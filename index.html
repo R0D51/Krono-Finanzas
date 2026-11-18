@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v5.9.0 — GEMINI ANDROID 1-CLIC + NLP CORREGIDO
+    // KRONO OTA BOOTLOADER v6.0.0 — MOTOR HÍBRIDO GEMINI ANDROID + GOOGLE TASKS + GITHUB SYNC
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -92,7 +92,7 @@
   <div id="app-root" class="relative z-10 min-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-x-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '5.9.0';
+    const APP_BASE_VERSION = '6.0.0';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -112,8 +112,8 @@
       githubUseReleases: true,
       githubIncludePrereleases: false,
       githubAutoPublishRelease: true,
-      lastReleaseTag: 'v5.9.0',
-      lastReleaseNotes: 'Vinculación con Gemini Android en 1 clic (sin servidores), soporte de miles (1.200) y micrófono de teclado en APK.',
+      lastReleaseTag: 'v6.0.0',
+      lastReleaseNotes: 'Método Híbrido (Mix): Inteligencia personalizada de Gemini Android dispara Google Tasks al decir Krono + Cosechador automático + Sync PC/Celular.',
       lastGithubSync: '',
       autoCheckOta: true,
       processedCommandIds: [],
@@ -141,6 +141,7 @@
     let lastAnimatedTab = null;
     let githubStatePushTimer = null;
     let isSyncingState = false;
+    let isPollingBridge = false;
 
     let ui = {
       activeTab: 'dashboard',
@@ -151,7 +152,7 @@
       showTransferModal: false,
       showNewBudgetModal: false,
       showVoiceWidgetOverlay: false,
-      showGeminiAndroidGuideModal: false,
+      showGeminiMixModal: false,
       showOtaModal: false,
       otaStatusMsg: '',
       otaChecking: false,
@@ -165,7 +166,8 @@
       voiceTranscript: '',
       voiceHintMsg: '',
       geminiResponse: null,
-      syncStatusText: 'Listo'
+      syncStatusText: 'Listo',
+      bridgeDiagnostic: ''
     };
 
     function getTabAnimationClass() {
@@ -215,6 +217,7 @@
       if (broadcast && syncChannel) syncChannel.postMessage({ type: 'SYNC_STATE', state });
       if (broadcast && markDataUpdated) {
         schedulePushStateToGitHub();
+        if (state.cloudWebhookUrl) pushToCloudBridge();
       }
       pulseSyncDot();
       render();
@@ -285,26 +288,276 @@
     }
 
     // ==========================================================================
-    // VINCULACIÓN EN 1 CLIC CON GEMINI NATIVO DE ANDROID (SIN GOOGLE APPS SCRIPT)
+    // MÉTODO MIX v6.0.0: REGLA "KRONO" EN INTELIGENCIA PERSONALIZADA -> GOOGLE TASKS
     // ==========================================================================
-    function getGeminiSavedInfoRuleText() {
-      return `Cuando te pida registrar, anotar o cargar un gasto, pago, compra o ingreso en Krono (por ejemplo: "Krono gasté 850 en súper con efectivo"), responde ÚNICAMENTE con un enlace clickeable con este formato exacto reemplazando COMANDO por mi frase usando guiones bajos en vez de espacios: https://r0d51.github.io/Krono-Finanzas/?gemini=COMANDO`;
+    function getGeminiMixPersonalIntelligenceRule() {
+      return `Siempre que mi mensaje o comando de voz empiece con la palabra "Krono" (por ejemplo: "Krono gasté 850 en súper con efectivo"), NO abras enlaces web ni respondas con texto largo: usá automáticamente la extensión de Google Tasks para crear una tarea nueva cuyo título sea exactamente mi frase completa comenzando con "Krono" (ejemplo de título de la tarea: "Krono gasté 850 en súper con efectivo") y confirmame únicamente "Listo, enviado a Krono".`;
     }
 
-    function copyGeminiAndroidRule() {
-      const rule = getGeminiSavedInfoRuleText();
+    function copyTextToClipboardSafe(text, burstLabel) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(rule);
-        spawnFloatingBurst('📋 Regla Gemini Copiada', true);
+        navigator.clipboard.writeText(text);
+        spawnFloatingBurst(burstLabel, true);
       } else {
         const ta = document.createElement('textarea');
-        ta.value = rule;
+        ta.value = text;
         document.body.appendChild(ta);
         ta.select();
         document.execCommand('copy');
         ta.remove();
-        spawnFloatingBurst('📋 Regla Gemini Copiada', true);
+        spawnFloatingBurst(burstLabel, true);
       }
+    }
+
+    function copyGeminiMixRule() {
+      copyTextToClipboardSafe(getGeminiMixPersonalIntelligenceRule(), '📋 Regla Mix Copiada');
+    }
+
+    function getGoogleAppsScriptBridgeV60Code() {
+      return `// ============================================================================
+// PUENTE KRONO FINANZAS v6.0.0 — MÉTODO MIX (REGLA "KRONO" -> GOOGLE TASKS)
+// ============================================================================
+// INSTRUCCIONES:
+// 1. Pegá este código en script.google.com reemplazando el anterior.
+// 2. En el menú izquierdo verificá que "Tasks" (Tasks API) esté en Servicios (+).
+// 3. Tocá arriba a la derecha "Implementar" -> "Nueva implementación" -> "Aplicación web"
+//    (Ejecutar como: Yo | Quién tiene acceso: Cualquier persona) y copiá la URL /exec.
+
+function harvestGoogleTasksForKrono(syncCode, props) {
+  var queueKey = 'PENDING_CMDS_' + syncCode;
+  var queue = [];
+  var diag = { tasksApiActive: false, listsChecked: 0, harvested: 0, error: null };
+  try {
+    var rawQ = props.getProperty(queueKey);
+    if (rawQ) queue = JSON.parse(rawQ);
+  } catch (e) { queue = []; }
+
+  try {
+    if (typeof Tasks !== 'undefined' && Tasks.Tasklists) {
+      diag.tasksApiActive = true;
+      var lists = Tasks.Tasklists.list().items;
+      if (lists && lists.length > 0) {
+        for (var l = 0; l < lists.length; l++) {
+          diag.listsChecked++;
+          var listTitle = (lists[l].title || '').trim();
+          var isKronoList = /krono/i.test(listTitle);
+          var tasks = Tasks.Tasks.list(lists[l].id, { showCompleted: false }).items;
+          if (!tasks) continue;
+          for (var t = 0; t < tasks.length; t++) {
+            var title = (tasks[t].title || '').trim();
+            var notes = (tasks[t].notes || '').trim();
+            var fullText = (title + ' ' + notes).trim();
+            // Detecta si empieza o contiene "Krono", o si Gemini creó la tarea directamente
+            // con el verbo financiero + monto (ej: "Gasté 850 en súper con efectivo")
+            var matchesKrono = /\bkrono\b/i.test(fullText);
+            var matchesFinanceVerb = /^(gast[eé]|pagu[eé]|compr[eé]|cobr[eé]|ingres[eé]|recib[ií]|cargu[eé]|agregu[eé])\b.*(\d+|mil|quinientos|cien)/i.test(fullText);
+            if (isKronoList || matchesKrono || matchesFinanceVerb) {
+              var cleanCommand = fullText.replace(/^(?:tarea\s+|en\s+krono\s+|krono[:\s,-]*)+/i, '').trim();
+              if (cleanCommand) {
+                queue.push({
+                  id: 'gtask_' + tasks[t].id,
+                  command: cleanCommand,
+                  source: 'gemini_mix_tasks',
+                  timestamp: new Date().getTime()
+                });
+                diag.harvested++;
+              }
+              Tasks.Tasks.remove(lists[l].id, tasks[t].id);
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    diag.error = String(err);
+  }
+
+  props.setProperty(queueKey, JSON.stringify(queue));
+  return { queue: queue, diag: diag };
+}
+
+function doGet(e) {
+  var syncCode = (e && e.parameter && e.parameter.syncCode) ? e.parameter.syncCode : '${state.syncCode || 'KRONO-7749'}';
+  var props = PropertiesService.getScriptProperties();
+
+  if (e && e.parameter && e.parameter.cmd) {
+    var qKey = 'PENDING_CMDS_' + syncCode;
+    var curQ = JSON.parse(props.getProperty(qKey) || '[]');
+    curQ.push({ id: 'url_' + new Date().getTime(), command: e.parameter.cmd, timestamp: new Date().getTime() });
+    props.setProperty(qKey, JSON.stringify(curQ));
+  }
+
+  var harvest = harvestGoogleTasksForKrono(syncCode, props);
+  var rawState = props.getProperty('STATE_' + syncCode);
+  var otaPayload = props.getProperty('OTA_PAYLOAD_' + syncCode);
+  var otaVersion = props.getProperty('OTA_VERSION_' + syncCode);
+
+  return ContentService.createTextOutput(JSON.stringify({
+    bridgeVersion: '6.0.0',
+    syncCode: syncCode,
+    tasksDiagnostic: harvest.diag,
+    state: rawState ? JSON.parse(rawState) : null,
+    otaVersion: otaVersion || null,
+    otaPayload: otaPayload || null,
+    pendingCommands: harvest.queue
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  var body = JSON.parse(e.postData.contents);
+  var syncCode = body.syncCode || '${state.syncCode || 'KRONO-7749'}';
+  var props = PropertiesService.getScriptProperties();
+  var qKey = 'PENDING_CMDS_' + syncCode;
+
+  if (body.action === 'enqueue_command' && body.command) {
+    var q = JSON.parse(props.getProperty(qKey) || '[]');
+    q.push({ id: 'post_' + new Date().getTime(), command: body.command, timestamp: new Date().getTime() });
+    props.setProperty(qKey, JSON.stringify(q));
+    return ContentService.createTextOutput(JSON.stringify({ ok: true, queued: true })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (body.action === 'ack_commands' && Array.isArray(body.commandIds)) {
+    var currentQ = JSON.parse(props.getProperty(qKey) || '[]');
+    var remaining = currentQ.filter(function(item) { return body.commandIds.indexOf(item.id) === -1; });
+    props.setProperty(qKey, JSON.stringify(remaining));
+    return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (body.action === 'publish_ota' && body.otaPayload) {
+    props.setProperty('OTA_PAYLOAD_' + syncCode, body.otaPayload);
+    props.setProperty('OTA_VERSION_' + syncCode, body.otaVersion || 'OTA-Live');
+    return ContentService.createTextOutput(JSON.stringify({ ok: true, otaPublished: true })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (body.state) {
+    props.setProperty('STATE_' + syncCode, JSON.stringify(body.state));
+  }
+  return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
+}`;
+    }
+
+    function copyBridgeScriptV60() {
+      copyTextToClipboardSafe(getGoogleAppsScriptBridgeV60Code(), '📋 Script Google Tasks Copiado');
+    }
+
+    async function consumePendingExternalCommands(pendingList) {
+      if (!Array.isArray(pendingList) || pendingList.length === 0) return 0;
+      if (!Array.isArray(state.processedCommandIds)) state.processedCommandIds = [];
+      if (!Array.isArray(state.externalCommandHistory)) state.externalCommandHistory = [];
+
+      const newlyProcessedIds = [];
+      let executedCount = 0;
+
+      for (const item of pendingList) {
+        const cmdId = (typeof item === 'object' && item !== null)
+          ? (item.id || ('cmd_' + item.timestamp))
+          : ('raw_' + btoa(unescape(encodeURIComponent(String(item)))).slice(0, 16));
+        const rawCmd = (typeof item === 'object' && item !== null)
+          ? (item.command || item.text || item.title || '')
+          : String(item || '');
+
+        if (!rawCmd.trim() || state.processedCommandIds.includes(cmdId)) continue;
+
+        const cleanCmd = rawCmd.replace(/^(?:tarea\s+|en\s+krono\s+|krono[:\s,-]*)+/i, '').trim();
+        if (cleanCmd) {
+          processGeminiCommand(cleanCmd, true);
+          state.processedCommandIds.push(cmdId);
+          if (state.processedCommandIds.length > 200) state.processedCommandIds.shift();
+          state.externalCommandHistory.unshift({
+            id: cmdId,
+            command: cleanCmd,
+            date: new Date().toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' })
+          });
+          if (state.externalCommandHistory.length > 10) state.externalCommandHistory.pop();
+          newlyProcessedIds.push(cmdId);
+          executedCount++;
+        }
+      }
+
+      if (executedCount > 0) {
+        saveState(true, true);
+        spawnFloatingBurst(`🤖 Gemini Mix (${executedCount})`, true);
+        if (state.cloudWebhookUrl) {
+          try {
+            await fetch(state.cloudWebhookUrl.trim(), {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'ack_commands',
+                syncCode: state.syncCode,
+                commandIds: newlyProcessedIds
+              })
+            });
+          } catch (e) {}
+        }
+      }
+      return executedCount;
+    }
+
+    async function pullFromCloudBridge(manual = false) {
+      if (isPollingBridge) return;
+      const targetUrl = (state.cloudWebhookUrl || '').trim();
+      if (!targetUrl) {
+        if (manual) {
+          ui.bridgeDiagnostic = '⚠️ Pegá tu URL /exec de Google Apps Script aquí abajo.';
+          render();
+        }
+        return;
+      }
+      isPollingBridge = true;
+      try {
+        const res = await fetch(`${targetUrl}?syncCode=${encodeURIComponent(state.syncCode)}&t=${Date.now()}`, { cache: 'no-store' });
+        const data = await res.json();
+
+        if (data && data.tasksDiagnostic) {
+          if (data.tasksDiagnostic.tasksApiActive) {
+            ui.bridgeDiagnostic = `✅ Google Tasks Activo (v${data.bridgeVersion || '6.0'})`;
+          } else {
+            ui.bridgeDiagnostic = '⚠️ Falta activar "Tasks API" en Servicios (+) de script.google.com';
+          }
+        } else {
+          ui.bridgeDiagnostic = '✅ Puente Conectado';
+        }
+
+        let executed = 0;
+        if (data && Array.isArray(data.pendingCommands) && data.pendingCommands.length > 0) {
+          executed = await consumePendingExternalCommands(data.pendingCommands);
+        }
+
+        if (executed === 0 && data && data.state && Array.isArray(data.state.accounts)) {
+          const remoteUpdated = Number(data.state.updatedAt) || 0;
+          if (remoteUpdated > (Number(state.updatedAt) || 0)) {
+            state = { ...state, ...data.state };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            pulseSyncDot();
+            render();
+          }
+        }
+
+        isPollingBridge = false;
+        if (manual) {
+          if (executed === 0) spawnFloatingBurst('🔄 Google Tasks verificado', true);
+          render();
+        }
+      } catch (e) {
+        isPollingBridge = false;
+        if (manual) {
+          ui.bridgeDiagnostic = '❌ Error de conexión con la URL /exec (verificá Acceso: Cualquier persona).';
+          render();
+        }
+      }
+    }
+
+    async function pushToCloudBridge() {
+      const targetUrl = (state.cloudWebhookUrl || '').trim();
+      if (!targetUrl) return;
+      try {
+        await fetch(targetUrl, {
+          method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ syncCode: state.syncCode, state })
+        });
+      } catch (e) {}
     }
 
     function isNewerVersion(remoteVer, currentVer) {
@@ -349,7 +602,7 @@
     }
 
     // ==========================================================================
-    // SINCRONIZACIÓN DE ESTADO ENTRE PC Y CELULAR VÍA GITHUB
+    // SINCRONIZACIÓN DE ESTADO Y URL DEL PUENTE ENTRE PC Y CELULAR VÍA GITHUB
     // ==========================================================================
     function getSyncStateFilePath() {
       const cleanCode = (state.syncCode || 'KRONO-7749').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
@@ -375,6 +628,7 @@
         const syncPayload = {
           syncCode: state.syncCode,
           updatedAt: state.updatedAt,
+          cloudWebhookUrl: state.cloudWebhookUrl || '',
           exchangeRate: state.exchangeRate,
           defaultCurrency: state.defaultCurrency,
           processedCommandIds: state.processedCommandIds || [],
@@ -438,11 +692,18 @@
         const remoteTime = Number(remoteState.updatedAt) || 0;
         const localTime = Number(state.updatedAt) || 0;
 
+        let urlSynced = false;
+        if (remoteState.cloudWebhookUrl && !state.cloudWebhookUrl) {
+          state.cloudWebhookUrl = remoteState.cloudWebhookUrl;
+          urlSynced = true;
+        }
+
         if (remoteTime > localTime && Array.isArray(remoteState.accounts)) {
           state.accounts = remoteState.accounts;
           state.budgets = Array.isArray(remoteState.budgets) ? remoteState.budgets : state.budgets;
           state.transactions = Array.isArray(remoteState.transactions) ? remoteState.transactions : state.transactions;
           if (remoteState.exchangeRate) state.exchangeRate = remoteState.exchangeRate;
+          if (remoteState.cloudWebhookUrl) state.cloudWebhookUrl = remoteState.cloudWebhookUrl;
           if (Array.isArray(remoteState.processedCommandIds)) {
             state.processedCommandIds = Array.from(new Set([...(state.processedCommandIds || []), ...remoteState.processedCommandIds])).slice(-200);
           }
@@ -458,7 +719,8 @@
           spawnFloatingBurst('🔄 Datos sincronizados', true);
           render();
           return true;
-        } else if (localTime > remoteTime && token) {
+        } else if ((localTime > remoteTime || urlSynced) && token) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
           isSyncingState = false;
           await pushStateToGitHubCloud(false);
           if (manual) {
@@ -713,16 +975,7 @@
         await pushSingleFileToGitHub(repo, branch, 'index.html', currentHtml, `🏷️ Krono Finanzas Release ${tagName} (index.html)`, token);
         await pushStateToGitHubCloud(false);
 
-        // Asegurar que GitHub Pages esté activo para que el enlace ?gemini= funcione desde el asistente Android
-        try {
-          await fetch(`https://api.github.com/repos/${repo}/pages`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ source: { branch: branch, path: '/' } })
-          });
-        } catch (e) {}
-
-        const notes = customNotes || ui.releaseNotesInput || `Release oficial Krono Finanzas ${tagName}.`;
+        const notes = customNotes || ui.releaseNotesInput || `Release oficial Krono Finanzas ${tagName}: Método Mix (Inteligencia personalizada + Google Tasks Bridge).`;
 
         let existingReleaseId = null;
         try {
@@ -772,6 +1025,7 @@
     }
 
     async function syncAllNow(manual = false) {
+      if (state.cloudWebhookUrl) await pullFromCloudBridge(manual);
       await pullStateFromGitHubCloud(manual);
       if (state.autoCheckOta || manual) {
         await checkGitHubReleaseOtaUpdate(manual);
@@ -1030,13 +1284,12 @@
     }
 
     // ==========================================================================
-    // MOTOR NLP GEMINI v5.9.0 — PARSER NUMÉRICO RIOPLATENSE + MULTI-CUENTA
+    // MOTOR NLP GEMINI v6.0.0 — PARSER NUMÉRICO RIOPLATENSE + MULTI-CUENTA
     // ==========================================================================
     function normalizeStr(str) {
       return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     }
 
-    // Convierte palabras numéricas habladas y formatos con punto de miles ("1.200" -> 1200)
     function extractSmartAmount(segText) {
       let s = normalizeStr(segText)
         .replace(/\bun\s+mil\b/g, '1000')
@@ -1064,7 +1317,6 @@
       }
 
       let rawNum = numMatch[1];
-      // Si tiene formato de miles con punto (ej: 1.200 o 45.000)
       if (/^\d{1,3}(\.\d{3})+$/.test(rawNum)) {
         rawNum = rawNum.replace(/\./g, '');
       } else if (rawNum.includes('.') && rawNum.includes(',')) {
@@ -1180,7 +1432,6 @@
 
     function processGeminiCommand(rawInput, fromExternalGemini = false) {
       if (!rawInput || !rawInput.trim()) return;
-      // Soportar frases que vienen con guiones bajos o signos + desde enlaces de Gemini Android
       const normalizedInput = rawInput.replace(/_/g, ' ').replace(/\+/g, ' ').trim();
       const text = normalizedInput.replace(/^(?:hey\s+gemini|hola\s+gemini|gemini|tarea\s+|en\s+krono\s+|krono[:\s,-]*)+/i, '').trim();
       const lower = normalizeStr(text);
@@ -1209,7 +1460,6 @@
         return;
       }
 
-      // Solo separar segmentos cuando después de "y" o "," realmente viene otro movimiento con monto
       const rawSegments = text.split(/(?:;|\s+y\s+(?=[^,.;]*?(?:\d|mil|quinientos|cien))|,(?=[^,.;]*?(?:\d|mil|quinientos|cien)))/i).map(s => s.trim()).filter(Boolean);
       const segments = rawSegments.length > 0 ? rawSegments : [text];
       const createdItems = [];
@@ -1255,14 +1505,14 @@
       });
 
       if (createdItems.length > 0) {
-        const prefix = fromExternalGemini ? '[Gemini Android] ' : '';
+        const prefix = fromExternalGemini ? '[Gemini Mix Android] ' : '';
         const summaryParts = createdItems.map(item => `${item.title} (${formatMoney(item.amount, item.currency)} en ${item.accountName})`);
         const reply = createdItems.length === 1
           ? `${prefix}Registré ${summaryParts[0]}.`
           : `${prefix}Registré ${createdItems.length} movimientos: ${summaryParts.join(' y ')}.`;
         ui.geminiResponse = { mode: 'action', prompt: text, reply, items: createdItems };
         speakText(reply);
-      } else {
+      } else if (!fromExternalGemini) {
         const fallback = 'No detecté un monto numérico. Probá decir o escribir: "Gasté 850 en súper con efectivo".';
         ui.geminiResponse = { mode: 'error', prompt: text, reply: fallback, items: [] };
         speakText(fallback);
@@ -1271,7 +1521,7 @@
     }
 
     // ==========================================================================
-    // CAPTURA DE VOZ CON SOPORTE NATIVO PARA .APK ANDROID (SIN PROMPT BLOQUEADO)
+    // CAPTURA DE VOZ CON SOPORTE NATIVO PARA .APK ANDROID
     // ==========================================================================
     let recognition = null;
 
@@ -1328,7 +1578,7 @@
           }
         };
 
-        recognition.onerror = (ev) => {
+        recognition.onerror = () => {
           ui.isListening = false;
           openInAppVoiceFallback('El APK bloqueó el micrófono directo. Tocá aquí abajo y dictá con el micrófono 🎙️ de tu teclado Android:');
         };
@@ -1358,10 +1608,12 @@
     }
 
     window.addEventListener('focus', () => {
+      if (state.cloudWebhookUrl) pullFromCloudBridge(false);
       pullStateFromGitHubCloud(false);
     });
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
+        if (state.cloudWebhookUrl) pullFromCloudBridge(false);
         pullStateFromGitHubCloud(false);
       }
     });
@@ -1376,7 +1628,6 @@
       const params = new URLSearchParams(window.location.search);
       if (params.get('sync')) { state.syncCode = params.get('sync').toUpperCase(); saveState(false, false); }
 
-      // Ejecución inmediata de comandos enviados desde el asistente Gemini Nativo de Android (?gemini=...)
       const extCmd = params.get('gemini') || params.get('cmd') || params.get('q') || (window.location.hash.startsWith('#gemini=') ? window.location.hash.slice(8) : '');
       if (extCmd) {
         setTimeout(async () => {
@@ -1386,7 +1637,10 @@
           window.history.replaceState({}, document.title, window.location.pathname);
         }, 300);
       } else {
-        setTimeout(() => pullStateFromGitHubCloud(false), 450);
+        setTimeout(async () => {
+          await pullStateFromGitHubCloud(false);
+          if (state.cloudWebhookUrl) await pullFromCloudBridge(false);
+        }, 450);
       }
 
       if (params.get('voice') === '1') {
@@ -1395,15 +1649,17 @@
 
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
         setTimeout(() => {
-          publishGitHubRelease(null, APP_BASE_VERSION, 'Release automático v5.9.0: Vinculación 1-clic con Gemini Android, soporte de miles (1.200) y dictado en APK corregido.');
+          publishGitHubRelease(null, APP_BASE_VERSION, 'Release automático v6.0.0: Método Mix (Inteligencia personalizada de Gemini Android -> Google Tasks Bridge) + Sync PC/Celular.');
         }, 1200);
       } else if (state.autoCheckOta && cleanRepoSlug()) {
         setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
       }
 
+      // Polling silencioso cada 10s: cosecha tareas creadas por la regla "Krono" de Gemini Android y sincroniza PC/Celular
       setInterval(() => {
+        if (state.cloudWebhookUrl) pullFromCloudBridge(false);
         pullStateFromGitHubCloud(false);
-      }, 12000);
+      }, 10000);
 
       setInterval(() => {
         if (state.autoCheckOta && cleanRepoSlug()) checkGitHubReleaseOtaUpdate(false);
@@ -1454,15 +1710,15 @@
             </div>
           </div>
 
-          <!-- Barra Rápida de Dictado y Comandos Gemini -->
+          <!-- Barra Rápida de Dictado y Método Mix Gemini Android -->
           <div class="glass-97 rounded-3xl p-4 w-full max-w-full overflow-hidden space-y-2.5">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div class="flex flex-wrap items-center gap-2">
                 <span class="text-xs text-cyan-300 font-extrabold flex items-center gap-1.5">
-                  🎙️ Dictado por Voz y Chat Gemini
+                  🎙️ Dictado y Gemini Mix
                 </span>
-                <button onclick="ui.showGeminiAndroidGuideModal=true;render();" class="px-2.5 py-1 rounded-full bg-violet-500/25 border border-violet-400/50 text-violet-200 text-[11px] font-bold hover:bg-violet-500/40">
-                  🤖 Vincular con Gemini de Android (1 Clic)
+                <button onclick="ui.showGeminiMixModal=true;render();" class="px-2.5 py-1 rounded-full bg-violet-500/25 border border-violet-400/50 text-violet-200 text-[11px] font-bold hover:bg-violet-500/40">
+                  🤖 Configurar Mix "Krono" → Google Tasks
                 </button>
               </div>
               <div class="flex items-center gap-1.5 w-full sm:w-auto min-w-0">
@@ -1716,23 +1972,44 @@
       const repo = cleanRepoSlug();
       return `
         <div class="space-y-5 ${animClass}">
-          <!-- Vinculación Directa con Gemini Nativo de Android (1 Clic) -->
+          <!-- MÉTODO MIX: INTELIGENCIA PERSONALIZADA ("KRONO...") + GOOGLE TASKS BRIDGE -->
           <div class="glass-97 rounded-3xl p-6 border-2 border-violet-400/50 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <div class="text-xs font-bold uppercase tracking-wider text-violet-300">🤖 Gemini Nativo de Android (Botón de Encendido)</div>
-                <h2 class="text-lg font-extrabold text-white mt-0.5">Vincular en 1 Clic (Sin Google Apps Script)</h2>
+                <div class="text-xs font-bold uppercase tracking-wider text-violet-300">🤖 Método Mix: Botón de Encendido Android ("Krono...")</div>
+                <h2 class="text-lg font-extrabold text-white mt-0.5">Inteligencia Personalizada + Cosechador Google Tasks</h2>
               </div>
-              <button onclick="ui.showGeminiAndroidGuideModal=true;render();" class="spring-btn px-4 py-2 rounded-xl bg-violet-500 text-white font-extrabold text-xs">
-                📱 Ver Paso a Paso
+              <span class="text-xs px-3 py-1 rounded-full bg-violet-500/20 border border-violet-400/40 text-violet-200 mono">
+                ${ui.bridgeDiagnostic || (state.cloudWebhookUrl ? '✅ URL /exec Activa' : '⚠️ Falta URL /exec')}
+              </span>
+            </div>
+            <p class="text-xs text-slate-300">1. Copiá la <strong class="text-white">Regla Mix</strong> y pegala en <strong class="text-cyan-300">Configuración → Inteligencia personalizada</strong> dentro de tu app Google Gemini de Android. Así solo tenés que decir <span class="text-emerald-300 font-bold">"Krono gasté 850 en súper con efectivo"</span> y Gemini creará la tarea en Google Tasks automáticamente.</p>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="copyGeminiMixRule()" class="spring-btn px-4 py-2.5 rounded-xl bg-violet-500 text-white font-extrabold text-xs">
+                📋 1. Copiar Regla para "Inteligencia personalizada"
+              </button>
+              <button onclick="copyBridgeScriptV60()" class="spring-btn px-4 py-2.5 rounded-xl bg-white/10 text-cyan-200 font-bold text-xs">
+                📋 2. Copiar Script Google Tasks (v6.0.0)
+              </button>
+              <button onclick="ui.showGeminiMixModal=true;render();" class="spring-btn px-3.5 py-2.5 rounded-xl bg-white/10 text-slate-200 font-bold text-xs">
+                ❓ Ver Guía del Mix
               </button>
             </div>
-            <p class="text-xs text-slate-300">Copiá esta regla y pegala en <strong class="text-white">Información guardada</strong> dentro de tu app Google Gemini de Android. Así, cuando mantengas apretado el botón de encendido y digas <span class="text-cyan-300 font-bold">"Krono gasté 1200 en súper con efectivo"</span>, Gemini te dará el botón directo para cargarlo en Krono.</p>
-            <div class="flex flex-wrap gap-2.5">
-              <button onclick="copyGeminiAndroidRule()" class="spring-btn px-4 py-2.5 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">
-                📋 Copiar Regla para Gemini Android
-              </button>
+            <div class="pt-1">
+              <label class="text-[11px] text-slate-300 block mb-1">URL de Google Apps Script (terminada en /exec — se sincroniza sola entre PC y Celular)</label>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <input type="text" placeholder="https://script.google.com/macros/s/.../exec" value="${state.cloudWebhookUrl || ''}" onchange="state.cloudWebhookUrl=this.value.trim();saveState(true, true);pullFromCloudBridge(true);" class="flex-1 bg-slate-950/70 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" />
+                <button onclick="pullFromCloudBridge(true)" class="spring-btn px-4 py-2.5 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs shrink-0">
+                  🔄 Cosechar Tareas Ahora
+                </button>
+              </div>
             </div>
+            ${state.externalCommandHistory && state.externalCommandHistory.length ? `
+              <div class="p-3 rounded-2xl bg-slate-950/50 border border-white/10 text-xs space-y-1">
+                <div class="text-[11px] font-bold text-cyan-300">📥 Últimos movimientos recibidos por el Mix de Gemini:</div>
+                ${state.externalCommandHistory.slice(0, 3).map(h => `<div class="text-[11px] mono text-slate-200">🤖 "${h.command}" <span class="text-slate-400">(${h.date})</span></div>`).join('')}
+              </div>
+            ` : ''}
           </div>
 
           <!-- Sincronización en la Nube PC <-> Celular -->
@@ -1886,7 +2163,7 @@
                 <div class="flex items-center justify-between mb-6">
                   <div>
                     <h1 class="text-xl font-extrabold text-white tracking-tight">Krono Finanzas</h1>
-                    <span class="text-[11px] font-bold mono text-cyan-300">v${currentVer} • Sync Activo</span>
+                    <span class="text-[11px] font-bold mono text-cyan-300">v${currentVer} • Mix Activo</span>
                   </div>
                   <span class="krono-sync-dot w-2.5 h-2.5 rounded-full bg-emerald-400 transition-transform duration-300"></span>
                 </div>
@@ -1904,8 +2181,8 @@
                   <span>${state.syncCode}</span>
                   <span>${ui.syncStatusText}</span>
                 </div>
-                <button onclick="ui.showGeminiAndroidGuideModal=true;render();" class="spring-btn w-full py-2.5 rounded-xl bg-violet-500/25 border border-violet-400/40 text-violet-200 font-bold text-xs">
-                  🤖 Vincular Gemini Android
+                <button onclick="ui.showGeminiMixModal=true;render();" class="spring-btn w-full py-2.5 rounded-xl bg-violet-500/25 border border-violet-400/40 text-violet-200 font-bold text-xs">
+                  🤖 Configurar Mix Gemini
                 </button>
                 <button onclick="syncAllNow(true)" class="spring-btn w-full py-2.5 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-200 font-bold text-xs">
                   🔄 Sincronizar Datos
@@ -1948,35 +2225,45 @@
           </nav>
         </div>
 
-        <!-- Modal Guía Rápida 1-Clic para Gemini Nativo de Android -->
-        ${ui.showGeminiAndroidGuideModal ? `
+        <!-- Modal Guía del Método Mix (Inteligencia Personalizada -> Google Tasks Bridge) -->
+        ${ui.showGeminiMixModal ? `
           <div class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
             <div class="glass-97 w-full max-w-lg rounded-3xl p-6 border-2 border-violet-400/50 animate-pop-elastic space-y-4 max-h-[92dvh] overflow-y-auto">
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-extrabold text-white">🤖 Usar Gemini de Android (Botón de Encendido)</h3>
-                <button onclick="ui.showGeminiAndroidGuideModal=false;render();" class="text-slate-400 hover:text-white">✕</button>
+                <h3 class="text-base font-extrabold text-white">🤖 Método Mix: Decir "Krono..." al Botón de Encendido</h3>
+                <button onclick="ui.showGeminiMixModal=false;render();" class="text-slate-400 hover:text-white">✕</button>
               </div>
               <div class="space-y-3 text-xs text-slate-200">
-                <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-cyan-400/30 space-y-2">
-                  <div class="font-extrabold text-cyan-300">Paso 1: Copiá esta instrucción</div>
-                  <div class="p-2.5 rounded-xl bg-slate-900 border border-white/10 mono text-[11px] text-cyan-200 break-words">${getGeminiSavedInfoRuleText()}</div>
-                  <button onclick="copyGeminiAndroidRule()" class="spring-btn w-full py-2.5 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">
-                    📋 Copiar Instrucción al Portapapeles
+                <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-violet-400/40 space-y-2">
+                  <div class="font-extrabold text-violet-300">Paso 1: Pegá esta regla en "Inteligencia personalizada" de Gemini</div>
+                  <p class="text-slate-300">Abrí la app de Gemini en tu Android → Tocá tu perfil → <strong class="text-white">Configuración</strong> → <strong class="text-cyan-300">Inteligencia personalizada</strong> y pegá esta regla:</p>
+                  <div class="p-2.5 rounded-xl bg-slate-900 border border-white/10 mono text-[11px] text-cyan-200 break-words">${getGeminiMixPersonalIntelligenceRule()}</div>
+                  <button onclick="copyGeminiMixRule()" class="spring-btn w-full py-2.5 rounded-xl bg-violet-500 text-white font-extrabold text-xs">
+                    📋 Copiar Regla para Inteligencia Personalizada
                   </button>
                 </div>
-                <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-white/15 space-y-1.5">
-                  <div class="font-extrabold text-violet-300">Paso 2: Pegala en tu app Gemini de Android (1 sola vez)</div>
-                  <p class="text-slate-300">1. Abrí la app <strong class="text-white">Google Gemini</strong> en tu celular Android.</p>
-                  <p class="text-slate-300">2. Tocá tu <strong class="text-white">foto de perfil</strong> (arriba a la derecha) → <strong class="text-white">Información guardada</strong> (o <em>Saved info</em>).</p>
-                  <p class="text-slate-300">3. Tocá <strong class="text-white">Añadir</strong>, pegá el texto copiado y guardalo.</p>
+
+                <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-cyan-400/30 space-y-2">
+                  <div class="font-extrabold text-cyan-300">Paso 2: Puente Google Tasks (El método habitual)</div>
+                  <p class="text-slate-300">Verificá que tu URL <code class="text-cyan-300">/exec</code> de Google Apps Script esté pegada aquí abajo (si necesitás el código del script con Tasks API, tocá el botón para copiarlo):</p>
+                  <input type="text" placeholder="https://script.google.com/macros/s/.../exec" value="${state.cloudWebhookUrl || ''}" onchange="state.cloudWebhookUrl=this.value.trim();saveState(true, true);pullFromCloudBridge(true);" class="w-full bg-slate-900 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" />
+                  <div class="grid grid-cols-2 gap-2">
+                    <button onclick="copyBridgeScriptV60()" class="spring-btn py-2 px-3 rounded-xl bg-white/10 text-cyan-200 font-bold text-xs">
+                      📋 Copiar Script .GS
+                    </button>
+                    <button onclick="pullFromCloudBridge(true)" class="spring-btn py-2 px-3 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">
+                      🔄 Probar y Cosechar
+                    </button>
+                  </div>
                 </div>
+
                 <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 space-y-1">
-                  <div class="font-extrabold text-emerald-300">¡Listo! ¿Cómo se usa en el día a día?</div>
-                  <p class="text-slate-200">Mantené apretado el botón de encendido desde cualquier pantalla y decile: <strong class="text-white">"Krono gasté 850 en súper con efectivo"</strong>. Gemini te mostrará el enlace directo: lo tocás y el gasto se carga y sincroniza solo con tu PC y tu celular.</p>
+                  <div class="font-extrabold text-emerald-300">¿Cómo funciona cuando mantenés el botón de encendido?</div>
+                  <p class="text-slate-200">Solo decís: <strong class="text-white">"Krono gasté 850 en súper con efectivo"</strong>. Por la regla del Paso 1, Gemini carga automáticamente la tarea en Google Tasks sin abrir ninguna página con error, y el puente del Paso 2 la mete directo en tus movimientos.</p>
                 </div>
               </div>
               <div class="flex justify-end">
-                <button onclick="ui.showGeminiAndroidGuideModal=false;render();" class="px-5 py-2 rounded-xl bg-white/10 text-white font-bold text-xs">Cerrar</button>
+                <button onclick="ui.showGeminiMixModal=false;render();" class="px-5 py-2 rounded-xl bg-white/10 text-white font-bold text-xs">Cerrar</button>
               </div>
             </div>
           </div>
@@ -2001,7 +2288,7 @@
                 Publicar automáticamente como nuevo GitHub Release al instalar un código pegado
               </label>
 
-              <textarea id="ota-paste-box" rows="5" placeholder='Pegá aquí el JSON {"version": "5.x.x", "html": "<!DOCTYPE html>..."}...' class="w-full p-3 rounded-2xl bg-slate-950/80 border border-white/15 text-xs text-white mono mb-3"></textarea>
+              <textarea id="ota-paste-box" rows="5" placeholder='Pegá aquí el JSON {"version": "6.x.x", "html": "<!DOCTYPE html>..."}...' class="w-full p-3 rounded-2xl bg-slate-950/80 border border-white/15 text-xs text-white mono mb-3"></textarea>
               ${ui.otaStatusMsg ? `<div class="p-2.5 rounded-xl bg-slate-950/80 border border-cyan-400/30 text-xs text-cyan-200 mb-3">${ui.otaStatusMsg}</div>` : ''}
 
               <div class="flex flex-wrap justify-between gap-2">
@@ -2115,7 +2402,6 @@
           </div>
         ` : ''}
 
-        <!-- Modal de Dictado Compatible con Teclado de Voz de Android (.APK) -->
         ${ui.showVoiceWidgetOverlay ? `
           <div class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-xl flex flex-col items-center justify-center p-4 text-center">
             <div class="glass-97 w-full max-w-sm rounded-3xl p-6 border-2 border-cyan-400/50 animate-pop-elastic overflow-hidden space-y-3">
