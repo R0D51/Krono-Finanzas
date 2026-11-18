@@ -1,61 +1,8 @@
 {
   "syncCode": "KRONO-7749",
   "updatedAt": 1795043441888,
-  "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzjr13-iMZfedt998PgtnPunrPeIso2vMYR2eaWD0lJxqL3r7AfU79usgz18_CA_LFodg/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
-  "processedCommandIds": [
-    "gtask_SW50MWZLVzFrNnRNUnVqZw",
-    "gtask_OEVBc2xhc254R19aXzgxUw",
-    "gtask_U1NmVG55UHRtZlhXZjEyVw",
-    "gtask_ajd2Q0VmOGJHbXplci1EWg",
-    "gtask_dnRMRzhQN1cwSFM5aFNxYQ",
-    "gtask_VHNDRm9MQlJvdWZ5RVZvcQ",
-    "gtask_SkVVWHZPTWcyMGdBSUlwaA",
-    "gtask_M2RoVXotb2Y4VWlBT19peA"
-  ],
-  "externalCommandHistory": [
-    {
-      "id": "gtask_M2RoVXotb2Y4VWlBT19peA",
-      "command": "gasté 850 en el súper",
-      "date": "08:10 p. m."
-    },
-    {
-      "id": "gtask_SkVVWHZPTWcyMGdBSUlwaA",
-      "command": "gasté 500 pesos en el almacén.",
-      "date": "07:46 p. m."
-    },
-    {
-      "id": "gtask_VHNDRm9MQlJvdWZ5RVZvcQ",
-      "command": "hoy perdí 1500 pesos.",
-      "date": "07:40 p. m."
-    },
-    {
-      "id": "gtask_dnRMRzhQN1cwSFM5aFNxYQ",
-      "command": "hoy obtuve de ganancias 2500 pesos.",
-      "date": "07:34 p. m."
-    },
-    {
-      "id": "gtask_ajd2Q0VmOGJHbXplci1EWg",
-      "command": "gané 1500 pesos.",
-      "date": "07:33 p. m."
-    },
-    {
-      "id": "gtask_U1NmVG55UHRtZlhXZjEyVw",
-      "command": "gané 500 pesos.",
-      "date": "07:32 p. m."
-    },
-    {
-      "id": "gtask_OEVBc2xhc254R19aXzgxUw",
-      "command": "gasté 550 pesos",
-      "date": "06:23 p. m."
-    },
-    {
-      "id": "gtask_SW50MWZLVzFrNnRNUnVqZw",
-      "command": "gasté 850 pesos en el súper",
-      "date": "06:19 p. m."
-    }
-  ],
   "accounts": [
     {
       "id": "acc_uyu",
