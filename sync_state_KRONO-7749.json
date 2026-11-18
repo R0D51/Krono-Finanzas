@@ -1,0 +1,95 @@
+{
+  "syncCode": "KRONO-7749",
+  "updatedAt": 1795024730337,
+  "exchangeRate": 41.5,
+  "defaultCurrency": "UYU",
+  "accounts": [
+    {
+      "id": "acc_uyu",
+      "name": "Cuenta Brou / Débito",
+      "currency": "UYU",
+      "balance": -400,
+      "color": "from-cyan-400 to-blue-500",
+      "icon": "🏦"
+    },
+    {
+      "id": "acc_usd",
+      "name": "Ahorro Dólares",
+      "currency": "USD",
+      "balance": 0,
+      "color": "from-emerald-400 to-teal-500",
+      "icon": "💵"
+    },
+    {
+      "id": "acc_cash",
+      "name": "Efectivo / Billetera",
+      "currency": "UYU",
+      "balance": 0,
+      "color": "from-violet-400 to-purple-500",
+      "icon": "👛"
+    }
+  ],
+  "budgets": [
+    {
+      "id": "cat_food",
+      "name": "Comida y Súper",
+      "limit": 18000,
+      "icon": "🛒",
+      "color": "#06b6d4"
+    },
+    {
+      "id": "cat_trans",
+      "name": "Ruta y Combustible",
+      "limit": 8500,
+      "icon": "⛽",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "cat_tech",
+      "name": "Electrónica y Proyectos",
+      "limit": 12000,
+      "icon": "⚡",
+      "color": "#10b981"
+    },
+    {
+      "id": "cat_home",
+      "name": "Hogar y Servicios",
+      "limit": 15000,
+      "icon": "🏠",
+      "color": "#f59e0b"
+    },
+    {
+      "id": "cat_lei",
+      "name": "Salidas y Ocio",
+      "limit": 7500,
+      "icon": "🎬",
+      "color": "#ec4899"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "tx_1795013195098_366",
+      "title": "Gasto super efectivo",
+      "amount": 200,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Brou / Débito",
+      "date": "18/11 11:46",
+      "timestamp": 1795013195098
+    },
+    {
+      "id": "tx_1795013187598_307",
+      "title": "Gasto super",
+      "amount": 200,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Brou / Débito",
+      "date": "18/11 11:46",
+      "timestamp": 1795013187598
+    }
+  ]
+}
