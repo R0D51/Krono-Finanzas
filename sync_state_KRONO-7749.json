@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795024730337,
+  "updatedAt": 1795024784003,
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
   "accounts": [
@@ -8,7 +8,7 @@
       "id": "acc_uyu",
       "name": "Cuenta Brou / Débito",
       "currency": "UYU",
-      "balance": -400,
+      "balance": 100,
       "color": "from-cyan-400 to-blue-500",
       "icon": "🏦"
     },
@@ -67,6 +67,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795024784003_448",
+      "title": "prueba",
+      "amount": 500,
+      "currency": "UYU",
+      "type": "income",
+      "category": "Ingreso",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Brou / Débito",
+      "date": "18/11 14:59",
+      "timestamp": 1795024784003
+    },
     {
       "id": "tx_1795013195098_366",
       "title": "Gasto super efectivo",
