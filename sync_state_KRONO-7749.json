@@ -1,6 +1,7 @@
 {
   "syncCode": "KRONO-7749",
   "updatedAt": 1795025954910,
+  "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbwvnHy5FaDKTnfBEbUROzzm_13uLsZlsnlPh8kF4JfrKBdtka4-IPvjjR74pdQ_-cRh5Q/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
   "processedCommandIds": [],
