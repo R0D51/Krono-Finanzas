@@ -4,7 +4,7 @@
   <meta name="theme-color" content="#040711" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v5.3.1 — GITHUB RELEASES + AUTO-DEPLOY
+    // KRONO OTA BOOTLOADER v5.4.0 — GITHUB RELEASES + GEMINI EXTERNO
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -90,11 +90,10 @@
   <div id="app-root" class="relative z-10 min-h-[100dvh] w-full flex flex-col"></div>
 
   <script>
-    const APP_BASE_VERSION = '5.3.1';
+    const APP_BASE_VERSION = '5.4.0';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
-    // Token fragmentado para evitar que GitHub Secret Scanning lo revoque al subir index.html
     const DEFAULT_GH_REPO = 'R0D51/Krono-Finanzas';
     const DEFAULT_GH_TOKEN = ['ghp_', 'QvsuFE2J5rMXd0', 'tnOrAudlHjShqWOs', '14AnDf'].join('');
 
@@ -110,10 +109,13 @@
       githubUseReleases: true,
       githubIncludePrereleases: false,
       githubAutoPublishRelease: true,
-      lastReleaseTag: 'v5.3.1',
-      lastReleaseNotes: 'Vinculación automática con R0D51/Krono-Finanzas y dictado por voz multi-cuenta.',
+      lastReleaseTag: 'v5.4.0',
+      lastReleaseNotes: 'Integración con Google Gemini externo (Botón de encendido de Android) vía Google Tasks Bridge y Deep-Links.',
       lastGithubSync: '',
       autoCheckOta: true,
+      autoClipboardGemini: true,
+      processedCommandIds: [],
+      externalCommandHistory: [],
       exchangeRate: 41.5,
       defaultCurrency: 'UYU',
       ttsEnabled: true,
@@ -144,6 +146,7 @@
       showNewBudgetModal: false,
       showVoiceWidgetOverlay: false,
       showOtaModal: false,
+      showExternalGeminiModal: false,
       otaStatusMsg: '',
       otaChecking: false,
       githubPushing: false,
@@ -172,6 +175,8 @@
             ...parsed,
             githubRepo: (parsed.githubRepo && parsed.githubRepo.trim()) ? parsed.githubRepo.trim() : DEFAULT_GH_REPO,
             githubToken: (parsed.githubToken && parsed.githubToken.trim()) ? parsed.githubToken.trim() : DEFAULT_GH_TOKEN,
+            processedCommandIds: Array.isArray(parsed.processedCommandIds) ? parsed.processedCommandIds : [],
+            externalCommandHistory: Array.isArray(parsed.externalCommandHistory) ? parsed.externalCommandHistory : [],
             accounts: Array.isArray(parsed.accounts) ? parsed.accounts : DEMO_STATE.accounts,
             budgets: Array.isArray(parsed.budgets) ? parsed.budgets : DEMO_STATE.budgets,
             transactions: Array.isArray(parsed.transactions) ? parsed.transactions : DEMO_STATE.transactions
@@ -261,7 +266,6 @@
       return headers;
     }
 
-    // Sanitiza cualquier token literal ghp_ del código antes de subirlo a GitHub para evitar revocación por Secret Scanning
     function sanitizeHtmlForGitHubUpload(htmlStr) {
       const tk = getActiveGitHubToken();
       if (!tk || !htmlStr.includes(tk)) return htmlStr;
@@ -463,7 +467,6 @@
       return await putRes.json();
     }
 
-    // PUBLICA UN NUEVO GITHUB RELEASE OFICIAL DESDE LA APP
     async function publishGitHubRelease(rawHtmlOrJson = null, versionTag = null, customNotes = '') {
       const repo = cleanRepoSlug();
       const token = getActiveGitHubToken();
@@ -487,7 +490,6 @@
           'Content-Type': 'application/json'
         };
 
-        // Detectar rama por defecto real del repositorio (main o master)
         try {
           const repoRes = await fetch(`https://api.github.com/repos/${repo}?t=${Date.now()}`, { headers, cache: 'no-store' });
           if (repoRes.ok) {
@@ -517,7 +519,7 @@
         await pushSingleFileToGitHub(repo, branch, otaPath, otaJsonPayload, `🏷️ Krono Finanzas Release ${tagName} (${otaPath})`, token);
         await pushSingleFileToGitHub(repo, branch, 'index.html', currentHtml, `🏷️ Krono Finanzas Release ${tagName} (index.html)`, token);
 
-        const notes = customNotes || ui.releaseNotesInput || `Release oficial Krono Finanzas ${tagName}: Motor GitHub Releases Auto-OTA y soporte de voz multi-cuenta.`;
+        const notes = customNotes || ui.releaseNotesInput || `Release oficial Krono Finanzas ${tagName}: Conexión con Google Gemini externo (botón de encendido Android) y soporte multi-cuenta.`;
 
         let existingReleaseId = null;
         try {
@@ -567,6 +569,208 @@
       }
     }
 
+    // ==========================================================================
+    // PUENTE DE COMANDOS EXTERNOS DE GOOGLE GEMINI (BOTÓN DE ENCENDIDO ANDROID)
+    // ==========================================================================
+    async function consumePendingExternalCommands(pendingList) {
+      if (!Array.isArray(pendingList) || pendingList.length === 0) return;
+      if (!Array.isArray(state.processedCommandIds)) state.processedCommandIds = [];
+      if (!Array.isArray(state.externalCommandHistory)) state.externalCommandHistory = [];
+
+      const newlyProcessedIds = [];
+      let executedCount = 0;
+
+      for (const item of pendingList) {
+        const cmdId = (typeof item === 'object' && item !== null) ? (item.id || ('cmd_' + item.timestamp)) : ('raw_' + btoa(unescape(encodeURIComponent(String(item)))).slice(0, 16));
+        const rawCmd = (typeof item === 'object' && item !== null) ? (item.command || item.text || item.title || '') : String(item || '');
+        if (!rawCmd.trim() || state.processedCommandIds.includes(cmdId)) continue;
+
+        // Limpiar prefijo "Krono" si viene de Google Tasks ("Krono gasté 850 en súper")
+        const cleanCmd = rawCmd.replace(/^(?:tarea\s+)?krono[:\s,-]*/i, '').trim();
+        if (cleanCmd) {
+          processGeminiCommand(cleanCmd, true);
+          state.processedCommandIds.push(cmdId);
+          if (state.processedCommandIds.length > 200) state.processedCommandIds.shift();
+          state.externalCommandHistory.unshift({
+            id: cmdId,
+            command: cleanCmd,
+            date: new Date().toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' })
+          });
+          if (state.externalCommandHistory.length > 15) state.externalCommandHistory.pop();
+          newlyProcessedIds.push(cmdId);
+          executedCount++;
+        }
+      }
+
+      if (executedCount > 0) {
+        saveState(true);
+        spawnFloatingBurst(`🤖 Gemini Externo (${executedCount})`, true);
+        // Confirmar al puente Google Apps Script que limpie los comandos ya procesados
+        if (state.cloudWebhookUrl) {
+          try {
+            await fetch(state.cloudWebhookUrl.trim(), {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'ack_commands',
+                syncCode: state.syncCode,
+                commandIds: newlyProcessedIds
+              })
+            });
+          } catch (e) {}
+        }
+      }
+    }
+
+    // Detector de comandos "Krono: ..." copiados desde Google Gemini al portapapeles
+    async function checkClipboardForExternalGemini() {
+      if (!state.autoClipboardGemini || !navigator.clipboard || !navigator.clipboard.readText) return;
+      try {
+        const clipText = (await navigator.clipboard.readText() || '').trim();
+        if (/^krono[:\s-]+(?:gast|pagu|compr|cobr|ingres|recib)/i.test(clipText)) {
+          const hash = 'clip_' + btoa(unescape(encodeURIComponent(clipText))).slice(0, 20);
+          if (!state.processedCommandIds.includes(hash)) {
+            state.processedCommandIds.push(hash);
+            const cleanCmd = clipText.replace(/^krono[:\s-]+/i, '').trim();
+            processGeminiCommand(cleanCmd, true);
+            spawnFloatingBurst('📋 Comando Gemini Detectado', true);
+          }
+        }
+      } catch (e) {}
+    }
+
+    function getGoogleAppsScriptBridgeV54Code() {
+      return `// ============================================================================
+// PUENTE KRONO FINANZAS v5.4.0 — GOOGLE GEMINI (BOTÓN ENCENDIDO) + GOOGLE TASKS
+// ============================================================================
+// Cómo usarlo fuera de la app:
+// 1. Mantené presionado el botón de encendido en Android para hablar con Gemini.
+// 2. Decile: "Agregá una tarea que diga Krono gasté 850 en súper con efectivo"
+// 3. Este script cosecha la tarea de Google Tasks y la envía a Krono Finanzas.
+
+function harvestGoogleTasksForKrono(syncCode, props) {
+  var queueKey = 'PENDING_CMDS_' + syncCode;
+  var queue = [];
+  try {
+    var rawQ = props.getProperty(queueKey);
+    if (rawQ) queue = JSON.parse(rawQ);
+  } catch (e) { queue = []; }
+
+  try {
+    if (typeof Tasks !== 'undefined' && Tasks.Tasklists) {
+      var lists = Tasks.Tasklists.list().items;
+      if (lists && lists.length > 0) {
+        for (var l = 0; l < lists.length; l++) {
+          var tasks = Tasks.Tasks.list(lists[l].id, { showCompleted: false }).items;
+          if (!tasks) continue;
+          for (var t = 0; t < tasks.length; t++) {
+            var title = (tasks[t].title || '').trim();
+            var notes = (tasks[t].notes || '').trim();
+            var fullText = (title + ' ' + notes).trim();
+            if (/^krono\b/i.test(fullText)) {
+              var cleanCommand = fullText.replace(/^krono[:\s,-]*/i, '').trim();
+              if (cleanCommand) {
+                queue.push({
+                  id: 'gtask_' + tasks[t].id,
+                  command: cleanCommand,
+                  source: 'gemini_power_button',
+                  timestamp: new Date().getTime()
+                });
+              }
+              Tasks.Tasks.remove(lists[l].id, tasks[t].id);
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {}
+
+  props.setProperty(queueKey, JSON.stringify(queue));
+  return queue;
+}
+
+function doGet(e) {
+  var syncCode = (e && e.parameter && e.parameter.syncCode) ? e.parameter.syncCode : '${state.syncCode || 'KRONO-7749'}';
+  var props = PropertiesService.getScriptProperties();
+
+  // Permite encolar un comando externo vía GET (?action=enqueue&cmd=gaste+850+en+super)
+  if (e && e.parameter && e.parameter.cmd) {
+    var qKey = 'PENDING_CMDS_' + syncCode;
+    var curQ = JSON.parse(props.getProperty(qKey) || '[]');
+    curQ.push({ id: 'url_' + new Date().getTime(), command: e.parameter.cmd, timestamp: new Date().getTime() });
+    props.setProperty(qKey, JSON.stringify(curQ));
+  }
+
+  var pendingCommands = harvestGoogleTasksForKrono(syncCode, props);
+  var rawState = props.getProperty('STATE_' + syncCode);
+  var otaPayload = props.getProperty('OTA_PAYLOAD_' + syncCode);
+  var otaVersion = props.getProperty('OTA_VERSION_' + syncCode);
+
+  return ContentService.createTextOutput(JSON.stringify({
+    syncCode: syncCode,
+    state: rawState ? JSON.parse(rawState) : null,
+    otaVersion: otaVersion || null,
+    otaPayload: otaPayload || null,
+    pendingCommands: pendingCommands
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  var body = JSON.parse(e.postData.contents);
+  var syncCode = body.syncCode || '${state.syncCode || 'KRONO-7749'}';
+  var props = PropertiesService.getScriptProperties();
+  var qKey = 'PENDING_CMDS_' + syncCode;
+
+  if (body.action === 'enqueue_command' && body.command) {
+    var q = JSON.parse(props.getProperty(qKey) || '[]');
+    q.push({ id: 'post_' + new Date().getTime(), command: body.command, timestamp: new Date().getTime() });
+    props.setProperty(qKey, JSON.stringify(q));
+    return ContentService.createTextOutput(JSON.stringify({ ok: true, queued: true })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (body.action === 'ack_commands' && Array.isArray(body.commandIds)) {
+    var currentQ = JSON.parse(props.getProperty(qKey) || '[]');
+    var remaining = currentQ.filter(function(item) { return body.commandIds.indexOf(item.id) === -1; });
+    props.setProperty(qKey, JSON.stringify(remaining));
+    return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (body.action === 'publish_ota' && body.otaPayload) {
+    props.setProperty('OTA_PAYLOAD_' + syncCode, body.otaPayload);
+    props.setProperty('OTA_VERSION_' + syncCode, body.otaVersion || 'OTA-Live');
+    return ContentService.createTextOutput(JSON.stringify({ ok: true, otaPublished: true })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (body.state) {
+    props.setProperty('STATE_' + syncCode, JSON.stringify(body.state));
+  }
+  return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
+}`;
+    }
+
+    function copyBridgeScriptToClipboard() {
+      const code = getGoogleAppsScriptBridgeV54Code();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code);
+        spawnFloatingBurst('📋 Script Bridge Copiado', true);
+      }
+    }
+
+    function simulateExternalPowerButtonCommand() {
+      const sample = prompt(
+        'Simular frase enviada a Google Gemini desde fuera de la app (con botón de encendido):',
+        'Krono gasté 950 en farmacia con efectivo'
+      );
+      if (!sample) return;
+      consumePendingExternalCommands([{
+        id: 'sim_' + Date.now(),
+        command: sample,
+        source: 'gemini_power_button',
+        timestamp: Date.now()
+      }]);
+    }
+
     async function checkCloudOtaUpdate(manual = true) {
       await checkGitHubReleaseOtaUpdate(manual);
       const targetUrl = (state.cloudWebhookUrl || '').trim();
@@ -574,6 +778,9 @@
       try {
         const res = await fetch(`${targetUrl}?action=get_ota&syncCode=${encodeURIComponent(state.syncCode)}`);
         const data = await res.json();
+        if (data && Array.isArray(data.pendingCommands) && data.pendingCommands.length > 0) {
+          await consumePendingExternalCommands(data.pendingCommands);
+        }
         if (data && data.otaPayload && data.otaVersion && isNewerVersion(data.otaVersion, getCurrentInstalledVersion())) {
           await applyOtaUpdatePayload(data.otaPayload, data.otaVersion, false, false);
         }
@@ -608,9 +815,15 @@
       }
       if (!state.cloudWebhookUrl) return;
       try {
-        const res = await fetch(`${state.cloudWebhookUrl}?syncCode=${encodeURIComponent(state.syncCode)}`);
+        const res = await fetch(`${state.cloudWebhookUrl}?syncCode=${encodeURIComponent(state.syncCode)}&t=${Date.now()}`);
         const data = await res.json();
-        if (data && data.state && data.state.accounts) { state = { ...state, ...data.state }; saveState(false); }
+        if (data && data.state && data.state.accounts) {
+          state = { ...state, ...data.state };
+          saveState(false);
+        }
+        if (data && Array.isArray(data.pendingCommands) && data.pendingCommands.length > 0) {
+          await consumePendingExternalCommands(data.pendingCommands);
+        }
         if (state.autoCheckOta && data && data.otaPayload && data.otaVersion && isNewerVersion(data.otaVersion, getCurrentInstalledVersion())) {
           await applyOtaUpdatePayload(data.otaPayload, data.otaVersion, false, false);
         }
@@ -654,7 +867,7 @@
       return (currency === 'USD' ? 'US$ ' : '$ ') + Number(amount || 0).toLocaleString('es-UY', { maximumFractionDigits: currency === 'USD' ? 2 : 0 });
     }
 
-    function addTransaction({ title, amount, currency = 'UYU', type = 'expense', category = 'Comida y Súper', accountId = null }) {
+    function addTransaction({ title, amount, currency = 'UYU', type = 'expense', category = 'Comida y Súper', accountId = null, fromExternal = false }) {
       const numAmount = Math.abs(Number(amount) || 0);
       if (numAmount <= 0) return null;
       let targetAcc = state.accounts.find(a => a.id === accountId) || state.accounts[0];
@@ -667,7 +880,7 @@
       const now = new Date();
       const newTx = {
         id: 'tx_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-        title: title || 'Transacción',
+        title: (fromExternal ? '🤖 ' : '') + (title || 'Transacción'),
         amount: numAmount,
         currency,
         type,
@@ -868,7 +1081,7 @@
       inp.click();
     }
 
-    // MOTOR NLP GEMINI v5.3.1 — DETECCIÓN INTELIGENTE DE CUENTAS POR VOZ Y TEXTO
+    // MOTOR NLP GEMINI v5.4.0 — MULTI-CUENTA + RECEPCIÓN EXTERNA
     function normalizeStr(str) {
       return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     }
@@ -971,9 +1184,9 @@
       window.speechSynthesis.speak(utter);
     }
 
-    function processGeminiCommand(rawInput) {
+    function processGeminiCommand(rawInput, fromExternalGemini = false) {
       if (!rawInput || !rawInput.trim()) return;
-      const text = rawInput.trim();
+      const text = rawInput.trim().replace(/^(?:krono[:\s,-]*)/i, '').trim();
       const lower = text.toLowerCase();
 
       if ((lower.includes('actualiza') || lower.includes('release') || lower.includes('github')) && (lower.includes('app') || lower.includes('ota') || lower.includes('versión'))) {
@@ -1037,19 +1250,21 @@
           currency: isUSD ? 'USD' : 'UYU',
           type,
           category,
-          accountId: targetAccount ? targetAccount.id : null
+          accountId: targetAccount ? targetAccount.id : null,
+          fromExternal: fromExternalGemini
         });
         if (tx) createdItems.push(tx);
       });
 
       if (createdItems.length > 0) {
+        const prefix = fromExternalGemini ? '[Botón Encendido / Gemini Externo] ' : '';
         const summaryParts = createdItems.map(item => `${item.title} (${formatMoney(item.amount, item.currency)} en ${item.accountName})`);
         const reply = createdItems.length === 1
-          ? `Registré ${summaryParts[0]}.`
-          : `Registré ${createdItems.length} movimientos: ${summaryParts.join(' y ')}.`;
+          ? `${prefix}Registré ${summaryParts[0]}.`
+          : `${prefix}Registré ${createdItems.length} movimientos: ${summaryParts.join(' y ')}.`;
         ui.geminiResponse = { mode: 'action', prompt: text, reply, items: createdItems };
         speakText(reply);
-      } else {
+      } else if (!fromExternalGemini) {
         const fallback = 'No detecté un monto numérico. Probá decir: "Gasté 850 en súper con efectivo y 1200 de luz con débito".';
         ui.geminiResponse = { mode: 'error', prompt: text, reply: fallback, items: [] };
         speakText(fallback);
@@ -1092,9 +1307,13 @@
       render();
     }
 
+    window.addEventListener('focus', () => {
+      checkClipboardForExternalGemini();
+      if (state.cloudWebhookUrl) pullFromCloudBridge();
+    });
+
     window.addEventListener('DOMContentLoaded', () => {
       loadLivePatches();
-      // Asegurar que R0D51/Krono-Finanzas y el token estén vinculados en el estado
       let updated = false;
       if (!state.githubRepo) { state.githubRepo = DEFAULT_GH_REPO; updated = true; }
       if (!state.githubToken) { state.githubToken = DEFAULT_GH_TOKEN; updated = true; }
@@ -1102,23 +1321,32 @@
 
       const params = new URLSearchParams(window.location.search);
       if (params.get('sync')) { state.syncCode = params.get('sync').toUpperCase(); saveState(false); }
-      if (params.get('gemini')) { setTimeout(() => processGeminiCommand(decodeURIComponent(params.get('gemini'))), 350); }
-      if (params.get('voice') === '1') { ui.showVoiceWidgetOverlay = true; setTimeout(() => startVoiceCapture(true), 300); }
 
-      // AUTO-DEPLOY INICIAL A R0D51/Krono-Finanzas AL INSTALAR v5.3.1
+      // Soporte Deep-Link directo desde Google Gemini / Rutinas (?gemini=, ?cmd=, ?q= o #gemini=)
+      const extCmd = params.get('gemini') || params.get('cmd') || params.get('q') || (window.location.hash.startsWith('#gemini=') ? window.location.hash.slice(8) : '');
+      if (extCmd) {
+        setTimeout(() => {
+          processGeminiCommand(decodeURIComponent(extCmd.replace(/\+/g, ' ')), true);
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }, 350);
+      }
+
+      if (params.get('voice') === '1') { ui.showVoiceWidgetOverlay = true; setTimeout(() => startVoiceCapture(true), 300); }
+      setTimeout(() => checkClipboardForExternalGemini(), 700);
+
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
         setTimeout(() => {
-          publishGitHubRelease(null, APP_BASE_VERSION, 'Release automático v5.3.1: Vinculación con R0D51/Krono-Finanzas y motor de voz multi-cuenta.');
+          publishGitHubRelease(null, APP_BASE_VERSION, 'Release automático v5.4.0: Integración con botón de encendido (Google Gemini externo) vía Google Tasks Bridge y Deep-Links.');
         }, 900);
       } else if (state.autoCheckOta && (cleanRepoSlug() || state.cloudWebhookUrl)) {
-        setTimeout(() => checkCloudOtaUpdate(false), 1600);
+        setTimeout(() => checkCloudOtaUpdate(false), 1500);
       }
 
       setInterval(() => {
         if (state.cloudWebhookUrl || (state.autoCheckOta && cleanRepoSlug())) {
           pullFromCloudBridge();
         }
-      }, 30000);
+      }, 15000);
       render();
     });
 
@@ -1127,7 +1355,6 @@
       const recentTxs = state.transactions.slice(0, 4);
       const topBudgets = state.budgets.slice(0, 4);
       const rate = Number(state.exchangeRate) || 41.5;
-      const repo = cleanRepoSlug();
 
       return `
         <div class="space-y-5 animate-pop-elastic">
@@ -1164,10 +1391,15 @@
             </div>
           </div>
 
-          <!-- Barra Rápida de Comandos Gemini Multi-Cuenta -->
+          <!-- Barra Rápida de Comandos Gemini Multi-Cuenta + Botón Encendido -->
           <div class="glass-97 rounded-3xl p-4 space-y-2.5">
             <div class="flex flex-wrap items-center justify-between gap-2 text-[11px]">
-              <span class="text-cyan-300 font-bold flex items-center gap-1.5">🎙️ Asistente Gemini Multi-Cuenta</span>
+              <div class="flex items-center gap-2">
+                <span class="text-cyan-300 font-bold">🎙️ Asistente Gemini Multi-Cuenta</span>
+                <button onclick="ui.showExternalGeminiModal=true;render();" class="px-2.5 py-0.5 rounded-full bg-violet-500/25 border border-violet-400/40 text-violet-200 font-bold hover:bg-violet-500/40">
+                  📱 Configurar Botón de Encendido (Fuera de la App)
+                </button>
+              </div>
               <div class="flex items-center gap-1.5">
                 <span class="text-slate-400">Cuenta destino:</span>
                 <select onchange="ui.voiceTargetAccountId=this.value;render();" class="bg-slate-950/70 border border-white/15 rounded-xl px-2.5 py-1 text-[11px] text-cyan-200 font-bold focus:outline-none focus:border-cyan-400">
@@ -1202,9 +1434,9 @@
               <span class="text-xl">⇄</span>
               <div><div class="text-xs font-bold text-white">Transferir</div><div class="text-[10px] text-slate-400">Entre cuentas</div></div>
             </button>
-            <button onclick="publishGitHubRelease();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-3">
-              <span class="text-xl">☁️</span>
-              <div><div class="text-xs font-bold text-violet-300">Subir Release</div><div class="text-[10px] text-slate-400 truncate max-w-[110px]">${repo}</div></div>
+            <button onclick="ui.showExternalGeminiModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-3 border border-violet-400/40">
+              <span class="text-xl">🤖</span>
+              <div><div class="text-xs font-bold text-violet-300">Botón Encendido</div><div class="text-[10px] text-slate-400">Gemini fuera de app</div></div>
             </button>
             <button onclick="ui.showOtaModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-3">
               <span class="text-xl">🚀</span>
@@ -1412,6 +1644,30 @@
       const repo = cleanRepoSlug();
       return `
         <div class="space-y-5 animate-pop-elastic">
+          <!-- Tarjeta Conexión Botón de Encendido Android (Gemini Externo) -->
+          <div class="glass-97 rounded-3xl p-6 border-2 border-violet-400/40">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <div>
+                <div class="text-xs font-bold uppercase tracking-wider text-violet-300">🤖 Google Gemini Fuera de la App (Botón de Encendido)</div>
+                <h2 class="text-lg font-extrabold text-white mt-0.5">Control por Voz desde Cualquier Pantalla de Android</h2>
+              </div>
+              <button onclick="ui.showExternalGeminiModal=true;render();" class="spring-btn px-4 py-2 rounded-xl bg-violet-500 text-white font-extrabold text-xs">
+                📱 Abrir Guía y Script de Conexión
+              </button>
+            </div>
+            <p class="text-xs text-slate-300 mb-3">Mantené apretado el botón de encendido de tu Android fuera de la app y decile a Google Gemini: <span class="text-cyan-300 font-bold mono">"Agregá una tarea que diga Krono gasté 850 en súper con efectivo"</span>.</p>
+            <div class="flex flex-wrap items-center gap-3">
+              <label class="flex items-center gap-2 text-xs text-slate-200 cursor-pointer">
+                <input type="checkbox" ${state.autoClipboardGemini ? 'checked' : ''} onchange="state.autoClipboardGemini=this.checked;saveState(false);" class="accent-cyan-400 w-4 h-4" />
+                Auto-detectar comandos "Krono:" en el portapapeles al abrir la app
+              </label>
+              <button onclick="simulateExternalPowerButtonCommand()" class="px-3 py-1.5 rounded-xl bg-white/10 text-cyan-200 font-bold text-xs">
+                🧪 Probar Comando Externo Ahora
+              </button>
+            </div>
+          </div>
+
+          <!-- Motor GitHub Releases Auto-OTA -->
           <div class="glass-97 rounded-3xl p-6 border-2 border-cyan-400/40">
             <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
               <div>
@@ -1491,7 +1747,7 @@
             </div>
 
             <div class="glass-97 rounded-3xl p-5 space-y-3">
-              <h3 class="text-sm font-extrabold text-white">☁️ Puente Google Apps Script</h3>
+              <h3 class="text-sm font-extrabold text-white">☁️ Puente Google Apps Script (Sincronización + Google Tasks)</h3>
               <div>
                 <label class="text-xs text-slate-300 block mb-1">Código de Sincronización</label>
                 <input type="text" value="${state.syncCode}" onchange="state.syncCode=this.value.trim().toUpperCase();saveState(true);" class="w-full bg-slate-950/60 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" />
@@ -1500,7 +1756,10 @@
                 <label class="text-xs text-slate-300 block mb-1">URL de Google Apps Script (Web App)</label>
                 <input type="text" placeholder="https://script.google.com/macros/s/.../exec" value="${state.cloudWebhookUrl || ''}" onchange="state.cloudWebhookUrl=this.value.trim();saveState(true);" class="w-full bg-slate-950/60 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" />
               </div>
-              <button onclick="pullFromCloudBridge()" class="spring-btn w-full py-2 rounded-xl bg-white/10 text-white font-bold text-xs">Sincronizar Estado Ahora</button>
+              <div class="flex gap-2">
+                <button onclick="pullFromCloudBridge()" class="spring-btn flex-1 py-2 rounded-xl bg-white/10 text-white font-bold text-xs">🔄 Cosechar Comandos Ahora</button>
+                <button onclick="copyBridgeScriptToClipboard()" class="spring-btn px-3 py-2 rounded-xl bg-violet-500/25 text-violet-200 font-bold text-xs">📋 Copiar Script .GS</button>
+              </div>
             </div>
           </div>
 
@@ -1565,8 +1824,8 @@
                   <span>Sync: ${state.syncCode}</span>
                   <span>1 USD = $${state.exchangeRate}</span>
                 </div>
-                <button onclick="publishGitHubRelease()" class="spring-btn w-full py-2.5 rounded-xl bg-violet-500/25 border border-violet-400/40 text-violet-200 font-bold text-xs">
-                  ☁️ Subir Release a GitHub
+                <button onclick="ui.showExternalGeminiModal=true;render();" class="spring-btn w-full py-2.5 rounded-xl bg-violet-500/25 border border-violet-400/40 text-violet-200 font-bold text-xs">
+                  🤖 Gemini Botón Encendido
                 </button>
                 <button onclick="checkGitHubReleaseOtaUpdate(true)" class="spring-btn w-full py-2.5 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-200 font-bold text-xs">
                   🏷️ Buscar Release GitHub
@@ -1586,7 +1845,7 @@
                   <span class="text-[10px] font-bold mono text-cyan-300">v${currentVer} • ${cleanRepoSlug()}</span>
                 </div>
                 <div class="flex items-center gap-2">
-                  <button onclick="publishGitHubRelease()" class="spring-btn px-3 py-1.5 rounded-xl glass-97 text-xs text-violet-200 font-bold">☁️ Push</button>
+                  <button onclick="ui.showExternalGeminiModal=true;render();" class="spring-btn px-3 py-1.5 rounded-xl glass-97 text-xs text-violet-200 font-bold">🤖 Gemini</button>
                   <button onclick="ui.showOtaModal=true;render();" class="spring-btn px-3 py-1.5 rounded-xl glass-97 text-xs text-emerald-200 font-bold">🚀 OTA</button>
                 </div>
               </div>
@@ -1605,6 +1864,62 @@
             </div>
           </nav>
         </div>
+
+        <!-- Modal Configuración Botón de Encendido Android (Google Gemini Externo) -->
+        ${ui.showExternalGeminiModal ? `
+          <div class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+            <div class="glass-97 w-full max-w-2xl rounded-3xl p-6 border-2 border-violet-400/50 animate-pop-elastic max-h-[92dvh] overflow-y-auto space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-violet-300">🤖 Integración Nativa Android</span>
+                  <h3 class="text-lg font-extrabold text-white">Hablar con Gemini Fuera de la App (Botón de Encendido)</h3>
+                </div>
+                <button onclick="ui.showExternalGeminiModal=false;render();" class="text-slate-400 hover:text-white text-lg">✕</button>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-slate-950/70 border border-cyan-400/30 space-y-2 text-xs">
+                <div class="font-extrabold text-cyan-300">✅ Método 1: Vía Voz Directa con Google Tasks (Sin tocar la pantalla)</div>
+                <p class="text-slate-300">Cuando mantenés presionado el botón de encendido en Android, Google Gemini puede crear tareas en tu cuenta de Google. Krono Finanzas cosecha automáticamente toda tarea que empiece con la palabra <strong class="text-white">"Krono"</strong> y la transforma en un movimiento real.</p>
+                <div class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-400/30 mono text-cyan-200">
+                  🗣️ Decile a Gemini: "Agregá una tarea en Google Tasks que diga Krono gasté 850 en súper con efectivo"
+                </div>
+                <p class="text-[11px] text-slate-400">Para activar el cosechador automático en tu Google Apps Script, copiá el script actualizado aquí abajo, pegalo en tu proyecto de <code class="text-cyan-300">script.google.com</code> y activá el servicio <strong class="text-white">Tasks API</strong> en el menú lateral "Servicios (+)".</p>
+                <div class="flex flex-wrap gap-2 pt-1">
+                  <button onclick="copyBridgeScriptToClipboard()" class="spring-btn px-4 py-2 rounded-xl bg-violet-500 text-white font-extrabold text-xs">
+                    📋 Copiar Código google_apps_script_bridge.gs (v5.4.0)
+                  </button>
+                  <button onclick="simulateExternalPowerButtonCommand()" class="spring-btn px-4 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">
+                    🧪 Simular Comando Externo Ahora
+                  </button>
+                </div>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-slate-950/70 border border-white/15 space-y-2 text-xs">
+                <div class="font-extrabold text-emerald-300">⚡ Método 2: Rutina de Gemini / Deep-Link Directo (?gemini=)</div>
+                <p class="text-slate-300">También podés abrir Krono o configurar un Atajo/Rutina en Android que llame a la URL de la app pasándole tu frase en el parámetro <code class="text-emerald-300">?gemini=</code>:</p>
+                <div class="p-2.5 rounded-xl bg-slate-900 border border-white/10 mono text-[11px] text-slate-200 break-all">
+                  https://r0d51.github.io/Krono-Finanzas/?gemini=gaste+850+en+super+con+efectivo
+                </div>
+              </div>
+
+              ${state.externalCommandHistory && state.externalCommandHistory.length ? `
+                <div class="p-4 rounded-2xl bg-slate-950/50 border border-white/10 space-y-1.5 text-xs">
+                  <div class="font-bold text-slate-300">📥 Últimos comandos externos recibidos:</div>
+                  ${state.externalCommandHistory.slice(0, 4).map(h => `
+                    <div class="flex justify-between text-[11px] mono text-cyan-200">
+                      <span>🤖 "${h.command}"</span>
+                      <span class="text-slate-400">${h.date}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+
+              <div class="flex justify-end">
+                <button onclick="ui.showExternalGeminiModal=false;render();" class="px-5 py-2 rounded-xl bg-white/10 text-white font-bold text-xs">Cerrar</button>
+              </div>
+            </div>
+          </div>
+        ` : ''}
 
         ${ui.showOtaModal ? `
           <div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
