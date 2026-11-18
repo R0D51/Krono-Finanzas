@@ -2,9 +2,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#040711" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link id="krono-pwa-manifest" rel="manifest" href="manifest.json" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v5.4.0 — GITHUB RELEASES + GEMINI EXTERNO
+    // KRONO OTA BOOTLOADER v5.5.0 — GITHUB RELEASES + APK BUILDER + GEMINI EXTERNO
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -90,7 +94,7 @@
   <div id="app-root" class="relative z-10 min-h-[100dvh] w-full flex flex-col"></div>
 
   <script>
-    const APP_BASE_VERSION = '5.4.0';
+    const APP_BASE_VERSION = '5.5.0';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -109,8 +113,8 @@
       githubUseReleases: true,
       githubIncludePrereleases: false,
       githubAutoPublishRelease: true,
-      lastReleaseTag: 'v5.4.0',
-      lastReleaseNotes: 'Integración con Google Gemini externo (Botón de encendido de Android) vía Google Tasks Bridge y Deep-Links.',
+      lastReleaseTag: 'v5.5.0',
+      lastReleaseNotes: 'Constructor automático de APK Android en GitHub Actions, WebAPK instalable y soporte Gemini externo.',
       lastGithubSync: '',
       autoCheckOta: true,
       autoClipboardGemini: true,
@@ -135,6 +139,13 @@
       ]
     };
 
+    let deferredPwaPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPwaPrompt = e;
+      render();
+    });
+
     let state = loadState();
     let ui = {
       activeTab: 'dashboard',
@@ -147,6 +158,10 @@
       showVoiceWidgetOverlay: false,
       showOtaModal: false,
       showExternalGeminiModal: false,
+      showAndroidApkModal: false,
+      apkBuildStatus: '',
+      apkBuilding: false,
+      apkDownloadUrl: '',
       otaStatusMsg: '',
       otaChecking: false,
       githubPushing: false,
@@ -270,6 +285,237 @@
       const tk = getActiveGitHubToken();
       if (!tk || !htmlStr.includes(tk)) return htmlStr;
       return htmlStr.split(tk).join("' + ['ghp_','QvsuFE2J5rMXd0','tnOrAudlHjShqWOs','14AnDf'].join('') + '");
+    }
+
+    // ==========================================================================
+    // CONSTRUCTOR DE APK ANDROID (GITHUB ACTIONS + CORDOVA + WEBAPK NATIVO)
+    // ==========================================================================
+    function getWebAppManifestObject() {
+      return {
+        name: 'Krono Finanzas',
+        short_name: 'Krono',
+        description: 'Gestión financiera bimonetaria Liquid Glass 97% con IA Gemini y Motor OTA',
+        start_url: './index.html?sync=' + encodeURIComponent(state.syncCode || 'KRONO-7749'),
+        display: 'standalone',
+        orientation: 'portrait',
+        background_color: '#040711',
+        theme_color: '#040711',
+        icons: [
+          {
+            src: 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="128" fill="#040711"/><circle cx="160" cy="150" r="140" fill="#06b6d4" opacity="0.35"/><circle cx="360" cy="360" r="140" fill="#8b5cf6" opacity="0.35"/><text x="256" y="330" font-family="sans-serif" font-size="240" font-weight="900" fill="#22d3ee" text-anchor="middle">K</text></svg>'),
+            sizes: '512x512',
+            type: 'image/svg+xml',
+            purpose: 'any maskable'
+          }
+        ],
+        shortcuts: [
+          {
+            name: 'Dictar Gasto a Gemini',
+            short_name: 'Voz Gemini',
+            description: 'Abre Krono Finanzas escuchando al instante',
+            url: './index.html?voice=1'
+          }
+        ]
+      };
+    }
+
+    function setupDynamicPwaManifest() {
+      try {
+        const manifestBlob = new Blob([JSON.stringify(getWebAppManifestObject(), null, 2)], { type: 'application/json' });
+        const linkEl = document.getElementById('krono-pwa-manifest');
+        if (linkEl) linkEl.href = URL.createObjectURL(manifestBlob);
+      } catch (e) {}
+    }
+
+    async function installNativeAndroidPwa() {
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        const { outcome } = await deferredPwaPrompt.userChoice;
+        deferredPwaPrompt = null;
+        if (outcome === 'accepted') spawnFloatingBurst('📲 Instalando Krono App', true);
+        render();
+      } else {
+        alert('En Chrome de Android: tocá el menú ⋮ (arriba a la derecha) y elegí "Instalar aplicación" o "Agregar a la pantalla principal" para instalar el WebAPK nativo a pantalla completa.');
+      }
+    }
+
+    function getCordovaConfigXml(ver) {
+      return `<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.krono.finanzas" version="${ver}" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+  <name>Krono Finanzas</name>
+  <description>Gestión financiera bimonetaria con IA Gemini y Motor Auto-OTA</description>
+  <author email="krono@finanzas.app" href="https://github.com/${cleanRepoSlug()}">Rodrigo</author>
+  <content src="index.html" />
+  <access origin="*" />
+  <allow-intent href="http://*/*" />
+  <allow-intent href="https://*/*" />
+  <preference name="Fullscreen" value="false" />
+  <preference name="BackgroundColor" value="0xff040711" />
+  <preference name="StatusBarBackgroundColor" value="#040711" />
+  <preference name="Orientation" value="default" />
+  <preference name="AndroidXEnabled" value="true" />
+  <platform name="android">
+    <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+      <application android:usesCleartextTraffic="true" />
+    </edit-config>
+    <config-file target="AndroidManifest.xml" parent="/*">
+      <uses-permission android:name="android.permission.INTERNET" />
+      <uses-permission android:name="android.permission.RECORD_AUDIO" />
+      <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    </config-file>
+  </platform>
+</widget>`;
+    }
+
+    function getGitHubActionsApkWorkflowYaml() {
+      return `name: Build Krono Finanzas Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Gradle & Cordova and Build APK
+        run: |
+          npm install -g cordova
+          cordova create krono_build com.krono.finanzas "Krono Finanzas"
+          cp index.html krono_build/www/index.html
+          if [ -f config.xml ]; then cp config.xml krono_build/config.xml; fi
+          cd krono_build
+          cordova platform add android@13.0.0
+          cordova build android --debug
+          cp platforms/android/app/build/outputs/apk/debug/app-debug.apk ../Krono-Finanzas.apk
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Krono-Finanzas-APK
+          path: Krono-Finanzas.apk
+
+      - name: Attach APK to Latest GitHub Release
+        env:
+          GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG=\$(gh release view --json tagName -q .tagName || echo "v5.5.0")
+          gh release upload "\$TAG" Krono-Finanzas.apk --clobber || true
+`;
+    }
+
+    function downloadVoltBuilderFilesLocally() {
+      const ver = getCurrentInstalledVersion();
+      const currentHtml = localStorage.getItem('KRONO_OTA_CUSTOM_HTML') || ('<!DOCTYPE html>' + document.documentElement.outerHTML);
+      const blobHtml = new Blob([currentHtml], { type: 'text/html;charset=utf-8' });
+      const a1 = document.createElement('a');
+      a1.href = URL.createObjectURL(blobHtml);
+      a1.download = 'index.html';
+      a1.click();
+
+      setTimeout(() => {
+        const blobXml = new Blob([getCordovaConfigXml(ver)], { type: 'application/xml;charset=utf-8' });
+        const a2 = document.createElement('a');
+        a2.href = URL.createObjectURL(blobXml);
+        a2.download = 'config.xml';
+        a2.click();
+      }, 450);
+      spawnFloatingBurst('📦 index.html + config.xml', true);
+    }
+
+    async function buildAndPublishAndroidApkOnGitHub() {
+      const repo = cleanRepoSlug();
+      const token = getActiveGitHubToken();
+      let branch = (state.githubBranch || 'main').trim() || 'main';
+      const ver = getCurrentInstalledVersion();
+
+      if (!repo || !token) {
+        ui.apkBuildStatus = '⚠️ Configurá tu repositorio y token de GitHub en Ajustes.';
+        render();
+        return;
+      }
+
+      ui.apkBuilding = true;
+      ui.apkBuildStatus = '⚙️ Subiendo proyecto Cordova (www/index.html + config.xml + manifest.json) a GitHub...';
+      render();
+
+      try {
+        const headers = {
+          'Accept': 'application/vnd.github.v3+json',
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        };
+
+        try {
+          const repoRes = await fetch(`https://api.github.com/repos/${repo}?t=${Date.now()}`, { headers, cache: 'no-store' });
+          if (repoRes.ok) {
+            const repoMeta = await repoRes.json();
+            if (repoMeta && repoMeta.default_branch) branch = repoMeta.default_branch;
+          }
+        } catch (e) {}
+
+        let currentHtml = localStorage.getItem('KRONO_OTA_CUSTOM_HTML') || ('<!DOCTYPE html>' + document.documentElement.outerHTML);
+        currentHtml = sanitizeHtmlForGitHubUpload(currentHtml);
+
+        await pushSingleFileToGitHub(repo, branch, 'index.html', currentHtml, `📱 Krono Android WebAPK v${ver}`, token);
+        await pushSingleFileToGitHub(repo, branch, 'www/index.html', currentHtml, `📱 Krono Cordova www/index.html v${ver}`, token);
+        await pushSingleFileToGitHub(repo, branch, 'config.xml', getCordovaConfigXml(ver), `📱 Krono Cordova config.xml v${ver}`, token);
+        await pushSingleFileToGitHub(repo, branch, 'manifest.json', JSON.stringify(getWebAppManifestObject(), null, 2), `📱 Krono PWA manifest.json v${ver}`, token);
+
+        // Activar GitHub Pages automáticamente para instalación inmediata en Android
+        try {
+          await fetch(`https://api.github.com/repos/${repo}/pages`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ source: { branch: branch, path: '/' } })
+          });
+        } catch (e) {}
+
+        // Intentar subir el workflow de GitHub Actions que compila el binario .apk
+        let workflowUploaded = false;
+        try {
+          await pushSingleFileToGitHub(repo, branch, '.github/workflows/android-apk.yml', getGitHubActionsApkWorkflowYaml(), `🤖 GitHub Actions Android APK Builder v${ver}`, token);
+          workflowUploaded = true;
+        } catch (wfErr) {
+          workflowUploaded = false;
+        }
+
+        ui.apkBuilding = false;
+        ui.apkDownloadUrl = `https://github.com/${repo}/releases/latest/download/Krono-Finanzas.apk`;
+        if (workflowUploaded) {
+          ui.apkBuildStatus = `✅ Compilador GitHub Actions activado en ${repo}. En ~2 minutos el archivo Krono-Finanzas.apk estará adjunto en tu Release v${ver}.`;
+          spawnFloatingBurst('🤖 Compilando APK en GitHub', true);
+        } else {
+          ui.apkBuildStatus = `✅ Proyecto Android (config.xml + www/index.html + WebAPK GitHub Pages) subido a ${repo}. Para que GitHub Actions compile el .apk automáticamente, marcá el permiso "workflow" en tu token de GitHub o instalá directo escaneando el QR.`;
+          spawnFloatingBurst('📲 WebAPK Android Listo', true);
+        }
+        render();
+      } catch (e) {
+        ui.apkBuilding = false;
+        ui.apkBuildStatus = `❌ Error: ${e.message}`;
+        render();
+      }
     }
 
     async function applyOtaUpdatePayload(rawPayload, versionLabel = null, broadcastToCloud = true, publishRelease = false, releaseNotes = '') {
@@ -480,7 +726,7 @@
       }
 
       ui.githubPushing = true;
-      ui.otaStatusMsg = `🏷️ Conectando con ${repo} y publicando Release...`;
+      ui.otaStatusMsg = `🏷️ Conectando con ${repo} y publicando Release + Proyecto APK...`;
       render();
 
       try {
@@ -518,8 +764,23 @@
         const otaJsonPayload = JSON.stringify({ version: ver, html: currentHtml }, null, 2);
         await pushSingleFileToGitHub(repo, branch, otaPath, otaJsonPayload, `🏷️ Krono Finanzas Release ${tagName} (${otaPath})`, token);
         await pushSingleFileToGitHub(repo, branch, 'index.html', currentHtml, `🏷️ Krono Finanzas Release ${tagName} (index.html)`, token);
+        await pushSingleFileToGitHub(repo, branch, 'www/index.html', currentHtml, `📱 Krono Cordova www/index.html ${tagName}`, token);
+        await pushSingleFileToGitHub(repo, branch, 'config.xml', getCordovaConfigXml(ver), `📱 Krono Cordova config.xml ${tagName}`, token);
+        await pushSingleFileToGitHub(repo, branch, 'manifest.json', JSON.stringify(getWebAppManifestObject(), null, 2), `📱 Krono Manifest ${tagName}`, token);
 
-        const notes = customNotes || ui.releaseNotesInput || `Release oficial Krono Finanzas ${tagName}: Conexión con Google Gemini externo (botón de encendido Android) y soporte multi-cuenta.`;
+        try {
+          await fetch(`https://api.github.com/repos/${repo}/pages`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ source: { branch: branch, path: '/' } })
+          });
+        } catch (e) {}
+
+        try {
+          await pushSingleFileToGitHub(repo, branch, '.github/workflows/android-apk.yml', getGitHubActionsApkWorkflowYaml(), `🤖 Compilador APK ${tagName}`, token);
+        } catch (e) {}
+
+        const notes = customNotes || ui.releaseNotesInput || `Release oficial Krono Finanzas ${tagName}: Incluye proyecto Android APK (Cordova/GitHub Actions), WebAPK instalable y soporte de voz Gemini.`;
 
         let existingReleaseId = null;
         try {
@@ -556,8 +817,8 @@
         state.lastGithubSync = new Date().toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         ui.githubPushing = false;
-        ui.otaStatusMsg = `✅ Release ${tagName} subido y publicado en https://github.com/${repo}/releases`;
-        spawnFloatingBurst(`🏷️ Subido ${tagName} a GitHub`, true);
+        ui.otaStatusMsg = `✅ Release ${tagName} y archivos Android APK publicados en https://github.com/${repo}/releases`;
+        spawnFloatingBurst(`📲 Release + APK ${tagName}`, true);
         render();
         return true;
       } catch (e) {
@@ -585,7 +846,6 @@
         const rawCmd = (typeof item === 'object' && item !== null) ? (item.command || item.text || item.title || '') : String(item || '');
         if (!rawCmd.trim() || state.processedCommandIds.includes(cmdId)) continue;
 
-        // Limpiar prefijo "Krono" si viene de Google Tasks ("Krono gasté 850 en súper")
         const cleanCmd = rawCmd.replace(/^(?:tarea\s+)?krono[:\s,-]*/i, '').trim();
         if (cleanCmd) {
           processGeminiCommand(cleanCmd, true);
@@ -605,7 +865,6 @@
       if (executedCount > 0) {
         saveState(true);
         spawnFloatingBurst(`🤖 Gemini Externo (${executedCount})`, true);
-        // Confirmar al puente Google Apps Script que limpie los comandos ya procesados
         if (state.cloudWebhookUrl) {
           try {
             await fetch(state.cloudWebhookUrl.trim(), {
@@ -623,7 +882,6 @@
       }
     }
 
-    // Detector de comandos "Krono: ..." copiados desde Google Gemini al portapapeles
     async function checkClipboardForExternalGemini() {
       if (!state.autoClipboardGemini || !navigator.clipboard || !navigator.clipboard.readText) return;
       try {
@@ -641,14 +899,7 @@
     }
 
     function getGoogleAppsScriptBridgeV54Code() {
-      return `// ============================================================================
-// PUENTE KRONO FINANZAS v5.4.0 — GOOGLE GEMINI (BOTÓN ENCENDIDO) + GOOGLE TASKS
-// ============================================================================
-// Cómo usarlo fuera de la app:
-// 1. Mantené presionado el botón de encendido en Android para hablar con Gemini.
-// 2. Decile: "Agregá una tarea que diga Krono gasté 850 en súper con efectivo"
-// 3. Este script cosecha la tarea de Google Tasks y la envía a Krono Finanzas.
-
+      return `// PUENTE KRONO FINANZAS v5.5.0 — GOOGLE GEMINI (BOTÓN ENCENDIDO) + GOOGLE TASKS
 function harvestGoogleTasksForKrono(syncCode, props) {
   var queueKey = 'PENDING_CMDS_' + syncCode;
   var queue = [];
@@ -656,7 +907,6 @@ function harvestGoogleTasksForKrono(syncCode, props) {
     var rawQ = props.getProperty(queueKey);
     if (rawQ) queue = JSON.parse(rawQ);
   } catch (e) { queue = []; }
-
   try {
     if (typeof Tasks !== 'undefined' && Tasks.Tasklists) {
       var lists = Tasks.Tasklists.list().items;
@@ -668,15 +918,10 @@ function harvestGoogleTasksForKrono(syncCode, props) {
             var title = (tasks[t].title || '').trim();
             var notes = (tasks[t].notes || '').trim();
             var fullText = (title + ' ' + notes).trim();
-            if (/^krono\b/i.test(fullText)) {
-              var cleanCommand = fullText.replace(/^krono[:\s,-]*/i, '').trim();
+            if (/^krono\\b/i.test(fullText)) {
+              var cleanCommand = fullText.replace(/^krono[:\\s,-]*/i, '').trim();
               if (cleanCommand) {
-                queue.push({
-                  id: 'gtask_' + tasks[t].id,
-                  command: cleanCommand,
-                  source: 'gemini_power_button',
-                  timestamp: new Date().getTime()
-                });
+                queue.push({ id: 'gtask_' + tasks[t].id, command: cleanCommand, source: 'gemini_power_button', timestamp: new Date().getTime() });
               }
               Tasks.Tasks.remove(lists[l].id, tasks[t].id);
             }
@@ -685,28 +930,16 @@ function harvestGoogleTasksForKrono(syncCode, props) {
       }
     }
   } catch (err) {}
-
   props.setProperty(queueKey, JSON.stringify(queue));
   return queue;
 }
-
 function doGet(e) {
   var syncCode = (e && e.parameter && e.parameter.syncCode) ? e.parameter.syncCode : '${state.syncCode || 'KRONO-7749'}';
   var props = PropertiesService.getScriptProperties();
-
-  // Permite encolar un comando externo vía GET (?action=enqueue&cmd=gaste+850+en+super)
-  if (e && e.parameter && e.parameter.cmd) {
-    var qKey = 'PENDING_CMDS_' + syncCode;
-    var curQ = JSON.parse(props.getProperty(qKey) || '[]');
-    curQ.push({ id: 'url_' + new Date().getTime(), command: e.parameter.cmd, timestamp: new Date().getTime() });
-    props.setProperty(qKey, JSON.stringify(curQ));
-  }
-
   var pendingCommands = harvestGoogleTasksForKrono(syncCode, props);
   var rawState = props.getProperty('STATE_' + syncCode);
   var otaPayload = props.getProperty('OTA_PAYLOAD_' + syncCode);
   var otaVersion = props.getProperty('OTA_VERSION_' + syncCode);
-
   return ContentService.createTextOutput(JSON.stringify({
     syncCode: syncCode,
     state: rawState ? JSON.parse(rawState) : null,
@@ -715,36 +948,23 @@ function doGet(e) {
     pendingCommands: pendingCommands
   })).setMimeType(ContentService.MimeType.JSON);
 }
-
 function doPost(e) {
   var body = JSON.parse(e.postData.contents);
   var syncCode = body.syncCode || '${state.syncCode || 'KRONO-7749'}';
   var props = PropertiesService.getScriptProperties();
   var qKey = 'PENDING_CMDS_' + syncCode;
-
-  if (body.action === 'enqueue_command' && body.command) {
-    var q = JSON.parse(props.getProperty(qKey) || '[]');
-    q.push({ id: 'post_' + new Date().getTime(), command: body.command, timestamp: new Date().getTime() });
-    props.setProperty(qKey, JSON.stringify(q));
-    return ContentService.createTextOutput(JSON.stringify({ ok: true, queued: true })).setMimeType(ContentService.MimeType.JSON);
-  }
-
   if (body.action === 'ack_commands' && Array.isArray(body.commandIds)) {
     var currentQ = JSON.parse(props.getProperty(qKey) || '[]');
     var remaining = currentQ.filter(function(item) { return body.commandIds.indexOf(item.id) === -1; });
     props.setProperty(qKey, JSON.stringify(remaining));
     return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
   }
-
   if (body.action === 'publish_ota' && body.otaPayload) {
     props.setProperty('OTA_PAYLOAD_' + syncCode, body.otaPayload);
     props.setProperty('OTA_VERSION_' + syncCode, body.otaVersion || 'OTA-Live');
     return ContentService.createTextOutput(JSON.stringify({ ok: true, otaPublished: true })).setMimeType(ContentService.MimeType.JSON);
   }
-
-  if (body.state) {
-    props.setProperty('STATE_' + syncCode, JSON.stringify(body.state));
-  }
+  if (body.state) props.setProperty('STATE_' + syncCode, JSON.stringify(body.state));
   return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
 }`;
     }
@@ -758,17 +978,9 @@ function doPost(e) {
     }
 
     function simulateExternalPowerButtonCommand() {
-      const sample = prompt(
-        'Simular frase enviada a Google Gemini desde fuera de la app (con botón de encendido):',
-        'Krono gasté 950 en farmacia con efectivo'
-      );
+      const sample = prompt('Simular frase enviada a Google Gemini desde fuera de la app:', 'Krono gasté 950 en farmacia con efectivo');
       if (!sample) return;
-      consumePendingExternalCommands([{
-        id: 'sim_' + Date.now(),
-        command: sample,
-        source: 'gemini_power_button',
-        timestamp: Date.now()
-      }]);
+      consumePendingExternalCommands([{ id: 'sim_' + Date.now(), command: sample, source: 'gemini_power_button', timestamp: Date.now() }]);
     }
 
     async function checkCloudOtaUpdate(manual = true) {
@@ -1081,7 +1293,7 @@ function doPost(e) {
       inp.click();
     }
 
-    // MOTOR NLP GEMINI v5.4.0 — MULTI-CUENTA + RECEPCIÓN EXTERNA
+    // MOTOR NLP GEMINI v5.5.0 — MULTI-CUENTA + RECEPCIÓN EXTERNA
     function normalizeStr(str) {
       return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     }
@@ -1314,6 +1526,7 @@ function doPost(e) {
 
     window.addEventListener('DOMContentLoaded', () => {
       loadLivePatches();
+      setupDynamicPwaManifest();
       let updated = false;
       if (!state.githubRepo) { state.githubRepo = DEFAULT_GH_REPO; updated = true; }
       if (!state.githubToken) { state.githubToken = DEFAULT_GH_TOKEN; updated = true; }
@@ -1322,7 +1535,6 @@ function doPost(e) {
       const params = new URLSearchParams(window.location.search);
       if (params.get('sync')) { state.syncCode = params.get('sync').toUpperCase(); saveState(false); }
 
-      // Soporte Deep-Link directo desde Google Gemini / Rutinas (?gemini=, ?cmd=, ?q= o #gemini=)
       const extCmd = params.get('gemini') || params.get('cmd') || params.get('q') || (window.location.hash.startsWith('#gemini=') ? window.location.hash.slice(8) : '');
       if (extCmd) {
         setTimeout(() => {
@@ -1336,7 +1548,7 @@ function doPost(e) {
 
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
         setTimeout(() => {
-          publishGitHubRelease(null, APP_BASE_VERSION, 'Release automático v5.4.0: Integración con botón de encendido (Google Gemini externo) vía Google Tasks Bridge y Deep-Links.');
+          publishGitHubRelease(null, APP_BASE_VERSION, 'Release automático v5.5.0: Constructor de APK Android en GitHub Actions, WebAPK instalable y soporte Gemini externo.');
         }, 900);
       } else if (state.autoCheckOta && (cleanRepoSlug() || state.cloudWebhookUrl)) {
         setTimeout(() => checkCloudOtaUpdate(false), 1500);
@@ -1391,13 +1603,16 @@ function doPost(e) {
             </div>
           </div>
 
-          <!-- Barra Rápida de Comandos Gemini Multi-Cuenta + Botón Encendido -->
+          <!-- Barra Rápida de Comandos Gemini Multi-Cuenta + Botón APK Android -->
           <div class="glass-97 rounded-3xl p-4 space-y-2.5">
             <div class="flex flex-wrap items-center justify-between gap-2 text-[11px]">
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
                 <span class="text-cyan-300 font-bold">🎙️ Asistente Gemini Multi-Cuenta</span>
+                <button onclick="ui.showAndroidApkModal=true;render();" class="px-2.5 py-0.5 rounded-full bg-emerald-500/25 border border-emerald-400/50 text-emerald-200 font-bold hover:bg-emerald-500/40">
+                  📲 Descargar / Instalar APK en Android
+                </button>
                 <button onclick="ui.showExternalGeminiModal=true;render();" class="px-2.5 py-0.5 rounded-full bg-violet-500/25 border border-violet-400/40 text-violet-200 font-bold hover:bg-violet-500/40">
-                  📱 Configurar Botón de Encendido (Fuera de la App)
+                  🤖 Botón Encendido
                 </button>
               </div>
               <div class="flex items-center gap-1.5">
@@ -1430,9 +1645,9 @@ function doPost(e) {
               <span class="text-xl">➕</span>
               <div><div class="text-xs font-bold text-white">Nuevo Movimiento</div><div class="text-[10px] text-slate-400">Gasto o ingreso</div></div>
             </button>
-            <button onclick="ui.showTransferModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-3">
-              <span class="text-xl">⇄</span>
-              <div><div class="text-xs font-bold text-white">Transferir</div><div class="text-[10px] text-slate-400">Entre cuentas</div></div>
+            <button onclick="ui.showAndroidApkModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-3 border border-emerald-400/40">
+              <span class="text-xl">📲</span>
+              <div><div class="text-xs font-bold text-emerald-300">APK Android</div><div class="text-[10px] text-slate-400">Compilar / QR</div></div>
             </button>
             <button onclick="ui.showExternalGeminiModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-3 border border-violet-400/40">
               <span class="text-xl">🤖</span>
@@ -1440,7 +1655,7 @@ function doPost(e) {
             </button>
             <button onclick="ui.showOtaModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-3">
               <span class="text-xl">🚀</span>
-              <div><div class="text-xs font-bold text-emerald-300">Panel OTA / Release</div><div class="text-[10px] text-slate-400">v${getCurrentInstalledVersion()}</div></div>
+              <div><div class="text-xs font-bold text-cyan-300">Panel OTA / Release</div><div class="text-[10px] text-slate-400">v${getCurrentInstalledVersion()}</div></div>
             </button>
           </div>
 
@@ -1644,6 +1859,31 @@ function doPost(e) {
       const repo = cleanRepoSlug();
       return `
         <div class="space-y-5 animate-pop-elastic">
+          <!-- Constructor y Descarga de APK para Android -->
+          <div class="glass-97 rounded-3xl p-6 border-2 border-emerald-400/50">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <div>
+                <div class="text-xs font-bold uppercase tracking-wider text-emerald-300">📲 Instalador Android (.APK + WebAPK)</div>
+                <h2 class="text-lg font-extrabold text-white mt-0.5">Compilar y Descargar APK para tu Teléfono Android</h2>
+              </div>
+              <button onclick="ui.showAndroidApkModal=true;render();" class="spring-btn px-4 py-2 rounded-xl bg-emerald-400 text-slate-950 font-extrabold text-xs">
+                📲 Abrir Centro APK y Código QR
+              </button>
+            </div>
+            <p class="text-xs text-slate-300 mb-3">Genera el archivo <code class="text-emerald-300">Krono-Finanzas.apk</code> automáticamente en los servidores de GitHub Actions de <span class="mono text-cyan-300">${repo}</span> o instalá el WebAPK nativo escaneando el código QR.</p>
+            <div class="flex flex-wrap gap-2.5">
+              <button onclick="buildAndPublishAndroidApkOnGitHub()" class="spring-btn px-4 py-2 rounded-xl bg-emerald-500/25 border border-emerald-400/50 text-emerald-200 font-bold text-xs">
+                🤖 Compilar APK en GitHub Ahora
+              </button>
+              <button onclick="installNativeAndroidPwa()" class="spring-btn px-4 py-2 rounded-xl bg-cyan-500/25 border border-cyan-400/40 text-cyan-200 font-bold text-xs">
+                ⚡ Instalar WebAPK Directo en Android
+              </button>
+              <button onclick="downloadVoltBuilderFilesLocally()" class="spring-btn px-4 py-2 rounded-xl bg-white/10 text-slate-200 font-bold text-xs">
+                📦 Descargar index.html + config.xml
+              </button>
+            </div>
+          </div>
+
           <!-- Tarjeta Conexión Botón de Encendido Android (Gemini Externo) -->
           <div class="glass-97 rounded-3xl p-6 border-2 border-violet-400/40">
             <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
@@ -1790,6 +2030,9 @@ function doPost(e) {
       const totals = getTotals();
       const displayTotal = ui.displayCurrency === 'USD' ? formatMoney(totals.totalUSD, 'USD') : formatMoney(totals.totalUYU, 'UYU');
       const currentVer = getCurrentInstalledVersion();
+      const repo = cleanRepoSlug();
+      const pagesUrl = `https://r0d51.github.io/Krono-Finanzas/?sync=${encodeURIComponent(state.syncCode || 'KRONO-7749')}`;
+      const releasePageUrl = `https://github.com/${repo}/releases`;
       const navItems = [
         { id: 'dashboard', icon: '🏠', label: 'Panel General' },
         { id: 'movements', icon: '⚡', label: 'Movimientos' },
@@ -1824,13 +2067,13 @@ function doPost(e) {
                   <span>Sync: ${state.syncCode}</span>
                   <span>1 USD = $${state.exchangeRate}</span>
                 </div>
+                <button onclick="ui.showAndroidApkModal=true;render();" class="spring-btn w-full py-2.5 rounded-xl bg-emerald-500/25 border border-emerald-400/50 text-emerald-200 font-bold text-xs">
+                  📲 Descargar APK Android
+                </button>
                 <button onclick="ui.showExternalGeminiModal=true;render();" class="spring-btn w-full py-2.5 rounded-xl bg-violet-500/25 border border-violet-400/40 text-violet-200 font-bold text-xs">
                   🤖 Gemini Botón Encendido
                 </button>
-                <button onclick="checkGitHubReleaseOtaUpdate(true)" class="spring-btn w-full py-2.5 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-200 font-bold text-xs">
-                  🏷️ Buscar Release GitHub
-                </button>
-                <button onclick="ui.showOtaModal=true;render();" class="spring-btn w-full py-2.5 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 font-bold text-xs">
+                <button onclick="ui.showOtaModal=true;render();" class="spring-btn w-full py-2.5 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-200 font-bold text-xs">
                   🚀 Actualizador OTA
                 </button>
               </div>
@@ -1842,11 +2085,12 @@ function doPost(e) {
               <div class="flex md:hidden items-center justify-between mb-4">
                 <div>
                   <h1 class="text-xl font-extrabold text-white">Krono Finanzas</h1>
-                  <span class="text-[10px] font-bold mono text-cyan-300">v${currentVer} • ${cleanRepoSlug()}</span>
+                  <span class="text-[10px] font-bold mono text-cyan-300">v${currentVer} • ${repo}</span>
                 </div>
-                <div class="flex items-center gap-2">
-                  <button onclick="ui.showExternalGeminiModal=true;render();" class="spring-btn px-3 py-1.5 rounded-xl glass-97 text-xs text-violet-200 font-bold">🤖 Gemini</button>
-                  <button onclick="ui.showOtaModal=true;render();" class="spring-btn px-3 py-1.5 rounded-xl glass-97 text-xs text-emerald-200 font-bold">🚀 OTA</button>
+                <div class="flex items-center gap-1.5">
+                  <button onclick="ui.showAndroidApkModal=true;render();" class="spring-btn px-2.5 py-1.5 rounded-xl glass-97 text-xs text-emerald-200 font-bold">📲 APK</button>
+                  <button onclick="ui.showExternalGeminiModal=true;render();" class="spring-btn px-2.5 py-1.5 rounded-xl glass-97 text-xs text-violet-200 font-bold">🤖 Gemini</button>
+                  <button onclick="ui.showOtaModal=true;render();" class="spring-btn px-2.5 py-1.5 rounded-xl glass-97 text-xs text-cyan-200 font-bold">🚀 OTA</button>
                 </div>
               </div>
               ${renderActiveSection(totals, displayTotal)}
@@ -1864,6 +2108,65 @@ function doPost(e) {
             </div>
           </nav>
         </div>
+
+        <!-- Modal Constructor y Descarga de APK para Android -->
+        ${ui.showAndroidApkModal ? `
+          <div class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+            <div class="glass-97 w-full max-w-2xl rounded-3xl p-6 border-2 border-emerald-400/50 animate-pop-elastic max-h-[92dvh] overflow-y-auto space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-300">📲 Centro de Instalación Android v${currentVer}</span>
+                  <h3 class="text-lg font-extrabold text-white">Obtener APK e Instalar Krono Finanzas en Android</h3>
+                </div>
+                <button onclick="ui.showAndroidApkModal=false;render();" class="text-slate-400 hover:text-white text-lg">✕</button>
+              </div>
+
+              ${ui.apkBuildStatus ? `
+                <div class="p-3 rounded-2xl bg-slate-950/80 border border-emerald-400/40 text-xs text-emerald-200">${ui.apkBuildStatus}</div>
+              ` : ''}
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center p-4 rounded-2xl bg-slate-950/70 border border-white/15">
+                <div class="flex flex-col items-center justify-center bg-white p-3 rounded-2xl mx-auto">
+                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(pagesUrl)}" alt="QR Instalación Android" class="w-36 h-36 rounded-lg" />
+                  <span class="text-[10px] font-extrabold text-slate-900 mt-1">Escanear con Android</span>
+                </div>
+                <div class="md:col-span-2 space-y-2.5 text-xs">
+                  <div class="font-extrabold text-emerald-300 text-sm">Opción 1: Instalación Directa sin Cables (Código QR / WebAPK)</div>
+                  <p class="text-slate-300">1. Escaneá este código QR con la cámara de tu teléfono Android (abre tu app alojada en <span class="mono text-cyan-300">${repo}</span> ya vinculada con tu código <span class="mono text-white">${state.syncCode}</span>).</p>
+                  <p class="text-slate-300">2. En tu teléfono tocá el botón <strong class="text-white">"⚡ Instalar App en Android"</strong> (o en el menú ⋮ de Chrome elegí <strong class="text-white">"Instalar aplicación"</strong>). Se instalará en tu cajón de aplicaciones a pantalla completa y con auto-actualización OTA desde GitHub Releases.</p>
+                  <div class="flex flex-wrap gap-2 pt-1">
+                    <button onclick="installNativeAndroidPwa()" class="spring-btn px-4 py-2 rounded-xl bg-emerald-400 text-slate-950 font-extrabold text-xs">
+                      ⚡ Instalar App en este Dispositivo
+                    </button>
+                    <a href="${pagesUrl}" target="_blank" class="spring-btn px-4 py-2 rounded-xl bg-white/10 text-cyan-200 font-bold text-xs inline-flex items-center">
+                      🔗 Abrir Enlace Android
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-slate-950/70 border border-cyan-400/30 space-y-2.5 text-xs">
+                <div class="font-extrabold text-cyan-300 text-sm">Opción 2: Compilar Archivo Binario .APK en GitHub Actions (${repo})</div>
+                <p class="text-slate-300">Al pulsar el botón debajo, Krono sube automáticamente <code class="text-cyan-300">config.xml</code>, <code class="text-cyan-300">www/index.html</code> y el compilador <code class="text-cyan-300">.github/workflows/android-apk.yml</code> a tu repositorio para que GitHub compile <strong class="text-white">Krono-Finanzas.apk</strong> y lo adjunte a tus Releases.</p>
+                <div class="flex flex-wrap gap-2 pt-1">
+                  <button onclick="buildAndPublishAndroidApkOnGitHub()" class="spring-btn px-4 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">
+                    🤖 ${ui.apkBuilding ? 'Subiendo y Compilando...' : 'Subir y Compilar .APK en GitHub'}
+                  </button>
+                  <a href="${releasePageUrl}" target="_blank" class="spring-btn px-4 py-2 rounded-xl bg-violet-500/30 border border-violet-400/40 text-violet-200 font-bold text-xs inline-flex items-center">
+                    📥 Abrir GitHub Releases (Descargar .APK)
+                  </a>
+                  <button onclick="downloadVoltBuilderFilesLocally()" class="spring-btn px-3.5 py-2 rounded-xl bg-white/10 text-slate-200 font-bold text-xs">
+                    📦 Bajar index.html + config.xml
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex justify-end">
+                <button onclick="ui.showAndroidApkModal=false;render();" class="px-5 py-2 rounded-xl bg-white/10 text-white font-bold text-xs">Cerrar</button>
+              </div>
+            </div>
+          </div>
+        ` : ''}
 
         <!-- Modal Configuración Botón de Encendido Android (Google Gemini Externo) -->
         ${ui.showExternalGeminiModal ? `
@@ -1883,36 +2186,15 @@ function doPost(e) {
                 <div class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-400/30 mono text-cyan-200">
                   🗣️ Decile a Gemini: "Agregá una tarea en Google Tasks que diga Krono gasté 850 en súper con efectivo"
                 </div>
-                <p class="text-[11px] text-slate-400">Para activar el cosechador automático en tu Google Apps Script, copiá el script actualizado aquí abajo, pegalo en tu proyecto de <code class="text-cyan-300">script.google.com</code> y activá el servicio <strong class="text-white">Tasks API</strong> en el menú lateral "Servicios (+)".</p>
                 <div class="flex flex-wrap gap-2 pt-1">
                   <button onclick="copyBridgeScriptToClipboard()" class="spring-btn px-4 py-2 rounded-xl bg-violet-500 text-white font-extrabold text-xs">
-                    📋 Copiar Código google_apps_script_bridge.gs (v5.4.0)
+                    📋 Copiar Código google_apps_script_bridge.gs
                   </button>
                   <button onclick="simulateExternalPowerButtonCommand()" class="spring-btn px-4 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">
                     🧪 Simular Comando Externo Ahora
                   </button>
                 </div>
               </div>
-
-              <div class="p-4 rounded-2xl bg-slate-950/70 border border-white/15 space-y-2 text-xs">
-                <div class="font-extrabold text-emerald-300">⚡ Método 2: Rutina de Gemini / Deep-Link Directo (?gemini=)</div>
-                <p class="text-slate-300">También podés abrir Krono o configurar un Atajo/Rutina en Android que llame a la URL de la app pasándole tu frase en el parámetro <code class="text-emerald-300">?gemini=</code>:</p>
-                <div class="p-2.5 rounded-xl bg-slate-900 border border-white/10 mono text-[11px] text-slate-200 break-all">
-                  https://r0d51.github.io/Krono-Finanzas/?gemini=gaste+850+en+super+con+efectivo
-                </div>
-              </div>
-
-              ${state.externalCommandHistory && state.externalCommandHistory.length ? `
-                <div class="p-4 rounded-2xl bg-slate-950/50 border border-white/10 space-y-1.5 text-xs">
-                  <div class="font-bold text-slate-300">📥 Últimos comandos externos recibidos:</div>
-                  ${state.externalCommandHistory.slice(0, 4).map(h => `
-                    <div class="flex justify-between text-[11px] mono text-cyan-200">
-                      <span>🤖 "${h.command}"</span>
-                      <span class="text-slate-400">${h.date}</span>
-                    </div>
-                  `).join('')}
-                </div>
-              ` : ''}
 
               <div class="flex justify-end">
                 <button onclick="ui.showExternalGeminiModal=false;render();" class="px-5 py-2 rounded-xl bg-white/10 text-white font-bold text-xs">Cerrar</button>
@@ -1928,7 +2210,7 @@ function doPost(e) {
                 <h3 class="text-base font-extrabold text-white">🚀 Actualizador en Vivo (OTA) + GitHub Releases</h3>
                 <span class="text-xs mono text-cyan-300">v${currentVer}</span>
               </div>
-              <p class="text-xs text-slate-300 mb-3">Vinculado con <span class="text-cyan-300 font-bold mono">${cleanRepoSlug()}</span>. Cada actualización que instales aquí se publicará automáticamente en tus GitHub Releases.</p>
+              <p class="text-xs text-slate-300 mb-3">Vinculado con <span class="text-cyan-300 font-bold mono">${repo}</span>. Cada actualización que instales aquí se publicará automáticamente en tus GitHub Releases.</p>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
                 <input type="text" placeholder="R0D51/Krono-Finanzas" value="${state.githubRepo || DEFAULT_GH_REPO}" onchange="state.githubRepo=this.value.trim();saveState(false);" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" />
