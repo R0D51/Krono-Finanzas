@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.krono.finanzas" version="5.5.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+<widget id="com.krono.finanzas" version="5.6.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
   <name>Krono Finanzas</name>
   <description>Gestión financiera bimonetaria con IA Gemini y Motor Auto-OTA</description>
   <author email="krono@finanzas.app" href="https://github.com/R0D51/Krono-Finanzas">Rodrigo</author>
