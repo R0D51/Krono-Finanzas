@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.krono.finanzas" version="5.5.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+  <name>Krono Finanzas</name>
+  <description>Gestión financiera bimonetaria con IA Gemini y Motor Auto-OTA</description>
+  <author email="krono@finanzas.app" href="https://github.com/R0D51/Krono-Finanzas">Rodrigo</author>
+  <content src="index.html" />
+  <access origin="*" />
+  <allow-intent href="http://*/*" />
+  <allow-intent href="https://*/*" />
+  <preference name="Fullscreen" value="false" />
+  <preference name="BackgroundColor" value="0xff040711" />
+  <preference name="StatusBarBackgroundColor" value="#040711" />
+  <preference name="Orientation" value="default" />
+  <preference name="AndroidXEnabled" value="true" />
+  <platform name="android">
+    <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+      <application android:usesCleartextTraffic="true" />
+    </edit-config>
+    <config-file target="AndroidManifest.xml" parent="/*">
+      <uses-permission android:name="android.permission.INTERNET" />
+      <uses-permission android:name="android.permission.RECORD_AUDIO" />
+      <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    </config-file>
+  </platform>
+</widget>
