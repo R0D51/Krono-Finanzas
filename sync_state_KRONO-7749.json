@@ -1,17 +1,25 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795036770836,
+  "updatedAt": 1795036772657,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzjr13-iMZfedt998PgtnPunrPeIso2vMYR2eaWD0lJxqL3r7AfU79usgz18_CA_LFodg/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
-  "processedCommandIds": [],
-  "externalCommandHistory": [],
+  "processedCommandIds": [
+    "gtask_SW50MWZLVzFrNnRNUnVqZw"
+  ],
+  "externalCommandHistory": [
+    {
+      "id": "gtask_SW50MWZLVzFrNnRNUnVqZw",
+      "command": "gasté 850 pesos en el súper",
+      "date": "06:19 p. m."
+    }
+  ],
   "accounts": [
     {
       "id": "acc_uyu",
       "name": "Cuenta Brou / Débito",
       "currency": "UYU",
-      "balance": 100,
+      "balance": -750,
       "color": "from-cyan-400 to-blue-500",
       "icon": "🏦"
     },
@@ -70,6 +78,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795036772655_694",
+      "title": "🤖 Gasté el súper",
+      "amount": 850,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Brou / Débito",
+      "date": "18/11 18:19",
+      "timestamp": 1795036772655
+    },
     {
       "id": "tx_1795024784003_448",
       "title": "prueba",
