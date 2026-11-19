@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795052171349,
+  "updatedAt": 1795052428697,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -41,9 +41,15 @@
     "gtask_emxleURyeExkMVdhLTVuZQ",
     "gtask_eHNlOV9iU1RJZWhrYjduUw",
     "gtask_cGZVOGlHa1lKS0NMU0YwRw",
-    "gtask_eENCVjU4eUVJZjhMWU0xNw"
+    "gtask_eENCVjU4eUVJZjhMWU0xNw",
+    "gtask_RFZBXzV6NjRlUG1GS2dnYw"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_RFZBXzV6NjRlUG1GS2dnYw",
+      "command": "Tarea: costo $300, ingreso $500 Ayer la tarea costó $300 y me ingresaron $500.",
+      "date": "10:40 p. m."
+    },
     {
       "id": "gtask_eENCVjU4eUVJZjhMWU0xNw",
       "command": "Gasté $200 y ahorré 300 pesos",
@@ -88,11 +94,6 @@
       "id": "gtask_TVl4TXdtdUFKN2FvSTZzUg",
       "command": "Gasté 2500 pesos",
       "date": "10:15 p. m."
-    },
-    {
-      "id": "gtask_d3I0bmprLXB4YXpEVGZjYw",
-      "command": "Gasté $1500",
-      "date": "10:14 p. m."
     }
   ],
   "accounts": [
@@ -108,7 +109,7 @@
       "id": "acc_usd",
       "name": "Ahorro Dólares",
       "currency": "USD",
-      "balance": -340.96385542168673,
+      "balance": -1640.9638554216867,
       "color": "from-emerald-400 to-teal-500",
       "icon": "💵"
     },
@@ -159,6 +160,42 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795052428694_838",
+      "title": "🤖 Me ingresaron",
+      "amount": 500,
+      "currency": "USD",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_usd",
+      "accountName": "Ahorro Dólares",
+      "date": "18/11 22:40",
+      "timestamp": 1795052428694
+    },
+    {
+      "id": "tx_1795052428692_57",
+      "title": "🤖 Ingreso Ayer la tarea costó",
+      "amount": 500,
+      "currency": "USD",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_usd",
+      "accountName": "Ahorro Dólares",
+      "date": "18/11 22:40",
+      "timestamp": 1795052428692
+    },
+    {
+      "id": "tx_1795052428690_550",
+      "title": "🤖 Tarea: costo",
+      "amount": 300,
+      "currency": "USD",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_usd",
+      "accountName": "Ahorro Dólares",
+      "date": "18/11 22:40",
+      "timestamp": 1795052428690
+    },
     {
       "id": "tx_1795052171347_175",
       "title": "🤖 Ahorré",
