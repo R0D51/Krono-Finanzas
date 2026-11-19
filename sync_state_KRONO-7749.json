@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795050936920,
+  "updatedAt": 1795051156826,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -34,9 +34,15 @@
     "gtask_RTN0SUYwM2VKTDYxeEc4eQ",
     "gtask_d3I0bmprLXB4YXpEVGZjYw",
     "gtask_TVl4TXdtdUFKN2FvSTZzUg",
-    "gtask_NFAyWmFkV09EZ3BnQTVDQQ"
+    "gtask_NFAyWmFkV09EZ3BnQTVDQQ",
+    "gtask_Yzh0UnZJTEEzbzFZMFhWQw"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_Yzh0UnZJTEEzbzFZMFhWQw",
+      "command": "Gasté 1500 pesos",
+      "date": "10:19 p. m."
+    },
     {
       "id": "gtask_NFAyWmFkV09EZ3BnQTVDQQ",
       "command": "Gané 2500 $1000",
@@ -81,11 +87,6 @@
       "id": "gtask_UnRyVkhMRHdfSG10WGM5cQ",
       "command": "gane 200 pesos en efectivo",
       "date": "09:10 p. m."
-    },
-    {
-      "id": "gtask_VjVWelk1Z2hic00yMmVoSw",
-      "command": "gasté 300 pesos en el súper en efectivo",
-      "date": "09:10 p. m."
     }
   ],
   "accounts": [
@@ -93,7 +94,7 @@
       "id": "acc_uyu",
       "name": "Cuenta Brou / Débito",
       "currency": "UYU",
-      "balance": 181548,
+      "balance": 180048,
       "color": "from-cyan-400 to-blue-500",
       "icon": "🏦"
     },
@@ -152,6 +153,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795051156823_193",
+      "title": "🤖 Gasté",
+      "amount": 1500,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Brou / Débito",
+      "date": "18/11 22:19",
+      "timestamp": 1795051156823
+    },
     {
       "id": "tx_1795050936917_536",
       "title": "🤖 Gané $",
