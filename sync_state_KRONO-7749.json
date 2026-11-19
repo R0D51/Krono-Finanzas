@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795050377602,
+  "updatedAt": 1795050497588,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -29,9 +29,15 @@
     "gtask_UnRyVkhMRHdfSG10WGM5cQ",
     "gtask_YVV6NFM5X1ljY0JWV1U3ZQ",
     "gtask_UGJWYkVNSEJkS05KTHlNZA",
-    "gtask_ZnI0NkxxSlZiYUxBN1NYRQ"
+    "gtask_ZnI0NkxxSlZiYUxBN1NYRQ",
+    "gtask_YWhkc3UtRmtjZlBRMXYtZw"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_YWhkc3UtRmtjZlBRMXYtZw",
+      "command": "Me ingresaron $1200 y gasté $350",
+      "date": "10:08 p. m."
+    },
     {
       "id": "gtask_ZnI0NkxxSlZiYUxBN1NYRQ",
       "command": "Gasté 200 pesos y me ingresaron 500 dólares",
@@ -76,11 +82,6 @@
       "id": "gtask_dUhmYzZ4TU5NY1huTHo5dg",
       "command": "Gasté 825 pesos",
       "date": "09:09 p. m."
-    },
-    {
-      "id": "gtask_Z2pJSHpZM193LVBhTTRIbg",
-      "command": "Gasté 850 pesos",
-      "date": "09:09 p. m."
     }
   ],
   "accounts": [
@@ -88,7 +89,7 @@
       "id": "acc_uyu",
       "name": "Cuenta Brou / Débito",
       "currency": "UYU",
-      "balance": 185149,
+      "balance": 183599,
       "color": "from-cyan-400 to-blue-500",
       "icon": "🏦"
     },
@@ -147,6 +148,30 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795050497585_324",
+      "title": "🤖 Gasté $",
+      "amount": 350,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Brou / Débito",
+      "date": "18/11 22:08",
+      "timestamp": 1795050497585
+    },
+    {
+      "id": "tx_1795050497583_954",
+      "title": "🤖 Me ingresaron $",
+      "amount": 1200,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Brou / Débito",
+      "date": "18/11 22:08",
+      "timestamp": 1795050497583
+    },
     {
       "id": "tx_1795050377599_391",
       "title": "🤖 Me ingresaron",
