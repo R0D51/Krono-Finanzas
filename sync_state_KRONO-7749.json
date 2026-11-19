@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795047019441,
+  "updatedAt": 1795047049014,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -25,9 +25,15 @@
     "gtask_UEVPYlQ5RGVBVkpOeVk2aQ",
     "gtask_RnhET0dqT042N1NPbmRqdg",
     "gtask_NDVVYWIwUWJqQTV0a0h5Xw",
-    "gtask_VjVWelk1Z2hic00yMmVoSw"
+    "gtask_VjVWelk1Z2hic00yMmVoSw",
+    "gtask_UnRyVkhMRHdfSG10WGM5cQ"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_UnRyVkhMRHdfSG10WGM5cQ",
+      "command": "gane 200 pesos en efectivo",
+      "date": "09:10 p. m."
+    },
     {
       "id": "gtask_VjVWelk1Z2hic00yMmVoSw",
       "command": "gasté 300 pesos en el súper en efectivo",
@@ -72,11 +78,6 @@
       "id": "gtask_NlFla1llb0xTelZiWVRWZA",
       "command": "Gordi❤️, gasté 500 pesos.",
       "date": "09:09 p. m."
-    },
-    {
-      "id": "gtask_ZmhiMVVRNFFmQUo1aG9PRQ",
-      "command": "Crono, gasté 500 pesos.",
-      "date": "09:09 p. m."
     }
   ],
   "accounts": [
@@ -100,7 +101,7 @@
       "id": "acc_cash",
       "name": "Efectivo / Billetera",
       "currency": "UYU",
-      "balance": -300,
+      "balance": -500,
       "color": "from-violet-400 to-purple-500",
       "icon": "👛"
     }
@@ -143,6 +144,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795047049011_96",
+      "title": "🤖 Gane",
+      "amount": 200,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_cash",
+      "accountName": "Efectivo / Billetera",
+      "date": "18/11 21:10",
+      "timestamp": 1795047049011
+    },
     {
       "id": "tx_1795047019438_319",
       "title": "🤖 Gasté el súper",
