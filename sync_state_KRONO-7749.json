@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795047965489,
+  "updatedAt": 1795048138519,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -27,9 +27,15 @@
     "gtask_NDVVYWIwUWJqQTV0a0h5Xw",
     "gtask_VjVWelk1Z2hic00yMmVoSw",
     "gtask_UnRyVkhMRHdfSG10WGM5cQ",
-    "gtask_YVV6NFM5X1ljY0JWV1U3ZQ"
+    "gtask_YVV6NFM5X1ljY0JWV1U3ZQ",
+    "gtask_UGJWYkVNSEJkS05KTHlNZA"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_UGJWYkVNSEJkS05KTHlNZA",
+      "command": "ahorré 200 dólares y gasté 1500 pesos",
+      "date": "09:28 p. m."
+    },
     {
       "id": "gtask_YVV6NFM5X1ljY0JWV1U3ZQ",
       "command": "ahorré 1500 pesos y me depositaron 200.000",
@@ -74,11 +80,6 @@
       "id": "gtask_VUpIblN2SklDYW5nSU9XRg",
       "command": "Crono gasté 500 pesos",
       "date": "09:09 p. m."
-    },
-    {
-      "id": "gtask_WmtxaVBfN05PeWdKZEtmag",
-      "command": "Crono, gasté 300 pesos.",
-      "date": "09:09 p. m."
     }
   ],
   "accounts": [
@@ -94,7 +95,7 @@
       "id": "acc_usd",
       "name": "Ahorro Dólares",
       "currency": "USD",
-      "balance": 0,
+      "balance": 163.85542168674698,
       "color": "from-emerald-400 to-teal-500",
       "icon": "💵"
     },
@@ -145,6 +146,30 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795048138515_709",
+      "title": "🤖 Gasté",
+      "amount": 1500,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_usd",
+      "accountName": "Ahorro Dólares",
+      "date": "18/11 21:28",
+      "timestamp": 1795048138515
+    },
+    {
+      "id": "tx_1795048138513_60",
+      "title": "🤖 Ahorré",
+      "amount": 200,
+      "currency": "USD",
+      "type": "income",
+      "category": "Ingreso",
+      "accountId": "acc_usd",
+      "accountName": "Ahorro Dólares",
+      "date": "18/11 21:28",
+      "timestamp": 1795048138513
+    },
     {
       "id": "tx_1795047965486_442",
       "title": "🤖 Ingreso",
