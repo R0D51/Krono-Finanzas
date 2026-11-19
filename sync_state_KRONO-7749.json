@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795052090574,
+  "updatedAt": 1795052141317,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -39,9 +39,15 @@
     "gtask_Zm5aVW9TYzVacTZnNGxrcw",
     "gtask_YTlCM0J6NlNRdWM3VWNuZg",
     "gtask_emxleURyeExkMVdhLTVuZQ",
-    "gtask_eHNlOV9iU1RJZWhrYjduUw"
+    "gtask_eHNlOV9iU1RJZWhrYjduUw",
+    "gtask_cGZVOGlHa1lKS0NMU0YwRw"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_cGZVOGlHa1lKS0NMU0YwRw",
+      "command": "Ahorré $1200 y gasté 300 pesos",
+      "date": "10:35 p. m."
+    },
     {
       "id": "gtask_eHNlOV9iU1RJZWhrYjduUw",
       "command": "Gasté 162.837 pesos",
@@ -86,11 +92,6 @@
       "id": "gtask_RTN0SUYwM2VKTDYxeEc4eQ",
       "command": "me entraron $1,200 y gasté 350 pesos",
       "date": "10:09 p. m."
-    },
-    {
-      "id": "gtask_YWhkc3UtRmtjZlBRMXYtZw",
-      "command": "Me ingresaron $1200 y gasté $350",
-      "date": "10:08 p. m."
     }
   ],
   "accounts": [
@@ -98,7 +99,7 @@
       "id": "acc_uyu",
       "name": "Cuenta Brou / Débito",
       "currency": "UYU",
-      "balance": 14650,
+      "balance": 15550,
       "color": "from-cyan-400 to-blue-500",
       "icon": "🏦"
     },
@@ -157,6 +158,30 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795052141315_917",
+      "title": "🤖 Gasté",
+      "amount": 300,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Brou / Débito",
+      "date": "18/11 22:35",
+      "timestamp": 1795052141315
+    },
+    {
+      "id": "tx_1795052141313_259",
+      "title": "🤖 Ahorré $",
+      "amount": 1200,
+      "currency": "UYU",
+      "type": "income",
+      "category": "Ingreso",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Brou / Débito",
+      "date": "18/11 22:35",
+      "timestamp": 1795052141313
+    },
     {
       "id": "tx_1795052090571_570",
       "title": "🤖 Gasté",
