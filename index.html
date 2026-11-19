@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.4
+    // KRONO OTA BOOTLOADER v6.5.5
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -83,7 +83,7 @@
   <div id="app-root" class="relative z-10 min-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-x-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.4';
+    const APP_BASE_VERSION = '6.5.5';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -96,8 +96,8 @@
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.4',
-      lastReleaseNotes: 'v6.5.4: Soporte de ahorré como ingreso y detección prioritaria de moneda USD (dólares).',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.5',
+      lastReleaseNotes: 'v6.5.5: Moneda y cuenta independientes por cada movimiento dentro de una misma frase.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
       accounts: [
@@ -639,10 +639,20 @@
       if (/\b(brou|debito|banco|tarjeta)\b/i.test(norm)) return state.accounts.find(a => a.id === 'acc_uyu' || /brou|debito|banco/i.test(normalizeStr(a.name))) || null;
       return null;
     }
-    function resolveAccountForSegment(seg, full, currency) {
+    function resolveAccountForSegment(seg, full, currency, hasExplicitSegCurrency) {
       const sM = findAccountMentionInText(seg); if (sM) return sM;
-      if (ui.voiceTargetAccountId && ui.voiceTargetAccountId !== 'auto') { const m = state.accounts.find(a => a.id === ui.voiceTargetAccountId); if (m) return m; }
-      const gM = findAccountMentionInText(full); if (gM) return gM;
+      if (hasExplicitSegCurrency) {
+        const matchingCurAcc = state.accounts.find(a => a.currency === currency);
+        if (matchingCurAcc) return matchingCurAcc;
+      }
+      if (ui.voiceTargetAccountId && ui.voiceTargetAccountId !== 'auto') {
+        const m = state.accounts.find(a => a.id === ui.voiceTargetAccountId);
+        if (m && (!hasExplicitSegCurrency || m.currency === currency)) return m;
+      }
+      if (!hasExplicitSegCurrency) {
+        const gM = findAccountMentionInText(full);
+        if (gM) return gM;
+      }
       if (currency === 'USD') { const u = state.accounts.find(a => a.currency === 'USD'); if (u) return u; }
       if (currency === 'UYU') { const y = state.accounts.find(a => a.currency === 'UYU'); if (y) return y; }
       return state.accounts[0];
@@ -675,11 +685,12 @@
       (rawSegs.length ? rawSegs : [text]).forEach(seg => {
         const sLower = normalizeStr(seg), amount = extractSmartAmount(seg);
         if (!amount || amount <= 0) return;
-        const explicitCurrency = detectCurrencyInText(sLower) || detectCurrencyInText(lower);
+        const segCurrency = detectCurrencyInText(sLower);
+        const hasExplicitSegCurrency = Boolean(segCurrency);
+        const currency = segCurrency || detectCurrencyInText(lower) || state.defaultCurrency || 'UYU';
         const txType = detectTransactionType(sLower);
         const isInc = txType === 'income';
-        const targetAcc = resolveAccountForSegment(seg, text, explicitCurrency);
-        const currency = explicitCurrency || (targetAcc && targetAcc.currency) || state.defaultCurrency || 'UYU';
+        const targetAcc = resolveAccountForSegment(seg, text, currency, hasExplicitSegCurrency);
         let cat = isInc ? 'Ingreso' : 'Comida y Súper';
         if (!isInc) {
           if (/\b(luz|agua|internet|antel|ute|ose|gas|alquiler|servicio)\b/i.test(sLower)) cat = 'Servicios y Luz';
@@ -696,7 +707,7 @@
         const reply = (fromExternal ? '[Google Tasks] ' : '') + `Registré ${created.map(i => `${i.title} (${formatMoney(i.amount, i.currency)} en ${i.accountName})`).join(' y ')}.`;
         ui.geminiResponse = { mode: 'action', prompt: text, reply, items: created }; speakText(reply);
       } else if (!fromExternal) {
-        ui.geminiResponse = { mode: 'error', prompt: text, reply: 'No detecté un monto. Probá: "Ahorré 200 dólares" o "Gasté 850 en súper".', items: [] };
+        ui.geminiResponse = { mode: 'error', prompt: text, reply: 'No detecté un monto. Probá: "Ahorré 200 dólares y gasté 1500 pesos".', items: [] };
       }
       render();
     }
@@ -747,7 +758,7 @@
       }
       if (params.get('voice') === '1') setTimeout(() => startVoiceCapture(), 350);
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
-        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.4: Soporte de ahorré como ingreso y detección prioritaria de moneda USD.'), 1200);
+        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.5: Moneda y cuenta independientes por cada movimiento dentro de una misma frase.'), 1200);
       } else if (state.autoCheckOta && cleanRepoSlug()) {
         setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
       }
@@ -787,7 +798,7 @@
             </div>
           </div>
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
-            <input id="gemini-quick-input" type="text" placeholder="Ej: Ahorré 200 dólares o Gasté 1.200 en súper..." onkeydown="if(event.key==='Enter'){processGeminiCommand(this.value);this.value='';}" class="w-full min-w-0 sm:flex-1 bg-slate-950/60 border border-white/15 rounded-2xl px-3.5 py-2.5 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-400" />
+            <input id="gemini-quick-input" type="text" placeholder="Ej: Ahorré 200 dólares y gasté 1500 pesos..." onkeydown="if(event.key==='Enter'){processGeminiCommand(this.value);this.value='';}" class="w-full min-w-0 sm:flex-1 bg-slate-950/60 border border-white/15 rounded-2xl px-3.5 py-2.5 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-400" />
             <div class="grid grid-cols-2 sm:flex items-center gap-2 w-full sm:w-auto shrink-0">
               <button onclick="startVoiceCapture()" class="spring-btn w-full sm:w-auto px-4 py-2.5 rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 bg-gradient-to-r from-cyan-500 to-violet-600 text-white">🎙️ Dictar</button>
               <button onclick="const i=document.getElementById('gemini-quick-input');if(i.value){processGeminiCommand(i.value);i.value='';}" class="spring-btn w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-cyan-400 text-slate-950 font-extrabold text-xs sm:text-sm">Enviar</button>
@@ -854,7 +865,7 @@
       return `<div class="space-y-5 ${anim}">
         <div class="glass-97 rounded-3xl p-6 border-2 border-violet-400/50 space-y-3">
           <div class="flex flex-wrap justify-between gap-2"><div><div class="text-xs font-bold uppercase text-violet-300">🤖 Puente Google Tasks (Gemini Android)</div><h2 class="text-lg font-extrabold text-white">URL Actualizada y Sincronizada</h2></div><span class="text-xs px-3 py-1 rounded-full bg-violet-500/20 border border-violet-400/40 text-violet-200 mono">${ui.bridgeDiagnostic}</span></div>
-          <p class="text-xs text-slate-300">Decile a Gemini: <strong class="text-emerald-300">"Agregá una tarea: ahorré 200 dólares"</strong> o <strong class="text-rose-300">"Agregá una tarea: gasté 850 en súper"</strong>.</p>
+          <p class="text-xs text-slate-300">Decile a Gemini: <strong class="text-emerald-300">"Agregá una tarea: ahorré 200 dólares y gasté 1500 pesos"</strong>.</p>
           <div class="flex flex-col sm:flex-row gap-2">
             <input type="text" value="${state.cloudWebhookUrl || DEFAULT_CLOUD_WEBHOOK_URL}" onchange="state.cloudWebhookUrl=this.value.trim();saveState(true,true);pullFromCloudBridge(true);" class="flex-1 bg-slate-950/70 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" />
             <button onclick="pullFromCloudBridge(true)" class="spring-btn px-4 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs shrink-0">🔄 Cosechar Tareas</button>
