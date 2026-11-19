@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795052428697,
+  "updatedAt": 1795052458458,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -42,9 +42,15 @@
     "gtask_eHNlOV9iU1RJZWhrYjduUw",
     "gtask_cGZVOGlHa1lKS0NMU0YwRw",
     "gtask_eENCVjU4eUVJZjhMWU0xNw",
-    "gtask_RFZBXzV6NjRlUG1GS2dnYw"
+    "gtask_RFZBXzV6NjRlUG1GS2dnYw",
+    "gtask_R0JEeE93WEloeGxwN085TQ"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_R0JEeE93WEloeGxwN085TQ",
+      "command": "Me ingresaron 500 pesos y vendí 300 dólares",
+      "date": "10:40 p. m."
+    },
     {
       "id": "gtask_RFZBXzV6NjRlUG1GS2dnYw",
       "command": "Tarea: costo $300, ingreso $500 Ayer la tarea costó $300 y me ingresaron $500.",
@@ -89,11 +95,6 @@
       "id": "gtask_NFAyWmFkV09EZ3BnQTVDQQ",
       "command": "Gané 2500 $1000",
       "date": "10:15 p. m."
-    },
-    {
-      "id": "gtask_TVl4TXdtdUFKN2FvSTZzUg",
-      "command": "Gasté 2500 pesos",
-      "date": "10:15 p. m."
     }
   ],
   "accounts": [
@@ -101,7 +102,7 @@
       "id": "acc_uyu",
       "name": "Cuenta Brou / Débito",
       "currency": "UYU",
-      "balance": 15650,
+      "balance": 15150,
       "color": "from-cyan-400 to-blue-500",
       "icon": "🏦"
     },
@@ -109,7 +110,7 @@
       "id": "acc_usd",
       "name": "Ahorro Dólares",
       "currency": "USD",
-      "balance": -1640.9638554216867,
+      "balance": -1940.9638554216867,
       "color": "from-emerald-400 to-teal-500",
       "icon": "💵"
     },
@@ -160,6 +161,30 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795052458454_518",
+      "title": "🤖 Vendí",
+      "amount": 300,
+      "currency": "USD",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_usd",
+      "accountName": "Ahorro Dólares",
+      "date": "18/11 22:40",
+      "timestamp": 1795052458454
+    },
+    {
+      "id": "tx_1795052458452_376",
+      "title": "🤖 Me ingresaron",
+      "amount": 500,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Brou / Débito",
+      "date": "18/11 22:40",
+      "timestamp": 1795052458453
+    },
     {
       "id": "tx_1795052428694_838",
       "title": "🤖 Me ingresaron",
