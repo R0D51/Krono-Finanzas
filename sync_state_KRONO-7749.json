@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795046996335,
+  "updatedAt": 1795047019441,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -12,48 +12,71 @@
     "gtask_dnRMRzhQN1cwSFM5aFNxYQ",
     "gtask_VHNDRm9MQlJvdWZ5RVZvcQ",
     "gtask_SkVVWHZPTWcyMGdBSUlwaA",
-    "gtask_M2RoVXotb2Y4VWlBT19peA"
+    "gtask_M2RoVXotb2Y4VWlBT19peA",
+    "gtask_UmZRQVpLbHB6VEZWYWltbQ",
+    "gtask_R1hVSDUyanhCU1U0U0pOOQ",
+    "gtask_bmJuT0ZfWHh4LTZ6blJKbQ",
+    "gtask_ZmhiMVVRNFFmQUo1aG9PRQ",
+    "gtask_NlFla1llb0xTelZiWVRWZA",
+    "gtask_WmtxaVBfN05PeWdKZEtmag",
+    "gtask_VUpIblN2SklDYW5nSU9XRg",
+    "gtask_Z2pJSHpZM193LVBhTTRIbg",
+    "gtask_dUhmYzZ4TU5NY1huTHo5dg",
+    "gtask_UEVPYlQ5RGVBVkpOeVk2aQ",
+    "gtask_RnhET0dqT042N1NPbmRqdg",
+    "gtask_NDVVYWIwUWJqQTV0a0h5Xw",
+    "gtask_VjVWelk1Z2hic00yMmVoSw"
   ],
   "externalCommandHistory": [
     {
-      "id": "gtask_M2RoVXotb2Y4VWlBT19peA",
-      "command": "gasté 850 en el súper",
-      "date": "08:10 p. m."
+      "id": "gtask_VjVWelk1Z2hic00yMmVoSw",
+      "command": "gasté 300 pesos en el súper en efectivo",
+      "date": "09:10 p. m."
     },
     {
-      "id": "gtask_SkVVWHZPTWcyMGdBSUlwaA",
-      "command": "gasté 500 pesos en el almacén.",
-      "date": "07:46 p. m."
+      "id": "gtask_NDVVYWIwUWJqQTV0a0h5Xw",
+      "command": "Consulta de Cardiología mañana Consulta de Cardiología con Dra. Maria Conde en Pando el 24/11/2026 a las 08:00 (Número: 1).",
+      "date": "09:09 p. m."
     },
     {
-      "id": "gtask_VHNDRm9MQlJvdWZ5RVZvcQ",
-      "command": "hoy perdí 1500 pesos.",
-      "date": "07:40 p. m."
+      "id": "gtask_RnhET0dqT042N1NPbmRqdg",
+      "command": "Consulta de Cardiología en 2 días Consulta de Cardiología con Dra. Maria Conde en Pando el 24/11/2026 a las 08:00 (Número: 1).",
+      "date": "09:09 p. m."
     },
     {
-      "id": "gtask_dnRMRzhQN1cwSFM5aFNxYQ",
-      "command": "hoy obtuve de ganancias 2500 pesos.",
-      "date": "07:34 p. m."
+      "id": "gtask_UEVPYlQ5RGVBVkpOeVk2aQ",
+      "command": "Hoy gasté 600 pesos",
+      "date": "09:09 p. m."
     },
     {
-      "id": "gtask_ajd2Q0VmOGJHbXplci1EWg",
-      "command": "gané 1500 pesos.",
-      "date": "07:33 p. m."
+      "id": "gtask_dUhmYzZ4TU5NY1huTHo5dg",
+      "command": "Gasté 825 pesos",
+      "date": "09:09 p. m."
     },
     {
-      "id": "gtask_U1NmVG55UHRtZlhXZjEyVw",
-      "command": "gané 500 pesos.",
-      "date": "07:32 p. m."
+      "id": "gtask_Z2pJSHpZM193LVBhTTRIbg",
+      "command": "Gasté 850 pesos",
+      "date": "09:09 p. m."
     },
     {
-      "id": "gtask_OEVBc2xhc254R19aXzgxUw",
-      "command": "gasté 550 pesos",
-      "date": "06:23 p. m."
+      "id": "gtask_VUpIblN2SklDYW5nSU9XRg",
+      "command": "Crono gasté 500 pesos",
+      "date": "09:09 p. m."
     },
     {
-      "id": "gtask_SW50MWZLVzFrNnRNUnVqZw",
-      "command": "gasté 850 pesos en el súper",
-      "date": "06:19 p. m."
+      "id": "gtask_WmtxaVBfN05PeWdKZEtmag",
+      "command": "Crono, gasté 300 pesos.",
+      "date": "09:09 p. m."
+    },
+    {
+      "id": "gtask_NlFla1llb0xTelZiWVRWZA",
+      "command": "Gordi❤️, gasté 500 pesos.",
+      "date": "09:09 p. m."
+    },
+    {
+      "id": "gtask_ZmhiMVVRNFFmQUo1aG9PRQ",
+      "command": "Crono, gasté 500 pesos.",
+      "date": "09:09 p. m."
     }
   ],
   "accounts": [
@@ -77,7 +100,7 @@
       "id": "acc_cash",
       "name": "Efectivo / Billetera",
       "currency": "UYU",
-      "balance": 0,
+      "balance": -300,
       "color": "from-violet-400 to-purple-500",
       "icon": "👛"
     }
@@ -120,6 +143,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795047019438_319",
+      "title": "🤖 Gasté el súper",
+      "amount": 300,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_cash",
+      "accountName": "Efectivo / Billetera",
+      "date": "18/11 21:10",
+      "timestamp": 1795047019438
+    },
     {
       "id": "tx_1795046996333_673",
       "title": "🤖 Consulta Cardiología mañana Consulta Cardiología Dra. Maria Conde Pando el / / a las : (Número: )",
