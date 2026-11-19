@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795047049014,
+  "updatedAt": 1795047965489,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -26,9 +26,15 @@
     "gtask_RnhET0dqT042N1NPbmRqdg",
     "gtask_NDVVYWIwUWJqQTV0a0h5Xw",
     "gtask_VjVWelk1Z2hic00yMmVoSw",
-    "gtask_UnRyVkhMRHdfSG10WGM5cQ"
+    "gtask_UnRyVkhMRHdfSG10WGM5cQ",
+    "gtask_YVV6NFM5X1ljY0JWV1U3ZQ"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_YVV6NFM5X1ljY0JWV1U3ZQ",
+      "command": "ahorré 1500 pesos y me depositaron 200.000",
+      "date": "09:26 p. m."
+    },
     {
       "id": "gtask_UnRyVkhMRHdfSG10WGM5cQ",
       "command": "gane 200 pesos en efectivo",
@@ -73,11 +79,6 @@
       "id": "gtask_WmtxaVBfN05PeWdKZEtmag",
       "command": "Crono, gasté 300 pesos.",
       "date": "09:09 p. m."
-    },
-    {
-      "id": "gtask_NlFla1llb0xTelZiWVRWZA",
-      "command": "Gordi❤️, gasté 500 pesos.",
-      "date": "09:09 p. m."
     }
   ],
   "accounts": [
@@ -85,7 +86,7 @@
       "id": "acc_uyu",
       "name": "Cuenta Brou / Débito",
       "currency": "UYU",
-      "balance": -13351,
+      "balance": 185149,
       "color": "from-cyan-400 to-blue-500",
       "icon": "🏦"
     },
@@ -144,6 +145,30 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795047965486_442",
+      "title": "🤖 Ingreso",
+      "amount": 200000,
+      "currency": "UYU",
+      "type": "income",
+      "category": "Ingreso",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Brou / Débito",
+      "date": "18/11 21:26",
+      "timestamp": 1795047965486
+    },
+    {
+      "id": "tx_1795047965484_520",
+      "title": "🤖 Ahorré",
+      "amount": 1500,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Brou / Débito",
+      "date": "18/11 21:26",
+      "timestamp": 1795047965484
+    },
     {
       "id": "tx_1795047049011_96",
       "title": "🤖 Gane",
