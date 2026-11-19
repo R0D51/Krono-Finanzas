@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795050547641,
+  "updatedAt": 1795050897331,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -31,9 +31,15 @@
     "gtask_UGJWYkVNSEJkS05KTHlNZA",
     "gtask_ZnI0NkxxSlZiYUxBN1NYRQ",
     "gtask_YWhkc3UtRmtjZlBRMXYtZw",
-    "gtask_RTN0SUYwM2VKTDYxeEc4eQ"
+    "gtask_RTN0SUYwM2VKTDYxeEc4eQ",
+    "gtask_d3I0bmprLXB4YXpEVGZjYw"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_d3I0bmprLXB4YXpEVGZjYw",
+      "command": "Gasté $1500",
+      "date": "10:14 p. m."
+    },
     {
       "id": "gtask_RTN0SUYwM2VKTDYxeEc4eQ",
       "command": "me entraron $1,200 y gasté 350 pesos",
@@ -78,11 +84,6 @@
       "id": "gtask_RnhET0dqT042N1NPbmRqdg",
       "command": "Consulta de Cardiología en 2 días Consulta de Cardiología con Dra. Maria Conde en Pando el 24/11/2026 a las 08:00 (Número: 1).",
       "date": "09:09 p. m."
-    },
-    {
-      "id": "gtask_UEVPYlQ5RGVBVkpOeVk2aQ",
-      "command": "Hoy gasté 600 pesos",
-      "date": "09:09 p. m."
     }
   ],
   "accounts": [
@@ -90,7 +91,7 @@
       "id": "acc_uyu",
       "name": "Cuenta Brou / Débito",
       "currency": "UYU",
-      "balance": 183048,
+      "balance": 181548,
       "color": "from-cyan-400 to-blue-500",
       "icon": "🏦"
     },
@@ -149,6 +150,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795050897328_515",
+      "title": "🤖 Gasté $",
+      "amount": 1500,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Brou / Débito",
+      "date": "18/11 22:14",
+      "timestamp": 1795050897328
+    },
     {
       "id": "tx_1795050547638_220",
       "title": "🤖 Gasté",
