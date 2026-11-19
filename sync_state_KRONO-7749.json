@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795051247028,
+  "updatedAt": 1795051581616,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -36,9 +36,15 @@
     "gtask_TVl4TXdtdUFKN2FvSTZzUg",
     "gtask_NFAyWmFkV09EZ3BnQTVDQQ",
     "gtask_Yzh0UnZJTEEzbzFZMFhWQw",
-    "gtask_Zm5aVW9TYzVacTZnNGxrcw"
+    "gtask_Zm5aVW9TYzVacTZnNGxrcw",
+    "gtask_YTlCM0J6NlNRdWM3VWNuZg"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_YTlCM0J6NlNRdWM3VWNuZg",
+      "command": "Gasté 200 pesos",
+      "date": "10:26 p. m."
+    },
     {
       "id": "gtask_Zm5aVW9TYzVacTZnNGxrcw",
       "command": "Gasté 1500 pesos.",
@@ -83,11 +89,6 @@
       "id": "gtask_UGJWYkVNSEJkS05KTHlNZA",
       "command": "ahorré 200 dólares y gasté 1500 pesos",
       "date": "09:28 p. m."
-    },
-    {
-      "id": "gtask_YVV6NFM5X1ljY0JWV1U3ZQ",
-      "command": "ahorré 1500 pesos y me depositaron 200.000",
-      "date": "09:26 p. m."
     }
   ],
   "accounts": [
@@ -95,7 +96,7 @@
       "id": "acc_uyu",
       "name": "Cuenta Brou / Débito",
       "currency": "UYU",
-      "balance": 178548,
+      "balance": 178348,
       "color": "from-cyan-400 to-blue-500",
       "icon": "🏦"
     },
@@ -154,6 +155,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795051581611_489",
+      "title": "🤖 Gasté",
+      "amount": 200,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Brou / Débito",
+      "date": "18/11 22:26",
+      "timestamp": 1795051581611
+    },
     {
       "id": "tx_1795051247026_675",
       "title": "🤖 Gasté",
