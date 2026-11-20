@@ -1,9 +1,9 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795195973203,
+  "updatedAt": 1795195974333,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
-  "defaultCurrency": "USD",
+  "defaultCurrency": "UYU",
   "processedCommandIds": [
     "gtask_SW50MWZLVzFrNnRNUnVqZw",
     "gtask_OEVBc2xhc254R19aXzgxUw",
