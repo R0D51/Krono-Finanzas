@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.12
+    // KRONO OTA BOOTLOADER v6.5.13
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -56,16 +56,16 @@
     .aurora-orb-1 { animation: auroraFloat1 14s ease-in-out infinite; }
     .aurora-orb-2 { animation: auroraFloat2 17s ease-in-out infinite; }
     .aurora-orb-3 { animation: auroraFloat3 19s ease-in-out infinite; }
-    .spring-card { transition: transform 0.32s var(--spring-soft), box-shadow 0.32s var(--spring-soft), background-color 0.25s ease, border-color 0.25s ease; }
-    .spring-card:hover { transform: translateY(-3px); box-shadow: 0 20px 40px -12px rgba(6,182,212,0.26), 0 0 24px rgba(255,255,255,0.09) inset; border-color: rgba(34,211,238,0.4); }
-    .spring-card:active { transform: translateY(-1px); }
-    .spring-btn { transition: transform 0.25s var(--spring-soft), box-shadow 0.25s ease, filter 0.2s ease, background-color 0.2s ease; }
-    .spring-btn:hover { transform: translateY(-2px); filter: brightness(1.06); }
-    .spring-btn:active { transform: translateY(0); filter: brightness(0.95); }
-    @keyframes popInElastic { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: none; } }
-    .animate-pop-elastic { animation: popInElastic 0.32s var(--spring-bounce) both; }
-    @keyframes floatBurst { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-48px); } }
-    .animate-burst { animation: floatBurst 1.3s var(--spring-soft) forwards; }
+    .spring-card { transition: box-shadow 0.22s ease, background-color 0.22s ease, border-color 0.22s ease; }
+    .spring-card:hover { background-color: rgba(255,255,255,0.06); box-shadow: 0 20px 42px -12px rgba(6,182,212,0.32), 0 1px 0 0 rgba(255,255,255,0.34) inset; border-color: rgba(34,211,238,0.48); }
+    .spring-card:active { background-color: rgba(255,255,255,0.03); border-color: rgba(34,211,238,0.65); }
+    .spring-btn { transition: box-shadow 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease; }
+    .spring-btn:hover { box-shadow: 0 8px 24px -6px rgba(6,182,212,0.38), 0 0 0 1px rgba(255,255,255,0.22) inset; }
+    .spring-btn:active { box-shadow: 0 2px 10px -2px rgba(6,182,212,0.28), 0 0 0 1px rgba(255,255,255,0.35) inset; }
+    @keyframes popInElastic { 0% { opacity: 0; } 100% { opacity: 1; } }
+    .animate-pop-elastic { animation: popInElastic 0.18s ease-out both; }
+    @keyframes floatBurst { 0% { opacity: 0; } 12% { opacity: 1; } 82% { opacity: 1; } 100% { opacity: 0; } }
+    .animate-burst { animation: floatBurst 1.5s ease-out forwards; }
     .glass-97 { background: rgba(255,255,255,0.032); border: 1px solid rgba(255,255,255,0.22); backdrop-filter: blur(32px) saturate(200%); -webkit-backdrop-filter: blur(32px) saturate(200%); box-shadow: 0 16px 40px -8px rgba(0,0,0,0.48), 0 1px 0 0 rgba(255,255,255,0.26) inset, 0 -1px 0 0 rgba(255,255,255,0.08) inset; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: rgba(4,7,17,0.6); }
@@ -83,7 +83,7 @@
   <div id="app-root" class="relative z-10 min-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-x-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.12';
+    const APP_BASE_VERSION = '6.5.13';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -96,8 +96,8 @@
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.12',
-      lastReleaseNotes: 'v6.5.12: Animaciones nítidas sin desenfoque y modales nativos para editar/renombrar cuentas y presupuestos en Windows.',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.13',
+      lastReleaseNotes: 'v6.5.13: Cero desenfoque al pasar el mouse o cambiar pestañas en Windows.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
       accounts: [
@@ -877,7 +877,7 @@
       }
       if (params.get('voice') === '1') setTimeout(() => startVoiceCapture(), 350);
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
-        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.12: Animaciones nítidas sin desenfoque y modales nativos para editar/renombrar cuentas y presupuestos.'), 1200);
+        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.13: Cero desenfoque al pasar el mouse o cambiar pestañas en Windows.'), 1200);
       } else if (state.autoCheckOta && cleanRepoSlug()) {
         setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
       }
