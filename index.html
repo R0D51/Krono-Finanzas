@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.25
+    // KRONO OTA BOOTLOADER v6.5.26
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -83,7 +83,7 @@
   <div id="app-root" class="relative z-10 min-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-x-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.25';
+    const APP_BASE_VERSION = '6.5.26';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -96,8 +96,8 @@
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.25',
-      lastReleaseNotes: 'v6.5.25: Tarjetas de crédito y cuotas en deudas, panel con solo Movimiento, Transferir y Deudas, y corrección de sintaxis en DEMO_STATE.',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.26',
+      lastReleaseNotes: 'v6.5.26: Flechas de inputs numéricos estilizadas al tema oscuro/cian y carga completa de deudas/créditos/tarjetas/cuotas por voz.'.
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
       accounts: [
@@ -962,23 +962,41 @@
         const reply = sp ? `El saldo de ${sp.name} es de ${formatMoney(sp.balance, sp.currency)}.` : `Tu patrimonio total es de ${formatMoney(getTotals().totalUYU, 'UYU')}.`;
         ui.geminiResponse = { mode: 'query', prompt: text, reply, items: [] }; speakText(reply); render(); return;
       }
-      const debtIntentMatch = /(?:^|\b)(?:debo|me\s+deben|me\s+debe|prestamo|préstamo|credito|crédito|deuda|cuota\s+pendiente|pendiente\s+de\s+(?:cobro|pago))(?:\b|$)/i.test(lower) && !/\b(?:pague|pagué|cobre|cobré|gaste|gasté)\b/i.test(lower);
+      const debtIntentMatch = /(?:^|\b)(?:debo|me\s+deben|me\s+debe|prestamo|préstamo|credito|crédito|deuda|cuota\s+pendiente|pendiente\s+de\s+(?:cobro|pago)|tarjeta\s+de\s+credito|en\s+\d+\s+cuotas?|\d+\s+cuotas?)(?:\b|$)/i.test(lower) && !/\b(?:pague|pagué|cobre|cobré|gaste|gasté)\b/i.test(lower);
       if (debtIntentMatch) {
         if (!Array.isArray(state.debts)) state.debts = [];
-        const amount = extractSmartAmount(text);
-        if (amount > 0) {
-          const isCredit = /\b(?:me\s+deben|me\s+debe|credito|crédito|prestamo|préstamo|por\s+cobrar)\b/i.test(lower);
+        let installmentsCount = 1;
+        const instMatch = lower.match(/(?:en|de|a|son)\s+(\d{1,3})\s+cuotas?/) || lower.match(/(\d{1,3})\s+cuotas?/);
+        if (instMatch && parseInt(instMatch[1], 10) > 1) {
+          installmentsCount = Math.min(120, parseInt(instMatch[1], 10));
+        }
+        const perInstallmentPhrase = /\b(?:por\s+cuota|cada\s+cuota|cuota\s+de|de\s+cuota)\b/i.test(lower);
+        let workText = text;
+        if (installmentsCount > 1) {
+          workText = workText.replace(new RegExp(`(?:\\b(?:en|de|a|son)\\s+)?${installmentsCount}\\s+cuotas?`, 'gi'), ' ');
+        }
+        const rawAmount = extractSmartAmount(workText);
+        if (rawAmount > 0) {
+          const isCredit = /\b(?:me\s+deben|me\s+debe|credito|crédito|por\s+cobrar)\b/i.test(lower);
+          const cardMatch = workText.match(/\b(?:visa|mastercard|master|oca|american\s+express|amex|cabal|brou\s+recompensa|santander|itau|itaú|bbva|scotia|hsbc|prex|midinero)\b/i);
+          const cardName = cardMatch ? cardMatch[0].replace(/\b\w/g, c => c.toUpperCase()) : '';
+          const paymentMethod = cardName || /\btarjeta\b/i.test(lower) ? 'credit_card' : (installmentsCount > 1 ? 'installment_plan' : (/\bprestamo|préstamo\b/i.test(lower) ? 'personal' : 'general'));
           const currency = detectCurrencyInText(lower) || state.defaultCurrency || 'UYU';
-          let cleanTitle = text.replace(/(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?)\s*(mil)?/gi, ' ')
+          const totalAmount = (installmentsCount > 1 && perInstallmentPhrase) ? Number((rawAmount * installmentsCount).toFixed(2)) : rawAmount;
+          let cleanTitle = workText.replace(/(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?)\s*(mil)?/gi, ' ')
             .replace(/\b(un mil|dos mil|tres mil|cuatro mil|cinco mil|diez mil|quince mil|veinte mil|quinientos|seiscientos|setecientos|ochocientos|novecientos|cien|doscientos|trescientos|cuatrocientos|mil)\b/gi, ' ')
-            .replace(/\b(?:debo|me\s+deben|me\s+debe|prestamo|préstamo|credito|crédito|deuda|pesos|dólares|dolares|dolar|dólar|usd|uyu|en|de|por|a)\b/gi, ' ')
+            .replace(/\b(?:debo|me\s+deben|me\s+debe|prestamo|préstamo|credito|crédito|deuda|cuota|cuotas|por\s+cuota|cada\s+cuota|tarjeta|pesos|dólares|dolares|dolar|dólar|usd|uyu|en|de|por|a|con|la|el)\b/gi, ' ')
             .replace(/\$/g, ' ').replace(/\s+/g, ' ').trim();
-          cleanTitle = cleanTitle ? (cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1)) : (isCredit ? 'Crédito pendiente' : 'Deuda pendiente');
+          cleanTitle = cleanTitle ? (cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1)) : (cardName ? `Compra ${cardName}` : (isCredit ? 'Crédito pendiente' : 'Deuda pendiente'));
           state.debts.unshift({
             id: 'debt_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
             title: cleanTitle,
-            counterparty: fromExternal ? 'Google Tasks' : 'Pendiente',
-            amount,
+            counterparty: cardName || (fromExternal ? 'Google Tasks' : (isCredit ? 'Por cobrar' : 'Por pagar')),
+            paymentMethod,
+            cardName,
+            installmentsCount,
+            paidInstallments: 0,
+            amount: totalAmount,
             currency,
             kind: isCredit ? 'credit' : 'debt',
             dueDate: '',
@@ -986,7 +1004,9 @@
             notes: '',
             createdAt: Date.now()
           });
-          const reply = (fromExternal ? '[Google Tasks] ' : '') + `Agregué ${isCredit ? 'crédito' : 'deuda'} pendiente: ${cleanTitle} (${formatMoney(amount, currency)}).`;
+          const cuotaInfo = installmentsCount > 1 ? ` en ${installmentsCount} cuotas (${formatMoney(Number((totalAmount / installmentsCount).toFixed(2)), currency)} c/u)` : '';
+          const cardInfo = cardName ? ` en ${cardName}` : '';
+          const reply = (fromExternal ? '[Google Tasks] ' : '') + `Agregué ${isCredit ? 'crédito' : 'deuda'} pendiente: ${cleanTitle} (${formatMoney(totalAmount, currency)}${cuotaInfo}${cardInfo}).`;
           ui.geminiResponse = { mode: 'action', prompt: text, reply, items: [] };
           speakText(reply);
           saveState(true, true);
@@ -1085,7 +1105,7 @@
       }
       if (params.get('voice') === '1') setTimeout(() => startVoiceCapture(), 350);
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
-        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.25: Tarjetas de crédito y cuotas en deudas, panel con solo Movimiento, Transferir y Deudas, y corrección de sintaxis en DEMO_STATE.'), 1200);
+        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.26: Flechas de inputs numéricos estilizadas al tema oscuro/cian y carga completa de deudas/créditos/tarjetas/cuotas por voz.'), 1200);
       } else if (state.autoCheckOta && cleanRepoSlug()) {
         setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
       }
