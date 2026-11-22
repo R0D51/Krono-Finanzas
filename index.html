@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.13
+    // KRONO OTA BOOTLOADER v6.5.20
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -83,7 +83,7 @@
   <div id="app-root" class="relative z-10 min-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-x-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.13';
+    const APP_BASE_VERSION = '6.5.20';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -96,8 +96,8 @@
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.13',
-      lastReleaseNotes: 'v6.5.13: Cero desenfoque al pasar el mouse o cambiar pestañas en Windows.',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.20',
+      lastReleaseNotes: 'v6.5.20: Apartado de Pendientes, Créditos y Deudas integrado con sincronización y modales nativos.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
       accounts: [
@@ -110,6 +110,10 @@
         { id: 'cat_services', name: 'Servicios y Luz', limit: 8500, icon: '⚡', color: '#8b5cf6' },
         { id: 'cat_transport', name: 'Transporte y Nafta', limit: 7000, icon: '🚗', color: '#10b981' }
       ],
+      debts: [
+        { id: 'debt_demo_1', title: 'Préstamo a amigo / Crédito', counterparty: 'Lucas', amount: 3500, currency: 'UYU', kind: 'credit', dueDate: '', status: 'pending', notes: '' },
+        { id: 'debt_demo_2', title: 'Cuota pendiente / Deuda', counterparty: 'Tarjeta / Comercio', amount: 180, currency: 'USD', kind: 'debt', dueDate: '', status: 'pending', notes: '' }
+      ],
       transactions: [
         { id: 'tx_demo_1', title: 'Supermercado', amount: 2450, currency: 'UYU', type: 'expense', category: 'Comida y Súper', accountId: 'acc_uyu', accountName: 'Cuenta Brou / Débito', date: '18/11 10:40', timestamp: 1763470000000 }
       ]
@@ -120,7 +124,7 @@
     let pendingInputModalCallback = null;
     let ui = {
       activeTab: 'dashboard', displayCurrency: state.defaultCurrency || 'UYU', voiceTargetAccountId: 'auto',
-      showNewTxModal: false, showNewAccountModal: false, showTransferModal: false, showNewBudgetModal: false,
+      showNewTxModal: false, showNewAccountModal: false, showTransferModal: false, showNewBudgetModal: false, showNewDebtModal: false, debtFilterKind: 'all', debtFilterStatus: 'pending',
       showVoiceWidgetOverlay: false, showOtaModal: false, inputModal: null, otaStatusMsg: '', otaChecking: false,
       githubPushing: false, releaseNotesInput: '', txSearch: '', txFilterType: 'all', txFilterAccount: 'all',
       txFilterCurrency: 'all', isListening: false, voiceTranscript: '', voiceHintMsg: '',
@@ -180,6 +184,7 @@
             externalCommandHistory: Array.isArray(parsed.externalCommandHistory) ? parsed.externalCommandHistory : [],
             accounts: Array.isArray(parsed.accounts) ? parsed.accounts : DEMO_STATE.accounts,
             budgets: Array.isArray(parsed.budgets) ? parsed.budgets : DEMO_STATE.budgets,
+            debts: Array.isArray(parsed.debts) ? parsed.debts : DEMO_STATE.debts,
             transactions: Array.isArray(parsed.transactions) ? parsed.transactions : DEMO_STATE.transactions
           };
         }
@@ -277,7 +282,7 @@
           syncCode: state.syncCode, updatedAt: state.updatedAt, cloudWebhookUrl: state.cloudWebhookUrl || DEFAULT_CLOUD_WEBHOOK_URL,
           exchangeRate: state.exchangeRate, defaultCurrency: state.defaultCurrency,
           processedCommandIds: state.processedCommandIds || [], externalCommandHistory: state.externalCommandHistory || [],
-          accounts: state.accounts, budgets: state.budgets, transactions: state.transactions
+          accounts: state.accounts, budgets: state.budgets, debts: state.debts || [], transactions: state.transactions
         };
         await pushSingleFileToGitHub(repo, branch, path, JSON.stringify(payload, null, 2), `🔄 Sync ${state.syncCode}`, token);
         ui.syncStatusText = 'Sync ' + new Date().toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
@@ -303,6 +308,7 @@
         if (rTime > lTime && Array.isArray(remote.accounts)) {
           state.accounts = remote.accounts;
           state.budgets = Array.isArray(remote.budgets) ? remote.budgets : state.budgets;
+          if (Array.isArray(remote.debts)) state.debts = remote.debts;
           state.transactions = Array.isArray(remote.transactions) ? remote.transactions : state.transactions;
           if (remote.exchangeRate) state.exchangeRate = remote.exchangeRate;
           if (remote.cloudWebhookUrl) state.cloudWebhookUrl = remote.cloudWebhookUrl;
@@ -631,6 +637,104 @@
     function resetSingleAccount(id) { const a = state.accounts.find(x => x.id === id); if (a && confirm(`¿Poner ${a.name} en $ 0?`)) { a.balance = 0; saveState(true, true); } }
     function deleteAccount(id) { if (state.accounts.length <= 1) return alert('Mínimo 1 cuenta.'); if (confirm('¿Eliminar cuenta?')) { state.accounts = state.accounts.filter(x => x.id !== id); if (ui.voiceTargetAccountId === id) ui.voiceTargetAccountId = 'auto'; saveState(true, true); } }
     function resetAllAccountsToZero() { if (confirm('¿Todas las cuentas a $ 0?')) { state.accounts.forEach(a => a.balance = 0); saveState(true, true); } }
+
+    function getDebtsSummary() {
+      const rate = Number(state.exchangeRate) || 41.5;
+      const list = Array.isArray(state.debts) ? state.debts : [];
+      let pendingCreditsUYU = 0, pendingDebtsUYU = 0, pendingCount = 0;
+      list.forEach(d => {
+        if (d.status !== 'settled') {
+          pendingCount++;
+          const v = (d.currency === 'USD' ? Number(d.amount || 0) * rate : Number(d.amount || 0));
+          if (d.kind === 'credit') pendingCreditsUYU += v;
+          else pendingDebtsUYU += v;
+        }
+      });
+      return {
+        pendingCreditsUYU,
+        pendingDebtsUYU,
+        netPendingUYU: pendingCreditsUYU - pendingDebtsUYU,
+        pendingCount
+      };
+    }
+    function handleCreateDebtSubmit(e) {
+      if (e) e.preventDefault();
+      if (!Array.isArray(state.debts)) state.debts = [];
+      const title = (document.getElementById('db-title').value || '').trim();
+      const counterparty = (document.getElementById('db-counterparty').value || '').trim();
+      const amount = Math.abs(parseFloat(document.getElementById('db-amount').value) || 0);
+      const currency = document.getElementById('db-currency').value || 'UYU';
+      const kind = document.getElementById('db-kind').value || 'credit';
+      const dueDate = (document.getElementById('db-due').value || '').trim();
+      const notes = (document.getElementById('db-notes').value || '').trim();
+      if (!title || amount <= 0) return;
+      state.debts.unshift({
+        id: 'debt_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        title,
+        counterparty: counterparty || (kind === 'credit' ? 'Por cobrar' : 'Por pagar'),
+        amount,
+        currency,
+        kind,
+        dueDate,
+        status: 'pending',
+        notes,
+        createdAt: Date.now()
+      });
+      ui.showNewDebtModal = false;
+      spawnFloatingBurst(`${kind === 'credit' ? '📈 Crédito' : '📉 Deuda'} ${formatMoney(amount, currency)}`, kind === 'credit');
+      saveState(true, true);
+    }
+    function editDebtAmount(id) {
+      const list = Array.isArray(state.debts) ? state.debts : [];
+      const d = list.find(x => x.id === id); if (!d) return;
+      openInputModal({
+        title: '✏️ Editar Monto Pendiente',
+        label: `Nuevo monto (${d.currency}) para ${d.title}:`,
+        value: d.amount,
+        inputType: 'number',
+        placeholder: '0',
+        onConfirm: (v) => {
+          const parsed = Math.abs(parseFloat(String(v).replace(',', '.')));
+          if (!isNaN(parsed) && parsed > 0) {
+            d.amount = parsed;
+            saveState(true, true);
+            spawnFloatingBurst('✅ Monto actualizado', true);
+          }
+        }
+      });
+    }
+    function toggleDebtSettled(id, settleAndRecordTx = false) {
+      const list = Array.isArray(state.debts) ? state.debts : [];
+      const d = list.find(x => x.id === id); if (!d) return;
+      if (d.status !== 'settled') {
+        d.status = 'settled';
+        d.settledAt = Date.now();
+        if (settleAndRecordTx) {
+          addTransaction({
+            title: `${d.kind === 'credit' ? 'Cobro' : 'Pago'}: ${d.title}`,
+            amount: d.amount,
+            currency: d.currency,
+            type: d.kind === 'credit' ? 'income' : 'expense',
+            category: d.kind === 'credit' ? 'Ingreso' : 'General',
+            accountId: state.accounts[0] ? state.accounts[0].id : null
+          });
+          spawnFloatingBurst('✅ Liquidado y asentado en cuenta', true);
+          return;
+        }
+        spawnFloatingBurst('✅ Marcado como saldado', true);
+      } else {
+        d.status = 'pending';
+        delete d.settledAt;
+        spawnFloatingBurst('⏳ Vuelto a pendiente', true);
+      }
+      saveState(true, true);
+    }
+    function deleteDebtItem(id) {
+      if (!confirm('¿Eliminar este registro pendiente?')) return;
+      state.debts = (Array.isArray(state.debts) ? state.debts : []).filter(x => x.id !== id);
+      saveState(true, true);
+    }
+
     function handleCreateBudgetSubmit(e) {
       if (e) e.preventDefault();
       const name = document.getElementById('bg-name').value.trim(), limit = Math.abs(parseFloat(document.getElementById('bg-limit').value) || 0);
@@ -877,7 +981,7 @@
       }
       if (params.get('voice') === '1') setTimeout(() => startVoiceCapture(), 350);
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
-        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.13: Cero desenfoque al pasar el mouse o cambiar pestañas en Windows.'), 1200);
+        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.20: Apartado de Pendientes, Créditos y Deudas integrado con sincronización y modales nativos.'), 1200);
       } else if (state.autoCheckOta && cleanRepoSlug()) {
         setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
       }
@@ -942,6 +1046,37 @@
           </div>
         </div>
         <div class="glass-97 rounded-3xl p-5">
+          <div class="flex justify-between items-center gap-2 mb-3">
+            <h3 class="text-sm font-extrabold text-white">📌 Cuentas Pendientes, Créditos y Deudas</h3>
+            <button onclick="switchTab('debts');" class="text-xs text-cyan-300 shrink-0">Ver todas →</button>
+          </div>
+          ${(() => {
+            const ds = getDebtsSummary();
+            const pendingList = (Array.isArray(state.debts) ? state.debts : []).filter(d => d.status !== 'settled').slice(0, 3);
+            return `
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3 text-xs">
+                <div onclick="ui.debtFilterKind='credit';ui.debtFilterStatus='pending';switchTab('debts');" class="spring-btn p-3 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
+                  <div class="text-[10px] text-slate-400">Me deben / Créditos</div>
+                  <div class="text-sm font-extrabold mono text-emerald-300 mt-0.5">+${formatMoney(ds.pendingCreditsUYU, 'UYU')}</div>
+                </div>
+                <div onclick="ui.debtFilterKind='debt';ui.debtFilterStatus='pending';switchTab('debts');" class="spring-btn p-3 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
+                  <div class="text-[10px] text-slate-400">Debo / Pendiente por pagar</div>
+                  <div class="text-sm font-extrabold mono text-rose-300 mt-0.5">-${formatMoney(ds.pendingDebtsUYU, 'UYU')}</div>
+                </div>
+              </div>
+              <div class="space-y-2">${pendingList.length ? pendingList.map(d => `
+                <div onclick="ui.debtFilterKind='${d.kind}';ui.debtFilterStatus='pending';switchTab('debts');" class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2 cursor-pointer">
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold text-white truncate">${d.kind === 'credit' ? '📈' : '📉'} ${escapeAttr(d.title)}</div>
+                    <div class="text-[10px] text-slate-400 truncate">${escapeAttr(d.counterparty)}${d.dueDate ? ' • Vence: ' + escapeAttr(d.dueDate) : ''}</div>
+                  </div>
+                  <div class="text-xs font-extrabold mono shrink-0 ${d.kind === 'credit' ? 'text-emerald-300' : 'text-rose-300'}">${d.kind === 'credit' ? '+' : '-'}${formatMoney(d.amount, d.currency)}</div>
+                </div>
+              `).join('') : '<div class="text-xs text-slate-400 py-3 text-center">Sin cuentas pendientes abiertas.</div>'}</div>
+            `;
+          })()}
+        </div>
+        <div class="glass-97 rounded-3xl p-5">
           <div class="flex justify-between mb-3"><h3 class="text-sm font-extrabold text-white">🎯 Top Presupuestos</h3><button onclick="switchTab('budgets');" class="text-xs text-cyan-300">Administrar →</button></div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${state.budgets.slice(0,4).map(bg => { const sp = state.transactions.filter(t => t.type==='expense' && t.category===bg.name).reduce((s,t) => s + (t.currency==='USD'?t.amount*rate:t.amount), 0); const pct = bg.limit>0?Math.min(100,Math.round((sp/bg.limit)*100)):0; return `<div class="p-3.5 rounded-2xl bg-slate-950/40 border border-white/10"><div class="flex justify-between gap-2 text-xs mb-1.5"><span class="font-bold text-white truncate">${bg.icon||'🎯'} ${bg.name}</span><span class="mono text-slate-300 shrink-0">${formatMoney(sp,'UYU')} / ${formatMoney(bg.limit,'UYU')} (${pct}%)</span></div><div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full ${pct>=90?'bg-rose-500':'bg-cyan-400'}" style="width:${pct}%"></div></div></div>`; }).join('')}</div>
         </div>
@@ -976,6 +1111,74 @@
       return `<div class="space-y-4 ${anim}">
         <div class="glass-97 rounded-3xl p-5 flex justify-between items-center"><h2 class="text-lg font-extrabold text-white">🎯 Presupuestos</h2><button onclick="ui.showNewBudgetModal=true;render();" class="spring-btn px-4 py-2 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">+ Nueva</button></div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${state.budgets.map(bg => { const sp = state.transactions.filter(t => t.type==='expense' && t.category===bg.name).reduce((s,t) => s + (t.currency==='USD'?t.amount*rate:t.amount), 0); const pct = bg.limit>0?Math.min(100,Math.round((sp/bg.limit)*100)):0; return `<div class="spring-card glass-97 rounded-3xl p-5"><div class="flex justify-between mb-2"><div class="text-base font-extrabold text-white truncate">${bg.icon||'🎯'} ${bg.name}</div><span class="text-xs font-bold mono ${pct>=90?'text-rose-300':'text-cyan-300'}">${pct}%</span></div><div class="text-xs text-slate-300 mono mb-3">${formatMoney(sp,'UYU')} / ${formatMoney(bg.limit,'UYU')}</div><div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden mb-4"><div class="h-full rounded-full ${pct>=90?'bg-rose-500':'bg-cyan-400'}" style="width:${pct}%"></div></div><div class="flex gap-2 text-xs"><button onclick="editBudgetLimit('${bg.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">Editar Tope</button><button onclick="deleteBudgetCategory('${bg.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-200">Eliminar</button></div></div>`; }).join('')}</div>
+      </div>`;
+    }
+
+
+    function renderDebtsTab(anim) {
+      const ds = getDebtsSummary();
+      const allDebts = Array.isArray(state.debts) ? state.debts : [];
+      const filtered = allDebts.filter(d => {
+        if (ui.debtFilterKind !== 'all' && d.kind !== ui.debtFilterKind) return false;
+        if (ui.debtFilterStatus === 'pending' && d.status === 'settled') return false;
+        if (ui.debtFilterStatus === 'settled' && d.status !== 'settled') return false;
+        return true;
+      });
+      return `<div class="space-y-4 ${anim}">
+        <div class="glass-97 rounded-3xl p-5 flex flex-wrap justify-between items-center gap-3">
+          <div>
+            <h2 class="text-lg font-extrabold text-white">📌 Pendientes, Créditos y Deudas</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Control de dinero por cobrar, préstamos, cuotas y deudas pendientes</p>
+          </div>
+          <button onclick="ui.showNewDebtModal=true;render();" class="spring-btn px-4 py-2 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">+ Nuevo</button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="spring-card glass-97 rounded-3xl p-4">
+            <div class="text-[11px] text-slate-400">Créditos / Me deben</div>
+            <div class="text-xl font-extrabold mono text-emerald-300 mt-1">+${formatMoney(ds.pendingCreditsUYU, 'UYU')}</div>
+          </div>
+          <div class="spring-card glass-97 rounded-3xl p-4">
+            <div class="text-[11px] text-slate-400">Deudas / Por pagar</div>
+            <div class="text-xl font-extrabold mono text-rose-300 mt-1">-${formatMoney(ds.pendingDebtsUYU, 'UYU')}</div>
+          </div>
+          <div class="spring-card glass-97 rounded-3xl p-4">
+            <div class="text-[11px] text-slate-400">Balance Neto Pendiente</div>
+            <div class="text-xl font-extrabold mono ${ds.netPendingUYU >= 0 ? 'text-cyan-300' : 'text-amber-300'} mt-1">${ds.netPendingUYU >= 0 ? '+' : '-'}${formatMoney(Math.abs(ds.netPendingUYU), 'UYU')}</div>
+          </div>
+        </div>
+        <div class="glass-97 rounded-3xl p-4 flex flex-wrap items-center gap-2">
+          <select onchange="ui.debtFilterKind=this.value;render();" class="bg-slate-950/60 border border-white/15 rounded-xl px-3 py-2 text-xs text-white">
+            <option value="all" ${ui.debtFilterKind==='all'?'selected':''}>Todos (Créditos y Deudas)</option>
+            <option value="credit" ${ui.debtFilterKind==='credit'?'selected':''}>📈 Créditos / Me deben</option>
+            <option value="debt" ${ui.debtFilterKind==='debt'?'selected':''}>📉 Deudas / Debo</option>
+          </select>
+          <select onchange="ui.debtFilterStatus=this.value;render();" class="bg-slate-950/60 border border-white/15 rounded-xl px-3 py-2 text-xs text-white">
+            <option value="pending" ${ui.debtFilterStatus==='pending'?'selected':''}>Pendientes</option>
+            <option value="settled" ${ui.debtFilterStatus==='settled'?'selected':''}>Saldados</option>
+            <option value="all" ${ui.debtFilterStatus==='all'?'selected':''}>Todos los estados</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${filtered.length ? filtered.map(d => {
+          const isSettled = d.status === 'settled';
+          const isCredit = d.kind === 'credit';
+          return `<div class="spring-card glass-97 rounded-3xl p-5 ${isSettled ? 'opacity-75' : ''}">
+            <div class="flex justify-between items-start gap-2 mb-2">
+              <div class="min-w-0">
+                <div class="text-base font-extrabold text-white truncate">${isCredit ? '📈' : '📉'} ${escapeAttr(d.title)}</div>
+                <div class="text-xs text-slate-300 truncate">${escapeAttr(d.counterparty)} • <span class="mono text-cyan-300">${d.currency}</span>${d.dueDate ? ' • Vence: <span class="mono text-amber-200">' + escapeAttr(d.dueDate) + '</span>' : ''}</div>
+              </div>
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${isSettled ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/30' : (isCredit ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/30' : 'bg-rose-500/20 text-rose-200 border border-rose-400/30')}">${isSettled ? 'Saldado' : (isCredit ? 'Crédito' : 'Deuda')}</span>
+            </div>
+            <div class="text-xl font-extrabold mono ${isCredit ? 'text-emerald-300' : 'text-rose-300'} mb-2">${isCredit ? '+' : '-'}${formatMoney(d.amount, d.currency)}</div>
+            ${d.notes ? `<div class="text-xs text-slate-400 mb-3 break-words">${escapeAttr(d.notes)}</div>` : '<div class="mb-2"></div>'}
+            <div class="flex flex-wrap gap-2 pt-3 border-t border-white/10 text-xs">
+              ${!isSettled ? `<button onclick="toggleDebtSettled('${d.id}', true)" class="spring-btn px-3 py-1.5 rounded-xl bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 font-bold">✓ Cobrar/Pagar y Asentar</button>` : ''}
+              <button onclick="toggleDebtSettled('${d.id}', false)" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">${isSettled ? 'Reabrir' : 'Marcar Saldado'}</button>
+              <button onclick="editDebtAmount('${d.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">Editar Monto</button>
+              <button onclick="deleteDebtItem('${d.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-200">Eliminar</button>
+            </div>
+          </div>`;
+        }).join('') : '<div class="glass-97 rounded-3xl p-8 text-center text-xs text-slate-400 col-span-full">No hay registros en este filtro.</div>'}</div>
       </div>`;
     }
 
@@ -1027,6 +1230,7 @@
       if (ui.activeTab === 'movements') return renderMovementsTab(anim);
       if (ui.activeTab === 'accounts') return renderAccountsTab(anim);
       if (ui.activeTab === 'budgets') return renderBudgetsTab(anim);
+      if (ui.activeTab === 'debts') return renderDebtsTab(anim);
       if (ui.activeTab === 'settings') return renderSettingsTab(anim);
       return renderDashboardTab(totals, displayTotal, anim);
     }
@@ -1034,7 +1238,7 @@
     function render() {
       const root = document.getElementById('app-root'); if (!root) return;
       const totals = getTotals(), displayTotal = ui.displayCurrency === 'USD' ? formatMoney(totals.totalUSD, 'USD') : formatMoney(totals.totalUYU, 'UYU'), ver = getCurrentInstalledVersion();
-      const nav = [{ id:'dashboard', icon:'🏠', label:'Panel' }, { id:'movements', icon:'⚡', label:'Movimientos' }, { id:'accounts', icon:'🏦', label:'Cuentas' }, { id:'budgets', icon:'🎯', label:'Presupuestos' }, { id:'settings', icon:'⚙️', label:'Ajustes' }];
+      const nav = [{ id:'dashboard', icon:'🏠', label:'Panel' }, { id:'movements', icon:'⚡', label:'Movimientos' }, { id:'accounts', icon:'🏦', label:'Cuentas' }, { id:'budgets', icon:'🎯', label:'Presupuestos' }, { id:'debts', icon:'📌', label:'Pendientes' }, { id:'settings', icon:'⚙️', label:'Ajustes' }];
       root.innerHTML = `
         <div class="flex-1 flex flex-col md:flex-row w-full max-w-[100vw] min-h-[100dvh] overflow-x-hidden">
           <aside class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 left-0 z-30 p-4">
@@ -1066,6 +1270,7 @@
         ${ui.showNewTxModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleNewTxSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">➕ Nuevo Movimiento</h3><input id="tx-title" type="text" required placeholder="Descripción" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="tx-amount" type="number" step="0.01" required placeholder="Monto" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><select id="tx-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select></div><div class="grid grid-cols-2 gap-2"><select id="tx-type" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="expense">Gasto (-)</option><option value="income">Ingreso (+)</option></select><select id="tx-account" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('')}</select></div><select id="tx-category" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.budgets.map(b => `<option value="${b.name}">${b.icon} ${b.name}</option>`).join('')}<option value="General">📌 General</option><option value="Ingreso">💰 Ingreso</option></select><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewTxModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Guardar</button></div></form></div>` : ''}
         ${ui.showNewAccountModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="createAccount(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">🏦 Nueva Cuenta</h3><input id="acc-name" type="text" required placeholder="Nombre" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-3 gap-2"><select id="acc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">UYU</option><option value="USD">USD</option></select><input id="acc-balance" type="number" step="0.01" placeholder="Saldo" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="acc-icon" type="text" value="🏦" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewAccountModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Crear</button></div></form></div>` : ''}
         ${ui.showTransferModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleTransferSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">⇄ Transferir</h3><select id="tr-from" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map(a => `<option value="${a.id}">Desde: ${a.name}</option>`).join('')}</select><select id="tr-to" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map((a,i) => `<option value="${a.id}" ${i===1?'selected':''}>Hacia: ${a.name}</option>`).join('')}</select><input id="tr-amount" type="number" step="0.01" required placeholder="Monto" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showTransferModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Transferir</button></div></form></div>` : ''}
+        ${ui.showNewDebtModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateDebtSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">📌 Nuevo Crédito / Deuda / Pendiente</h3><input id="db-title" type="text" required placeholder="Concepto (ej: Préstamo, cuota, factura)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><input id="db-counterparty" type="text" placeholder="Persona o entidad (opcional)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><select id="db-kind" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="credit">📈 Crédito / Me deben (+)</option><option value="debt">📉 Deuda / Debo (-)</option></select><select id="db-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select></div><div class="grid grid-cols-2 gap-2"><input id="db-amount" type="number" step="0.01" required placeholder="Monto" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="db-due" type="text" placeholder="Vencimiento (ej: 30/11)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /></div><input id="db-notes" type="text" placeholder="Notas adicionales (opcional)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewDebtModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Guardar</button></div></form></div>` : ''}
         ${ui.showNewBudgetModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateBudgetSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">🎯 Nueva Categoría</h3><input id="bg-name" type="text" required placeholder="Nombre" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="bg-limit" type="number" required placeholder="Tope ($ UYU)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="bg-icon" type="text" value="🎯" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewBudgetModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Crear</button></div></form></div>` : ''}
         ${ui.showVoiceWidgetOverlay ? `<div class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4 text-center"><div class="glass-97 w-full max-w-sm rounded-3xl p-6 border-2 border-cyan-400/50 animate-pop-elastic space-y-3"><div class="text-4xl">${ui.isListening?'🎙️':'✨'}</div><h3 class="text-base font-extrabold text-white">${ui.isListening?'Escuchando...':'Dictado por Voz'}</h3>${ui.voiceHintMsg?`<p class="text-[11px] text-amber-200 bg-amber-500/15 rounded-xl p-2">${ui.voiceHintMsg}</p>`:''}<input id="voice-overlay-manual-input" type="text" value="${escapeAttr(ui.voiceTranscript)}" oninput="ui.voiceTranscript=this.value;" onkeydown="if(event.key==='Enter')submitVoiceOverlayInput();" placeholder="Dictá con el teclado o escribí..." class="w-full bg-slate-950/85 border border-cyan-400/50 rounded-2xl px-3.5 py-3 text-xs text-white" /><div class="grid grid-cols-2 gap-2.5 pt-1"><button onclick="submitVoiceOverlayInput()" class="spring-btn py-2.5 rounded-2xl bg-cyan-400 text-slate-950 font-extrabold text-xs">✅ Procesar</button><button onclick="stopVoiceCapture();ui.showVoiceWidgetOverlay=false;render();" class="py-2.5 rounded-2xl bg-white/10 text-slate-300 font-bold text-xs">Cerrar</button></div></div></div>` : ''}
       `;
