@@ -160,32 +160,6 @@
       "color": "#ec4899"
     }
   ],
-  "debts": [
-    {
-      "id": "debt_demo_1",
-      "title": "Préstamo a amigo / Crédito",
-      "counterparty": "Lucas",
-      "amount": 3500,
-      "currency": "UYU",
-      "kind": "credit",
-      "dueDate": "",
-      "status": "settled",
-      "notes": "",
-      "settledAt": 1795318631934
-    },
-    {
-      "id": "debt_demo_2",
-      "title": "Cuota pendiente / Deuda",
-      "counterparty": "Tarjeta / Comercio",
-      "amount": 180,
-      "currency": "USD",
-      "kind": "debt",
-      "dueDate": "",
-      "status": "settled",
-      "notes": "",
-      "settledAt": 1795318733832
-    }
-  ],
   "transactions": [
     {
       "id": "tx_1795318631934_714",
