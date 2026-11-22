@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.23
+    // KRONO OTA BOOTLOADER v6.5.24
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -83,7 +83,7 @@
   <div id="app-root" class="relative z-10 min-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-x-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.23';
+    const APP_BASE_VERSION = '6.5.24';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -96,8 +96,8 @@
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.23',
-      lastReleaseNotes: 'v6.5.23: Solo 3 botones en el panel principal (Movimiento, Transferir, Deudas); Sincronizar y Panel OTA quedan en la barra lateral.',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.24',
+      lastReleaseNotes: 'v6.5.24: Soporte de tarjetas de crédito y cuotas al cargar deudas/créditos, con pago cuota a cuota o total.'.
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
       accounts: [
@@ -638,21 +638,45 @@
     function deleteAccount(id) { if (state.accounts.length <= 1) return alert('Mínimo 1 cuenta.'); if (confirm('¿Eliminar cuenta?')) { state.accounts = state.accounts.filter(x => x.id !== id); if (ui.voiceTargetAccountId === id) ui.voiceTargetAccountId = 'auto'; saveState(true, true); } }
     function resetAllAccountsToZero() { if (confirm('¿Todas las cuentas a $ 0?')) { state.accounts.forEach(a => a.balance = 0); saveState(true, true); } }
 
+    function getDebtRemainingAmount(d) {
+      const total = Math.max(0, Number(d.amount || 0));
+      const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+      const paidInst = Math.max(0, Math.min(instCount, parseInt(d.paidInstallments, 10) || 0));
+      if (instCount > 1) {
+        const perInst = total / instCount;
+        const remInst = Math.max(0, instCount - paidInst);
+        return Number((perInst * remInst).toFixed(2));
+      }
+      return total;
+    }
+    function getDebtInstallmentValue(d) {
+      const total = Math.max(0, Number(d.amount || 0));
+      const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+      return Number((total / instCount).toFixed(2));
+    }
     function getDebtsSummary() {
       const rate = Number(state.exchangeRate) || 41.5;
       const list = Array.isArray(state.debts) ? state.debts : [];
-      let pendingCreditsUYU = 0, pendingDebtsUYU = 0, pendingCount = 0;
+      let pendingCreditsUYU = 0, pendingDebtsUYU = 0, pendingCount = 0, nextInstallmentsUYU = 0;
       list.forEach(d => {
         if (d.status !== 'settled') {
           pendingCount++;
-          const v = (d.currency === 'USD' ? Number(d.amount || 0) * rate : Number(d.amount || 0));
-          if (d.kind === 'credit') pendingCreditsUYU += v;
-          else pendingDebtsUYU += v;
+          const rem = getDebtRemainingAmount(d);
+          const v = (d.currency === 'USD' ? rem * rate : rem);
+          const instVal = getDebtInstallmentValue(d);
+          const instV = (d.currency === 'USD' ? instVal * rate : instVal);
+          if (d.kind === 'credit') {
+            pendingCreditsUYU += v;
+          } else {
+            pendingDebtsUYU += v;
+            nextInstallmentsUYU += instV;
+          }
         }
       });
       return {
         pendingCreditsUYU,
         pendingDebtsUYU,
+        nextInstallmentsUYU,
         netPendingUYU: pendingCreditsUYU - pendingDebtsUYU,
         pendingCount
       };
@@ -662,17 +686,26 @@
       if (!Array.isArray(state.debts)) state.debts = [];
       const title = (document.getElementById('db-title').value || '').trim();
       const counterparty = (document.getElementById('db-counterparty').value || '').trim();
-      const amount = Math.abs(parseFloat(document.getElementById('db-amount').value) || 0);
+      const rawAmount = Math.abs(parseFloat(document.getElementById('db-amount').value) || 0);
       const currency = document.getElementById('db-currency').value || 'UYU';
       const kind = document.getElementById('db-kind').value || 'credit';
+      const paymentMethod = document.getElementById('db-method') ? document.getElementById('db-method').value : 'general';
+      const cardName = document.getElementById('db-card') ? (document.getElementById('db-card').value || '').trim() : '';
+      const amountMode = document.getElementById('db-amount-mode') ? document.getElementById('db-amount-mode').value : 'total';
+      const installmentsCount = Math.max(1, parseInt(document.getElementById('db-installments') ? document.getElementById('db-installments').value : '1', 10) || 1);
       const dueDate = (document.getElementById('db-due').value || '').trim();
       const notes = (document.getElementById('db-notes').value || '').trim();
-      if (!title || amount <= 0) return;
+      if (!title || rawAmount <= 0) return;
+      const totalAmount = amountMode === 'installment' ? Number((rawAmount * installmentsCount).toFixed(2)) : rawAmount;
       state.debts.unshift({
         id: 'debt_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
         title,
-        counterparty: counterparty || (kind === 'credit' ? 'Por cobrar' : 'Por pagar'),
-        amount,
+        counterparty: counterparty || (cardName ? cardName : (kind === 'credit' ? 'Por cobrar' : 'Por pagar')),
+        paymentMethod,
+        cardName,
+        installmentsCount,
+        paidInstallments: 0,
+        amount: totalAmount,
         currency,
         kind,
         dueDate,
@@ -681,15 +714,46 @@
         createdAt: Date.now()
       });
       ui.showNewDebtModal = false;
-      spawnFloatingBurst(`${kind === 'credit' ? '📈 Crédito' : '📉 Deuda'} ${formatMoney(amount, currency)}`, kind === 'credit');
+      spawnFloatingBurst(`${kind === 'credit' ? '📈 Crédito' : '📉 Deuda'} ${formatMoney(totalAmount, currency)}${installmentsCount > 1 ? ' (' + installmentsCount + ' cuotas)' : ''}`, kind === 'credit');
+      saveState(true, true);
+    }
+    function payNextDebtInstallment(id, recordTx = true) {
+      const list = Array.isArray(state.debts) ? state.debts : [];
+      const d = list.find(x => x.id === id); if (!d || d.status === 'settled') return;
+      const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+      const paidInst = Math.max(0, parseInt(d.paidInstallments, 10) || 0);
+      const instVal = getDebtInstallmentValue(d);
+      const remBefore = getDebtRemainingAmount(d);
+      const payVal = Math.min(remBefore, instVal || remBefore);
+      const nextPaid = Math.min(instCount, paidInst + 1);
+      d.paidInstallments = nextPaid;
+      if (nextPaid >= instCount || getDebtRemainingAmount(d) <= 0.01) {
+        d.status = 'settled';
+        d.settledAt = Date.now();
+      }
+      if (recordTx && payVal > 0) {
+        const cardTag = d.cardName ? ` [${d.cardName}]` : '';
+        const cuotaTag = instCount > 1 ? ` (Cuota ${nextPaid}/${instCount})` : '';
+        addTransaction({
+          title: `${d.kind === 'credit' ? 'Cobro' : 'Pago'}: ${d.title}${cuotaTag}${cardTag}`,
+          amount: payVal,
+          currency: d.currency,
+          type: d.kind === 'credit' ? 'income' : 'expense',
+          category: d.kind === 'credit' ? 'Ingreso' : (d.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 'General'),
+          accountId: state.accounts[0] ? state.accounts[0].id : null
+        });
+        spawnFloatingBurst(`✅ ${instCount > 1 ? 'Cuota ' + nextPaid + '/' + instCount + ' asentada' : 'Liquidado y asentado'}`, true);
+        return;
+      }
+      spawnFloatingBurst(nextPaid >= instCount ? '✅ Todas las cuotas saldadas' : `✅ Cuota ${nextPaid}/${instCount} marcada`, true);
       saveState(true, true);
     }
     function editDebtAmount(id) {
       const list = Array.isArray(state.debts) ? state.debts : [];
       const d = list.find(x => x.id === id); if (!d) return;
       openInputModal({
-        title: '✏️ Editar Monto Pendiente',
-        label: `Nuevo monto (${d.currency}) para ${d.title}:`,
+        title: '✏️ Editar Monto Total',
+        label: `Nuevo monto total (${d.currency}) para ${d.title}:`,
         value: d.amount,
         inputType: 'number',
         placeholder: '0',
@@ -697,6 +761,10 @@
           const parsed = Math.abs(parseFloat(String(v).replace(',', '.')));
           if (!isNaN(parsed) && parsed > 0) {
             d.amount = parsed;
+            if (getDebtRemainingAmount(d) > 0 && d.status === 'settled') {
+              d.status = 'pending';
+              delete d.settledAt;
+            }
             saveState(true, true);
             spawnFloatingBurst('✅ Monto actualizado', true);
           }
@@ -706,16 +774,20 @@
     function toggleDebtSettled(id, settleAndRecordTx = false) {
       const list = Array.isArray(state.debts) ? state.debts : [];
       const d = list.find(x => x.id === id); if (!d) return;
+      const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
       if (d.status !== 'settled') {
+        const remVal = getDebtRemainingAmount(d);
         d.status = 'settled';
+        d.paidInstallments = instCount;
         d.settledAt = Date.now();
-        if (settleAndRecordTx) {
+        if (settleAndRecordTx && remVal > 0) {
+          const cardTag = d.cardName ? ` [${d.cardName}]` : '';
           addTransaction({
-            title: `${d.kind === 'credit' ? 'Cobro' : 'Pago'}: ${d.title}`,
-            amount: d.amount,
+            title: `${d.kind === 'credit' ? 'Cobro' : 'Pago'}: ${d.title}${cardTag}`,
+            amount: remVal,
             currency: d.currency,
             type: d.kind === 'credit' ? 'income' : 'expense',
-            category: d.kind === 'credit' ? 'Ingreso' : 'General',
+            category: d.kind === 'credit' ? 'Ingreso' : (d.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 'General'),
             accountId: state.accounts[0] ? state.accounts[0].id : null
           });
           spawnFloatingBurst('✅ Liquidado y asentado en cuenta', true);
@@ -724,6 +796,7 @@
         spawnFloatingBurst('✅ Marcado como saldado', true);
       } else {
         d.status = 'pending';
+        if (d.paidInstallments >= instCount) d.paidInstallments = Math.max(0, instCount - 1);
         delete d.settledAt;
         spawnFloatingBurst('⏳ Vuelto a pendiente', true);
       }
@@ -1012,7 +1085,7 @@
       }
       if (params.get('voice') === '1') setTimeout(() => startVoiceCapture(), 350);
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
-        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.23: Solo 3 botones en el panel principal (Movimiento, Transferir, Deudas); Sincronizar y Panel OTA quedan en la barra lateral.'), 1200);
+        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.24: Soporte de tarjetas de crédito y cuotas al cargar deudas/créditos, con pago cuota a cuota o total.'), 1200);
       } else if (state.autoCheckOta && cleanRepoSlug()) {
         setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
       }
@@ -1194,18 +1267,29 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${filtered.length ? filtered.map(d => {
           const isSettled = d.status === 'settled';
           const isCredit = d.kind === 'credit';
+          const isCard = d.paymentMethod === 'credit_card' || Boolean(d.cardName);
+          const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+          const paidInst = Math.max(0, Math.min(instCount, parseInt(d.paidInstallments, 10) || 0));
+          const remAmount = getDebtRemainingAmount(d);
+          const instVal = getDebtInstallmentValue(d);
+          const pctPaid = instCount > 1 ? Math.round((paidInst / instCount) * 100) : (isSettled ? 100 : 0);
           return `<div class="spring-card glass-97 rounded-3xl p-5 ${isSettled ? 'opacity-75' : ''}">
             <div class="flex justify-between items-start gap-2 mb-2">
               <div class="min-w-0">
-                <div class="text-base font-extrabold text-white truncate">${isCredit ? '📈' : '📉'} ${escapeAttr(d.title)}</div>
-                <div class="text-xs text-slate-300 truncate">${escapeAttr(d.counterparty)} • <span class="mono text-cyan-300">${d.currency}</span>${d.dueDate ? ' • Vence: <span class="mono text-amber-200">' + escapeAttr(d.dueDate) + '</span>' : ''}</div>
+                <div class="text-base font-extrabold text-white truncate">${isCard ? '💳' : (isCredit ? '📈' : '📉')} ${escapeAttr(d.title)}</div>
+                <div class="text-xs text-slate-300 truncate">${escapeAttr(d.counterparty)}${d.cardName ? ' • <span class="text-violet-300 font-semibold">' + escapeAttr(d.cardName) + '</span>' : ''} • <span class="mono text-cyan-300">${d.currency}</span>${d.dueDate ? ' • Vence: <span class="mono text-amber-200">' + escapeAttr(d.dueDate) + '</span>' : ''}</div>
               </div>
-              <span class="text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${isSettled ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/30' : (isCredit ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/30' : 'bg-rose-500/20 text-rose-200 border border-rose-400/30')}">${isSettled ? 'Saldado' : (isCredit ? 'Crédito' : 'Deuda')}</span>
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${isSettled ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/30' : (isCard ? 'bg-violet-500/20 text-violet-200 border border-violet-400/30' : (isCredit ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/30' : 'bg-rose-500/20 text-rose-200 border border-rose-400/30'))}">${isSettled ? 'Saldado' : (isCard ? 'Tarjeta' : (isCredit ? 'Crédito' : 'Deuda'))}</span>
             </div>
-            <div class="text-xl font-extrabold mono ${isCredit ? 'text-emerald-300' : 'text-rose-300'} mb-2">${isCredit ? '+' : '-'}${formatMoney(d.amount, d.currency)}</div>
+            <div class="flex flex-wrap items-baseline justify-between gap-2 mb-2">
+              <div class="text-xl font-extrabold mono ${isCredit ? 'text-emerald-300' : 'text-rose-300'}">${isCredit ? '+' : '-'}${formatMoney(remAmount, d.currency)} <span class="text-[11px] font-normal text-slate-400">${instCount > 1 ? 'restante de ' + formatMoney(d.amount, d.currency) : ''}</span></div>
+              ${instCount > 1 ? `<div class="text-xs font-bold mono text-cyan-200">Cuota ${paidInst}/${instCount} • ${formatMoney(instVal, d.currency)} c/u</div>` : ''}
+            </div>
+            ${instCount > 1 ? `<div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden mb-3"><div class="h-full rounded-full bg-cyan-400" style="width:${pctPaid}%"></div></div>` : ''}
             ${d.notes ? `<div class="text-xs text-slate-400 mb-3 break-words">${escapeAttr(d.notes)}</div>` : '<div class="mb-2"></div>'}
             <div class="flex flex-wrap gap-2 pt-3 border-t border-white/10 text-xs">
-              ${!isSettled ? `<button onclick="toggleDebtSettled('${d.id}', true)" class="spring-btn px-3 py-1.5 rounded-xl bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 font-bold">✓ Cobrar/Pagar y Asentar</button>` : ''}
+              ${!isSettled && instCount > 1 ? `<button onclick="payNextDebtInstallment('${d.id}', true)" class="spring-btn px-3 py-1.5 rounded-xl bg-cyan-500/25 border border-cyan-400/40 text-cyan-200 font-bold">💳 Pagar/Cobrar Cuota (${formatMoney(instVal, d.currency)})</button>` : ''}
+              ${!isSettled ? `<button onclick="toggleDebtSettled('${d.id}', true)" class="spring-btn px-3 py-1.5 rounded-xl bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 font-bold">✓ Saldar Todo y Asentar</button>` : ''}
               <button onclick="toggleDebtSettled('${d.id}', false)" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">${isSettled ? 'Reabrir' : 'Marcar Saldado'}</button>
               <button onclick="editDebtAmount('${d.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">Editar Monto</button>
               <button onclick="deleteDebtItem('${d.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-200">Eliminar</button>
@@ -1303,7 +1387,7 @@
         ${ui.showNewTxModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleNewTxSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">➕ Nuevo Movimiento</h3><input id="tx-title" type="text" required placeholder="Descripción" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="tx-amount" type="number" step="0.01" required placeholder="Monto" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><select id="tx-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select></div><div class="grid grid-cols-2 gap-2"><select id="tx-type" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="expense">Gasto (-)</option><option value="income">Ingreso (+)</option></select><select id="tx-account" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('')}</select></div><select id="tx-category" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.budgets.map(b => `<option value="${b.name}">${b.icon} ${b.name}</option>`).join('')}<option value="General">📌 General</option><option value="Ingreso">💰 Ingreso</option></select><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewTxModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Guardar</button></div></form></div>` : ''}
         ${ui.showNewAccountModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="createAccount(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">🏦 Nueva Cuenta</h3><input id="acc-name" type="text" required placeholder="Nombre" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-3 gap-2"><select id="acc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">UYU</option><option value="USD">USD</option></select><input id="acc-balance" type="number" step="0.01" placeholder="Saldo" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="acc-icon" type="text" value="🏦" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewAccountModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Crear</button></div></form></div>` : ''}
         ${ui.showTransferModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleTransferSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">⇄ Transferir</h3><select id="tr-from" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map(a => `<option value="${a.id}">Desde: ${a.name}</option>`).join('')}</select><select id="tr-to" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map((a,i) => `<option value="${a.id}" ${i===1?'selected':''}>Hacia: ${a.name}</option>`).join('')}</select><input id="tr-amount" type="number" step="0.01" required placeholder="Monto" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showTransferModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Transferir</button></div></form></div>` : ''}
-        ${ui.showNewDebtModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateDebtSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">📌 Nuevo Crédito / Deuda / Pendiente</h3><input id="db-title" type="text" required placeholder="Concepto (ej: Préstamo, cuota, factura)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><input id="db-counterparty" type="text" placeholder="Persona o entidad (opcional)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><select id="db-kind" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="credit">📈 Crédito / Me deben (+)</option><option value="debt">📉 Deuda / Debo (-)</option></select><select id="db-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select></div><div class="grid grid-cols-2 gap-2"><input id="db-amount" type="number" step="0.01" required placeholder="Monto" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="db-due" type="text" placeholder="Vencimiento (ej: 30/11)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /></div><input id="db-notes" type="text" placeholder="Notas adicionales (opcional)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewDebtModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Guardar</button></div></form></div>` : ''}
+        ${ui.showNewDebtModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateDebtSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">📌 Nuevo Crédito / Deuda / Tarjeta</h3><input id="db-title" type="text" required placeholder="Concepto (ej: Compra en cuotas, préstamo, tarjeta)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><select id="db-kind" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="debt">📉 Deuda / Debo (-)</option><option value="credit">📈 Crédito / Me deben (+)</option></select><select id="db-method" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="credit_card">💳 Tarjeta de Crédito</option><option value="installment_plan">🗓️ Plan / Cuotas</option><option value="personal">🤝 Préstamo / Persona</option><option value="general">📌 General</option></select></div><div class="grid grid-cols-2 gap-2"><input id="db-card" type="text" placeholder="Tarjeta o banco (ej: Visa, Oca, Master)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><input id="db-counterparty" type="text" placeholder="Comercio o persona (opcional)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /></div><div class="grid grid-cols-3 gap-2"><input id="db-amount" type="number" step="0.01" required placeholder="Monto" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><select id="db-amount-mode" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="total">Monto Total</option><option value="installment">Valor x Cuota</option></select><select id="db-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select></div><div class="grid grid-cols-2 gap-2"><input id="db-installments" type="number" min="1" max="120" value="1" placeholder="Cantidad de cuotas (1 = pago único)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="db-due" type="text" placeholder="Vencimiento / Cierre (ej: 30/11)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /></div><input id="db-notes" type="text" placeholder="Notas adicionales (opcional)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewDebtModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Guardar</button></div></form></div>` : ''}
         ${ui.showNewBudgetModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateBudgetSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">🎯 Nueva Categoría</h3><input id="bg-name" type="text" required placeholder="Nombre" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="bg-limit" type="number" required placeholder="Tope ($ UYU)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="bg-icon" type="text" value="🎯" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewBudgetModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Crear</button></div></form></div>` : ''}
         ${ui.showVoiceWidgetOverlay ? `<div class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4 text-center"><div class="glass-97 w-full max-w-sm rounded-3xl p-6 border-2 border-cyan-400/50 animate-pop-elastic space-y-3"><div class="text-4xl">${ui.isListening?'🎙️':'✨'}</div><h3 class="text-base font-extrabold text-white">${ui.isListening?'Escuchando...':'Dictado por Voz'}</h3>${ui.voiceHintMsg?`<p class="text-[11px] text-amber-200 bg-amber-500/15 rounded-xl p-2">${ui.voiceHintMsg}</p>`:''}<input id="voice-overlay-manual-input" type="text" value="${escapeAttr(ui.voiceTranscript)}" oninput="ui.voiceTranscript=this.value;" onkeydown="if(event.key==='Enter')submitVoiceOverlayInput();" placeholder="Dictá con el teclado o escribí..." class="w-full bg-slate-950/85 border border-cyan-400/50 rounded-2xl px-3.5 py-3 text-xs text-white" /><div class="grid grid-cols-2 gap-2.5 pt-1"><button onclick="submitVoiceOverlayInput()" class="spring-btn py-2.5 rounded-2xl bg-cyan-400 text-slate-950 font-extrabold text-xs">✅ Procesar</button><button onclick="stopVoiceCapture();ui.showVoiceWidgetOverlay=false;render();" class="py-2.5 rounded-2xl bg-white/10 text-slate-300 font-bold text-xs">Cerrar</button></div></div></div>` : ''}
       `;
