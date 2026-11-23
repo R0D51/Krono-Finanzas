@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795464219930,
+  "updatedAt": 1795464224857,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -102,7 +102,7 @@
       "id": "acc_uyu",
       "name": "Cuenta Itaú / Débito",
       "currency": "UYU",
-      "balance": -8017,
+      "balance": -12259,
       "color": "from-cyan-400 to-blue-500",
       "icon": "🏦"
     },
@@ -235,6 +235,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795464224857_962",
+      "title": "324",
+      "amount": 4242,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Itaú / Débito",
+      "date": "23/11 17:03",
+      "timestamp": 1795464224857
+    },
     {
       "id": "tx_1795464219929_908",
       "title": "432",
