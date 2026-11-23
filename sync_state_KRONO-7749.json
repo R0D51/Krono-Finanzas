@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795461568642,
+  "updatedAt": 1795461994608,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -162,6 +162,22 @@
   ],
   "debts": [
     {
+      "id": "debt_1795461994607_298",
+      "title": "Prueba",
+      "counterparty": "Milonga",
+      "paymentMethod": "credit_card",
+      "cardName": "Itaú",
+      "installmentsCount": 3,
+      "paidInstallments": 0,
+      "amount": 456,
+      "currency": "UYU",
+      "kind": "debt",
+      "dueDate": "",
+      "status": "pending",
+      "notes": "Cosso Pero Pum",
+      "createdAt": 1795461994607
+    },
+    {
       "id": "debt_1795461568642_995",
       "title": "Compu",
       "counterparty": "CDR",
@@ -219,6 +235,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_debt_1795461994607_516",
+      "title": "📉 Deuda: Prueba (Itaú) • 3 cuotas",
+      "amount": 456,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Tarjeta / Crédito",
+      "accountId": "debt_ledger",
+      "accountName": "Itaú",
+      "date": "23/11 16:26",
+      "timestamp": 1795461994607
+    },
     {
       "id": "tx_1795318631934_714",
       "title": "Cobro: Préstamo a amigo / Crédito",
