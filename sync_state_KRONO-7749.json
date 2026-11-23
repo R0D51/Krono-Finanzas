@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795461189346,
+  "updatedAt": 1795461568642,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -161,6 +161,22 @@
     }
   ],
   "debts": [
+    {
+      "id": "debt_1795461568642_995",
+      "title": "Compu",
+      "counterparty": "CDR",
+      "paymentMethod": "credit_card",
+      "cardName": "Itaú Visa",
+      "installmentsCount": 12,
+      "paidInstallments": 0,
+      "amount": 36000,
+      "currency": "UYU",
+      "kind": "debt",
+      "dueDate": "",
+      "status": "pending",
+      "notes": "",
+      "createdAt": 1795461568642
+    },
     {
       "id": "debt_1795461189346_365",
       "title": "Porton",
