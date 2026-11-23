@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795461994608,
+  "updatedAt": 1795464216944,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -102,7 +102,7 @@
       "id": "acc_uyu",
       "name": "Cuenta Itaú / Débito",
       "currency": "UYU",
-      "balance": 18650,
+      "balance": 15407,
       "color": "from-cyan-400 to-blue-500",
       "icon": "🏦"
     },
@@ -235,6 +235,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795464216944_229",
+      "title": "fsef",
+      "amount": 3243,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Comida y Súper",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Itaú / Débito",
+      "date": "23/11 17:03",
+      "timestamp": 1795464216944
+    },
     {
       "id": "tx_debt_1795461994607_516",
       "title": "📉 Deuda: Prueba (Itaú) • 3 cuotas",
