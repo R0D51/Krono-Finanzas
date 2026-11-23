@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.39
+    // KRONO OTA BOOTLOADER v6.5.40
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -133,6 +133,29 @@
 }
 .krono-recent-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(103, 232, 249, 0.72);
+}
+.krono-sidebar-shell {
+  background: linear-gradient(175deg, rgba(10, 18, 36, 0.72) 0%, rgba(7, 13, 28, 0.62) 55%, rgba(14, 18, 38, 0.68) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.6), 0 1px 0 0 rgba(255, 255, 255, 0.22) inset !important;
+}
+.krono-brand-card {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.10), rgba(139, 92, 246, 0.08)) !important;
+  border: 1px solid rgba(103, 232, 249, 0.22) !important;
+  box-shadow: 0 8px 20px -8px rgba(6, 182, 212, 0.25), 0 1px 0 0 rgba(255, 255, 255, 0.16) inset;
+}
+.krono-brand-emblem {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.24), rgba(139, 92, 246, 0.26));
+  border: 1px solid rgba(103, 232, 249, 0.45);
+  box-shadow: 0 0 18px -4px rgba(34, 211, 238, 0.5), 0 1px 0 0 rgba(255, 255, 255, 0.3) inset;
+}
+.krono-nav-item .krono-nav-icon {
+  transition: transform 0.28s cubic-bezier(0.34, 1.7, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease;
+}
+.krono-nav-item:hover .krono-nav-icon {
+  transform: scale(1.1) rotate(-4deg);
+  border-color: rgba(103, 232, 249, 0.4);
+  background-color: rgba(34, 211, 238, 0.12);
 }</style>
 <style id="krono-spin-buttons-css">input[type=number] { -moz-appearance: textfield !important; padding-right: 1.85rem !important; }
 input[type=number]::-webkit-inner-spin-button,
@@ -219,6 +242,29 @@ input[type=number]::-webkit-outer-spin-button:hover {
 .krono-recent-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(103, 232, 249, 0.72);
 }</style>
+<style id="krono-sidebar-css">.krono-sidebar-shell {
+  background: linear-gradient(175deg, rgba(10, 18, 36, 0.72) 0%, rgba(7, 13, 28, 0.62) 55%, rgba(14, 18, 38, 0.68) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.6), 0 1px 0 0 rgba(255, 255, 255, 0.22) inset !important;
+}
+.krono-brand-card {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.10), rgba(139, 92, 246, 0.08)) !important;
+  border: 1px solid rgba(103, 232, 249, 0.22) !important;
+  box-shadow: 0 8px 20px -8px rgba(6, 182, 212, 0.25), 0 1px 0 0 rgba(255, 255, 255, 0.16) inset;
+}
+.krono-brand-emblem {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.24), rgba(139, 92, 246, 0.26));
+  border: 1px solid rgba(103, 232, 249, 0.45);
+  box-shadow: 0 0 18px -4px rgba(34, 211, 238, 0.5), 0 1px 0 0 rgba(255, 255, 255, 0.3) inset;
+}
+.krono-nav-item .krono-nav-icon {
+  transition: transform 0.28s cubic-bezier(0.34, 1.7, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease;
+}
+.krono-nav-item:hover .krono-nav-icon {
+  transform: scale(1.1) rotate(-4deg);
+  border-color: rgba(103, 232, 249, 0.4);
+  background-color: rgba(34, 211, 238, 0.12);
+}</style>
 </head><body class="min-h-[100dvh] w-full max-w-[100vw] relative selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
   <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
     <div class="aurora-orb-1 absolute -top-24 -left-24 w-[440px] h-[440px] rounded-full bg-cyan-500/25 blur-[110px]"></div>
@@ -230,7 +276,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 min-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-x-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.39';
+    const APP_BASE_VERSION = '6.5.40';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -243,7 +289,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.39',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.40',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -1713,15 +1759,47 @@ input[type=number]::-webkit-outer-spin-button:hover {
       root.innerHTML = `
         <div class="flex-1 flex flex-col md:flex-row w-full max-w-[100vw] min-h-[100dvh] overflow-x-hidden">
           <aside class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 left-0 z-30 p-4">
-            <div class="glass-97 flex-1 rounded-3xl p-5 flex flex-col justify-between">
+            <div class="krono-sidebar-shell glass-97 flex-1 rounded-3xl p-4 flex flex-col justify-between">
               <div>
-                <div class="flex justify-between items-center mb-6"><div><h1 class="text-xl font-extrabold text-white">Krono Finanzas</h1><span class="text-[11px] font-bold mono text-cyan-300">v${ver} • Sync Activo</span></div><span class="krono-sync-dot w-2.5 h-2.5 rounded-full bg-emerald-400"></span></div>
-                <nav class="space-y-1.5">${nav.map(i => `<button onclick="switchTab('${i.id}');" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold ${ui.activeTab===i.id?'bg-cyan-400 text-slate-950':'text-slate-300 hover:bg-white/10'}"><span>${i.icon}</span><span>${i.label}</span></button>`).join('')}</nav>
+                <div class="krono-brand-card rounded-2xl p-3.5 mb-5 flex items-center justify-between gap-2.5">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div class="krono-brand-emblem w-10 h-10 rounded-2xl flex items-center justify-center font-extrabold text-base text-cyan-200 shrink-0">K</div>
+                    <div class="min-w-0">
+                      <h1 class="text-[15px] font-extrabold tracking-tight text-white truncate">Krono Finanzas</h1>
+                      <div class="flex items-center gap-1.5 mt-0.5">
+                        <span class="text-[10px] font-bold mono px-1.5 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/30 text-cyan-300">v${ver}</span>
+                        <span class="text-[10px] font-semibold text-emerald-300/90 truncate">En línea</span>
+                      </div>
+                    </div>
+                  </div>
+                  <span class="krono-sync-dot w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0"></span>
+                </div>
+                <div class="px-2.5 mb-2 flex items-center justify-between">
+                  <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400/80">Navegación</span>
+                </div>
+                <nav class="space-y-1.5">${nav.map(i => {
+                  const isAct = ui.activeTab === i.id;
+                  return `<button onclick="switchTab('${i.id}');" class="krono-nav-item w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-bold ${isAct ? 'bg-cyan-400 text-slate-950 is-active' : 'text-slate-300 hover:bg-white/10'}">
+                    <div class="flex items-center gap-3 min-w-0">
+                      <span class="krono-nav-icon w-7 h-7 rounded-xl flex items-center justify-center text-sm shrink-0 ${isAct ? 'bg-cyan-400/20 text-cyan-200 border border-cyan-300/40' : 'bg-white/[0.04] border border-white/10'}">${i.icon}</span>
+                      <span class="truncate">${i.label}</span>
+                    </div>
+                    ${isAct ? '<span class="w-1.5 h-1.5 rounded-full bg-cyan-300 shadow-[0_0_8px_#67e8f9] shrink-0"></span>' : ''}
+                  </button>`;
+                }).join('')}</nav>
               </div>
-              <div class="space-y-2 pt-4 border-t border-white/10">
-                <div class="text-[11px] text-slate-400 mono flex justify-between"><span>${state.syncCode}</span><span>${ui.syncStatusText}</span></div>
-                <button onclick="syncAllNow(true)" class="spring-btn w-full py-2.5 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-200 font-bold text-xs">🔄 Sincronizar</button>
-                <button onclick="ui.showOtaModal=true;render();" class="spring-btn w-full py-2.5 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 font-bold text-xs">🚀 Panel OTA</button>
+              <div class="space-y-2.5 pt-3.5 border-t border-white/10">
+                <div class="rounded-2xl bg-slate-950/45 border border-white/10 px-3 py-2.5 flex items-center justify-between gap-2">
+                  <div class="min-w-0">
+                    <div class="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Código Sync</div>
+                    <div class="text-[11px] font-extrabold mono text-cyan-200 truncate">${state.syncCode}</div>
+                  </div>
+                  <span class="text-[10px] mono px-2 py-0.5 rounded-lg bg-white/[0.05] border border-white/10 text-slate-300 shrink-0">${ui.syncStatusText}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <button onclick="syncAllNow(true)" class="spring-btn py-2.5 px-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/35 text-cyan-200 font-bold text-[11px] flex items-center justify-center gap-1.5"><span>🔄</span><span>Sync</span></button>
+                  <button onclick="ui.showOtaModal=true;render();" class="spring-btn py-2.5 px-2.5 rounded-xl bg-violet-500/15 hover:bg-violet-500/25 border border-violet-400/35 text-violet-200 font-bold text-[11px] flex items-center justify-center gap-1.5"><span>🚀</span><span>OTA</span></button>
+                </div>
               </div>
             </div>
           </aside>
