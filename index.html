@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.33
+    // KRONO OTA BOOTLOADER v6.5.35
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -83,7 +83,7 @@
   <div id="app-root" class="relative z-10 min-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-x-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.33';
+    const APP_BASE_VERSION = '6.5.35';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -96,8 +96,8 @@
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.33',
-      lastReleaseNotes: 'v6.5.33: Movimientos de deudas/créditos integrados en Últimos Movimientos y quitados de la lista inferior de Cuentas Pendientes.',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.35',
+      lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
       accounts: [
@@ -109,6 +109,10 @@
         { id: 'cat_food', name: 'Comida y Súper', limit: 18000, icon: '🛒', color: '#06b6d4' },
         { id: 'cat_services', name: 'Servicios y Luz', limit: 8500, icon: '⚡', color: '#8b5cf6' },
         { id: 'cat_transport', name: 'Transporte y Nafta', limit: 7000, icon: '🚗', color: '#10b981' }
+      ],
+      creditCards: [
+        { id: 'card_itau_visa', name: 'Itaú Visa', brand: 'Visa', bank: 'Itaú', currency: 'UYU', closingDay: '15', dueDay: '25' },
+        { id: 'card_zodimac', name: 'Zodimac', brand: 'Comercio', bank: 'Zodimac', currency: 'UYU', closingDay: '10', dueDay: '23' }
       ],
       debts: [
         { id: 'debt_demo_1', title: 'Préstamo a amigo / Crédito', counterparty: 'Lucas', amount: 3500, currency: 'UYU', kind: 'credit', dueDate: '', status: 'pending', notes: '' },
@@ -124,7 +128,7 @@
     let pendingInputModalCallback = null;
     let ui = {
       activeTab: 'dashboard', displayCurrency: state.defaultCurrency || 'UYU', voiceTargetAccountId: 'auto',
-      showNewTxModal: false, showNewAccountModal: false, showTransferModal: false, showNewBudgetModal: false, showNewDebtModal: false, debtFilterKind: 'all', debtFilterStatus: 'pending', debtFilterCard: 'all',
+      showNewTxModal: false, showNewAccountModal: false, showTransferModal: false, showNewBudgetModal: false, showNewDebtModal: false, showNewCardModal: false, debtFilterKind: 'all', debtFilterStatus: 'pending', debtFilterCard: 'all',
       showVoiceWidgetOverlay: false, showOtaModal: false, inputModal: null, otaStatusMsg: '', otaChecking: false,
       githubPushing: false, releaseNotesInput: '', txSearch: '', txFilterType: 'all', txFilterAccount: 'all',
       txFilterCurrency: 'all', isListening: false, voiceTranscript: '', voiceHintMsg: '',
@@ -184,6 +188,7 @@
             externalCommandHistory: Array.isArray(parsed.externalCommandHistory) ? parsed.externalCommandHistory : [],
             accounts: Array.isArray(parsed.accounts) ? parsed.accounts : DEMO_STATE.accounts,
             budgets: Array.isArray(parsed.budgets) ? parsed.budgets : DEMO_STATE.budgets,
+            creditCards: Array.isArray(parsed.creditCards) ? parsed.creditCards : DEMO_STATE.creditCards,
             debts: Array.isArray(parsed.debts) ? parsed.debts : DEMO_STATE.debts,
             transactions: Array.isArray(parsed.transactions) ? parsed.transactions : DEMO_STATE.transactions
           };
@@ -664,7 +669,29 @@
     function getDebtsCardsBreakdown() {
       const rate = Number(state.exchangeRate) || 41.5;
       const list = Array.isArray(state.debts) ? state.debts : [];
+      const savedCards = Array.isArray(state.creditCards) ? state.creditCards : [];
       const map = new Map();
+      savedCards.forEach(sc => {
+        const label = (sc.name || '').trim();
+        if (!label) return;
+        const key = label.toLowerCase();
+        if (!map.has(key)) {
+          map.set(key, {
+            id: sc.id,
+            name: label,
+            currency: sc.currency || 'UYU',
+            closingDay: sc.closingDay || '',
+            dueDay: sc.dueDay || '',
+            totalItems: 0,
+            pendingItems: 0,
+            activeInstallmentPlans: 0,
+            remainingInstallmentsTotal: 0,
+            nextPaymentUYU: 0,
+            remainingBalanceUYU: 0,
+            dueDates: sc.dueDay ? ['Día ' + sc.dueDay] : []
+          });
+        }
+      });
       list.forEach(d => {
         const cardLabel = getDebtInstrumentLabel(d);
         if (!cardLabel) return;
@@ -885,6 +912,40 @@
     function deleteDebtItem(id) {
       if (!confirm('¿Eliminar este registro pendiente?')) return;
       state.debts = (Array.isArray(state.debts) ? state.debts : []).filter(x => x.id !== id);
+      saveState(true, true);
+    }
+
+    function handleCreateCreditCardSubmit(e) {
+      if (e) e.preventDefault();
+      if (!Array.isArray(state.creditCards)) state.creditCards = [];
+      const name = (document.getElementById('cc-name').value || '').trim();
+      if (!name) return;
+      const bank = (document.getElementById('cc-bank').value || '').trim();
+      const brand = (document.getElementById('cc-brand').value || 'Visa').trim();
+      const currency = document.getElementById('cc-currency').value || 'UYU';
+      const closingDay = (document.getElementById('cc-closing').value || '').trim();
+      const dueDay = (document.getElementById('cc-due').value || '').trim();
+      const cardObj = {
+        id: 'card_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        name,
+        bank,
+        brand,
+        currency,
+        closingDay,
+        dueDay
+      };
+      state.creditCards.unshift(cardObj);
+      ui.showNewCardModal = false;
+      spawnFloatingBurst(`💳 Tarjeta ${name} creada`, true);
+      saveState(true, true);
+      setTimeout(() => {
+        const sel = document.getElementById('db-card');
+        if (sel) { sel.value = name; }
+      }, 50);
+    }
+    function deleteCreditCard(cardId) {
+      if (!confirm('¿Eliminar esta tarjeta guardada?')) return;
+      state.creditCards = (Array.isArray(state.creditCards) ? state.creditCards : []).filter(c => c.id !== cardId);
       saveState(true, true);
     }
 
@@ -1185,7 +1246,7 @@
       }
       if (params.get('voice') === '1') setTimeout(() => startVoiceCapture(), 350);
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
-        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.33: Movimientos de deudas/créditos integrados en Últimos Movimientos y quitados de la lista inferior de Cuentas Pendientes.'), 1200);
+        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.'), 1200);
       } else if (state.autoCheckOta && cleanRepoSlug()) {
         setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
       }
@@ -1211,48 +1272,11 @@
             <div class="min-w-0"><div class="text-slate-400 truncate">Ahorro</div><div class="text-cyan-300 font-bold mono mt-0.5">${totals.savingsRate}%</div></div>
           </div>
         </div>
-        <div class="glass-97 rounded-3xl p-4 w-full max-w-full overflow-hidden space-y-2.5">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="text-xs text-cyan-300 font-extrabold">🎙️ Dictado y Google Tasks</span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-200 border border-emerald-400/30">${ui.bridgeDiagnostic}</span>
-            </div>
-            <div class="flex items-center gap-1.5 w-full sm:w-auto min-w-0">
-              <span class="text-[11px] text-slate-400 shrink-0">Cuenta:</span>
-              <select onchange="ui.voiceTargetAccountId=this.value;render();" class="w-full sm:w-auto max-w-full min-w-0 bg-slate-950/75 border border-white/15 rounded-xl px-2.5 py-1.5 text-xs text-cyan-200 font-bold truncate">
-                <option value="auto" ${ui.voiceTargetAccountId==='auto'?'selected':''}>🤖 Auto (por voz)</option>
-                ${state.accounts.map(a => `<option value="${a.id}" ${ui.voiceTargetAccountId===a.id?'selected':''}>${a.icon||'🏦'} ${a.name} (${a.currency})</option>`).join('')}
-              </select>
-            </div>
-          </div>
-          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
-            <input id="gemini-quick-input" type="text" placeholder="Ej: Me ingresaron 5,000 pesos o Gasté $ 200..." onkeydown="if(event.key==='Enter'){processGeminiCommand(this.value);this.value='';}" class="w-full min-w-0 sm:flex-1 bg-slate-950/60 border border-white/15 rounded-2xl px-3.5 py-2.5 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-400" />
-            <div class="grid grid-cols-2 sm:flex items-center gap-2 w-full sm:w-auto shrink-0">
-              <button onclick="startVoiceCapture()" class="spring-btn w-full sm:w-auto px-4 py-2.5 rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 bg-gradient-to-r from-cyan-500 to-violet-600 text-white">🎙️ Dictar</button>
-              <button onclick="const i=document.getElementById('gemini-quick-input');if(i.value){processGeminiCommand(i.value);i.value='';}" class="spring-btn w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-cyan-400 text-slate-950 font-extrabold text-xs sm:text-sm">Enviar</button>
-            </div>
-          </div>
-          ${ui.geminiResponse ? `<div class="p-3 rounded-2xl bg-slate-950/60 border border-cyan-400/30 text-xs flex items-center justify-between gap-2"><div class="min-w-0 flex-1 break-words"><span class="text-cyan-300 font-bold">Gemini:</span> <span class="text-slate-200">${ui.geminiResponse.reply}</span></div><button onclick="ui.geminiResponse=null;render();" class="text-slate-400">✕</button></div>` : ''}
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          <button onclick="ui.showNewTxModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">➕</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Movimiento</div><div class="text-[10px] text-slate-400 truncate">Gasto o ingreso</div></div></button>
-          <button onclick="ui.showTransferModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">⇄</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Transferir</div><div class="text-[10px] text-slate-400 truncate">Entre cuentas</div></div></button>
-          <button onclick="ui.showNewDebtModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">📌</span><div class="min-w-0"><div class="text-xs font-bold text-amber-200 truncate">Deudas</div><div class="text-[10px] text-slate-400 truncate">Créditos o pendientes</div></div></button>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="glass-97 rounded-3xl p-5">
-            <div class="flex justify-between mb-3"><h3 class="text-sm font-extrabold text-white">🏦 Cuentas Activas</h3><button onclick="switchTab('accounts');" class="text-xs text-cyan-300">Ver todas →</button></div>
-            <div class="space-y-2.5">${state.accounts.map(a => `<div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="flex items-center gap-2.5 min-w-0"><span class="text-xl">${a.icon||'🏦'}</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">${a.name}</div><div class="text-[10px] text-slate-400">${a.currency}</div></div></div><div class="text-sm font-extrabold mono text-white shrink-0">${formatMoney(a.balance,a.currency)}</div></div>`).join('')}</div>
-          </div>
-          <div class="glass-97 rounded-3xl p-5">
-            <div class="flex justify-between mb-3"><h3 class="text-sm font-extrabold text-white">⚡ Últimos Movimientos</h3><button onclick="switchTab('movements');" class="text-xs text-cyan-300">Historial →</button></div>
-            <div class="space-y-2.5">${state.transactions.slice(0,4).length ? state.transactions.slice(0,4).map(t => `<div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="min-w-0"><div class="text-xs font-bold text-white truncate">${t.title}</div><div class="text-[10px] text-slate-400 truncate">${t.category} • <span class="text-cyan-300">${t.accountName}</span> • ${t.date}</div></div><div class="text-xs font-extrabold mono shrink-0 ${t.type==='income'?'text-emerald-300':'text-rose-300'}">${t.type==='income'?'+':'-'}${formatMoney(t.amount,t.currency)}</div></div>`).join('') : '<div class="text-xs text-slate-400 py-4 text-center">Sin movimientos.</div>'}</div>
-          </div>
-        </div>
         <div class="glass-97 rounded-3xl p-5">
           <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
             <h3 class="text-sm font-extrabold text-white">📌 Cuentas Pendientes, Créditos y Deudas</h3>
             <div class="flex items-center gap-3 shrink-0">
+              <button onclick="ui.showNewCardModal=true;render();" class="text-xs font-bold text-violet-300 hover:text-violet-200">+ Tarjeta</button>
               <button onclick="ui.showNewDebtModal=true;render();" class="text-xs font-bold text-amber-300 hover:text-amber-200">+ Nueva deuda/crédito</button>
               <button onclick="switchTab('debts');" class="text-xs text-cyan-300">Ver todas →</button>
             </div>
@@ -1276,6 +1300,22 @@
               </div>
             `;
           })()}
+        </div>
+        ${ui.geminiResponse ? `<div class="p-3 rounded-2xl bg-slate-950/60 border border-cyan-400/30 text-xs flex items-center justify-between gap-2"><div class="min-w-0 flex-1 break-words"><span class="text-cyan-300 font-bold">Gemini:</span> <span class="text-slate-200">${ui.geminiResponse.reply}</span></div><button onclick="ui.geminiResponse=null;render();" class="text-slate-400">✕</button></div>` : ''}
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <button onclick="ui.showNewTxModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">➕</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Movimiento</div><div class="text-[10px] text-slate-400 truncate">Gasto o ingreso</div></div></button>
+          <button onclick="ui.showTransferModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">⇄</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Transferir</div><div class="text-[10px] text-slate-400 truncate">Entre cuentas</div></div></button>
+          <button onclick="ui.showNewDebtModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">📌</span><div class="min-w-0"><div class="text-xs font-bold text-amber-200 truncate">Deudas</div><div class="text-[10px] text-slate-400 truncate">Créditos o pendientes</div></div></button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="glass-97 rounded-3xl p-5">
+            <div class="flex justify-between mb-3"><h3 class="text-sm font-extrabold text-white">🏦 Cuentas Activas</h3><button onclick="switchTab('accounts');" class="text-xs text-cyan-300">Ver todas →</button></div>
+            <div class="space-y-2.5">${state.accounts.map(a => `<div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="flex items-center gap-2.5 min-w-0"><span class="text-xl">${a.icon||'🏦'}</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">${a.name}</div><div class="text-[10px] text-slate-400">${a.currency}</div></div></div><div class="text-sm font-extrabold mono text-white shrink-0">${formatMoney(a.balance,a.currency)}</div></div>`).join('')}</div>
+          </div>
+          <div class="glass-97 rounded-3xl p-5">
+            <div class="flex justify-between mb-3"><h3 class="text-sm font-extrabold text-white">⚡ Últimos Movimientos</h3><button onclick="switchTab('movements');" class="text-xs text-cyan-300">Historial →</button></div>
+            <div class="space-y-2.5">${state.transactions.slice(0,4).length ? state.transactions.slice(0,4).map(t => `<div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="min-w-0"><div class="text-xs font-bold text-white truncate">${t.title}</div><div class="text-[10px] text-slate-400 truncate">${t.category} • <span class="text-cyan-300">${t.accountName}</span> • ${t.date}</div></div><div class="text-xs font-extrabold mono shrink-0 ${t.type==='income'?'text-emerald-300':'text-rose-300'}">${t.type==='income'?'+':'-'}${formatMoney(t.amount,t.currency)}</div></div>`).join('') : '<div class="text-xs text-slate-400 py-4 text-center">Sin movimientos.</div>'}</div>
+          </div>
         </div>
         <div class="glass-97 rounded-3xl p-5">
           <div class="flex justify-between mb-3"><h3 class="text-sm font-extrabold text-white">🎯 Top Presupuestos</h3><button onclick="switchTab('budgets');" class="text-xs text-cyan-300">Administrar →</button></div>
@@ -1336,7 +1376,10 @@
             <h2 class="text-lg font-extrabold text-white">📌 Pendientes, Créditos y Tarjetas</h2>
             <p class="text-xs text-slate-400 mt-0.5">Control individual de tarjetas (ej. Itaú Visa), próximo pago, cuotas y saldos</p>
           </div>
-          <button onclick="ui.showNewDebtModal=true;render();" class="spring-btn px-4 py-2 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">+ Nuevo</button>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="ui.showNewCardModal=true;render();" class="spring-btn px-3.5 py-2 rounded-xl bg-violet-500/25 border border-violet-400/40 text-violet-200 font-bold text-xs">+ Nueva tarjeta</button>
+            <button onclick="ui.showNewDebtModal=true;render();" class="spring-btn px-4 py-2 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">+ Nuevo</button>
+          </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div class="spring-card glass-97 rounded-3xl p-4">
@@ -1524,7 +1567,9 @@
         ${ui.showNewTxModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleNewTxSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">➕ Nuevo Movimiento</h3><input id="tx-title" type="text" required placeholder="Descripción" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="tx-amount" type="number" step="0.01" required placeholder="Monto" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><select id="tx-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select></div><div class="grid grid-cols-2 gap-2"><select id="tx-type" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="expense">Gasto (-)</option><option value="income">Ingreso (+)</option></select><select id="tx-account" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('')}</select></div><select id="tx-category" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.budgets.map(b => `<option value="${b.name}">${b.icon} ${b.name}</option>`).join('')}<option value="General">📌 General</option><option value="Ingreso">💰 Ingreso</option></select><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewTxModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Guardar</button></div></form></div>` : ''}
         ${ui.showNewAccountModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="createAccount(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">🏦 Nueva Cuenta</h3><input id="acc-name" type="text" required placeholder="Nombre" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-3 gap-2"><select id="acc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">UYU</option><option value="USD">USD</option></select><input id="acc-balance" type="number" step="0.01" placeholder="Saldo" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="acc-icon" type="text" value="🏦" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewAccountModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Crear</button></div></form></div>` : ''}
         ${ui.showTransferModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleTransferSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">⇄ Transferir</h3><select id="tr-from" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map(a => `<option value="${a.id}">Desde: ${a.name}</option>`).join('')}</select><select id="tr-to" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map((a,i) => `<option value="${a.id}" ${i===1?'selected':''}>Hacia: ${a.name}</option>`).join('')}</select><input id="tr-amount" type="number" step="0.01" required placeholder="Monto" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showTransferModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Transferir</button></div></form></div>` : ''}
-        ${ui.showNewDebtModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateDebtSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">📌 Nuevo Crédito / Deuda / Tarjeta</h3><input id="db-title" type="text" required placeholder="Concepto (ej: Compra en cuotas, préstamo, tarjeta)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><select id="db-kind" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="debt">📉 Deuda / Debo (-)</option><option value="credit">📈 Crédito / Me deben (+)</option></select><select id="db-method" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="credit_card">💳 Tarjeta de Crédito</option><option value="installment_plan">🗓️ Plan / Cuotas</option><option value="personal">🤝 Préstamo / Persona</option><option value="general">📌 General</option></select></div><div class="grid grid-cols-2 gap-2"><input id="db-card" type="text" placeholder="Tarjeta o banco (ej: Visa, Oca, Master)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><input id="db-counterparty" type="text" placeholder="Comercio o persona (opcional)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /></div><div class="grid grid-cols-3 gap-2"><input id="db-amount" type="number" step="0.01" required placeholder="Monto" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><select id="db-amount-mode" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="total">Monto Total</option><option value="installment">Valor x Cuota</option></select><select id="db-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select></div><div class="grid grid-cols-2 gap-2"><input id="db-installments" type="number" min="1" max="120" value="1" placeholder="Cantidad de cuotas (1 = pago único)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="db-due" type="text" placeholder="Vencimiento / Cierre (ej: 30/11)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /></div><input id="db-notes" type="text" placeholder="Notas adicionales (opcional)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewDebtModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Guardar</button></div></form></div>` : ''}
+                <button onclick="startVoiceCapture()" title="Dictado por voz" aria-label="Dictado por voz" class="spring-btn fixed bottom-20 md:bottom-6 right-5 z-40 w-12 h-12 rounded-full bg-gradient-to-r from-cyan-500 to-violet-600 border border-cyan-300/50 text-white shadow-2xl flex items-center justify-center text-lg">🎙️</button>
+        ${ui.showNewCardModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateCreditCardSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-violet-400/50 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">💳 Nueva Tarjeta de Crédito</h3><input id="cc-name" type="text" required placeholder="Nombre de la tarjeta (ej: Itaú Visa, BROU Master)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="cc-bank" type="text" placeholder="Banco / Emisor (ej: Itaú)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><select id="cc-brand" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="Visa">Visa</option><option value="Mastercard">Mastercard</option><option value="Oca">Oca</option><option value="Amex">Amex</option><option value="Cabal">Cabal</option><option value="Comercio">Comercio</option></select></div><div class="grid grid-cols-3 gap-2"><select id="cc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select><input id="cc-closing" type="text" placeholder="Día cierre (ej: 15)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="cc-due" type="text" placeholder="Día vto. (ej: 25)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewCardModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-violet-400 text-slate-950 font-extrabold text-xs">Guardar Tarjeta</button></div></form></div>` : ''}
+        ${ui.showNewDebtModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateDebtSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">📌 Nuevo Crédito / Deuda / Tarjeta</h3><input id="db-title" type="text" required placeholder="Concepto (ej: Compra en cuotas, préstamo, tarjeta)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><select id="db-kind" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="debt">📉 Deuda / Debo (-)</option><option value="credit">📈 Crédito / Me deben (+)</option></select><select id="db-method" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="credit_card">💳 Tarjeta de Crédito</option><option value="installment_plan">🗓️ Plan / Cuotas</option><option value="personal">🤝 Préstamo / Persona</option><option value="general">📌 General</option></select></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div class="flex gap-1.5 items-center"><select id="db-card-pick" onchange="const c=document.getElementById('db-card');if(c && this.value) c.value=this.value;" class="flex-1 bg-slate-950/80 border border-white/15 rounded-xl px-2.5 py-2.5 text-xs text-cyan-200"><option value="">Elegir tarjeta...</option>${(Array.isArray(state.creditCards)?state.creditCards:[]).map(cc => `<option value="${escapeAttr(cc.name)}">💳 ${escapeAttr(cc.name)}</option>`).join('')}</select><button type="button" onclick="ui.showNewCardModal=true;render();" title="Crear tarjeta" class="px-2.5 py-2.5 rounded-xl bg-violet-500/25 border border-violet-400/40 text-violet-200 text-xs font-bold shrink-0">+</button></div><input id="db-card" type="text" placeholder="Tarjeta o banco (ej: Itaú Visa)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /></div><input id="db-counterparty" type="text" placeholder="Comercio o persona (opcional)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-3 gap-2"><input id="db-amount" type="number" step="0.01" required placeholder="Monto" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><select id="db-amount-mode" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="total">Monto Total</option><option value="installment">Valor x Cuota</option></select><select id="db-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select></div><div class="grid grid-cols-2 gap-2"><input id="db-installments" type="number" min="1" max="120" value="1" placeholder="Cantidad de cuotas (1 = pago único)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="db-due" type="text" placeholder="Vencimiento / Cierre (ej: 30/11)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /></div><input id="db-notes" type="text" placeholder="Notas adicionales (opcional)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewDebtModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Guardar</button></div></form></div>` : ''}
         ${ui.showNewBudgetModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateBudgetSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">🎯 Nueva Categoría</h3><input id="bg-name" type="text" required placeholder="Nombre" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="bg-limit" type="number" required placeholder="Tope ($ UYU)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="bg-icon" type="text" value="🎯" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewBudgetModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Crear</button></div></form></div>` : ''}
         ${ui.showVoiceWidgetOverlay ? `<div class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4 text-center"><div class="glass-97 w-full max-w-sm rounded-3xl p-6 border-2 border-cyan-400/50 animate-pop-elastic space-y-3"><div class="text-4xl">${ui.isListening?'🎙️':'✨'}</div><h3 class="text-base font-extrabold text-white">${ui.isListening?'Escuchando...':'Dictado por Voz'}</h3>${ui.voiceHintMsg?`<p class="text-[11px] text-amber-200 bg-amber-500/15 rounded-xl p-2">${ui.voiceHintMsg}</p>`:''}<input id="voice-overlay-manual-input" type="text" value="${escapeAttr(ui.voiceTranscript)}" oninput="ui.voiceTranscript=this.value;" onkeydown="if(event.key==='Enter')submitVoiceOverlayInput();" placeholder="Dictá con el teclado o escribí..." class="w-full bg-slate-950/85 border border-cyan-400/50 rounded-2xl px-3.5 py-3 text-xs text-white" /><div class="grid grid-cols-2 gap-2.5 pt-1"><button onclick="submitVoiceOverlayInput()" class="spring-btn py-2.5 rounded-2xl bg-cyan-400 text-slate-950 font-extrabold text-xs">✅ Procesar</button><button onclick="stopVoiceCapture();ui.showVoiceWidgetOverlay=false;render();" class="py-2.5 rounded-2xl bg-white/10 text-slate-300 font-bold text-xs">Cerrar</button></div></div></div>` : ''}
       `;
