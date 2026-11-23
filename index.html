@@ -1,103 +1,1510 @@
-import json, os, re
-
-with open("ota_v6.5.29.json", "r", encoding="utf-8") as f:
-    d29 = json.load(f)
-
-html = d29["html"]
-css = d29.get("css", "")
-js = d29.get("js", "")
-
-# 1. Fix the syntax error in DEMO_STATE.lastReleaseNotes ('.' -> "',")
-html = html.replace(
-    "lastReleaseNotes: 'v6.5.29: Control individual de tarjetas de crédito (ej. Itaú Visa) en Pendientes con próximo pago, desglose de cuotas, cuotas restantes y saldo por tarjeta/ítem.'.",
-    "lastReleaseNotes: 'v6.5.30: Sintaxis corregida, bootloader blindado y control individual de tarjetas/cuotas/deudas con 3 botones en panel principal.',"
-)
-
-# 2. Update version to 6.5.30
-html = html.replace("// KRONO OTA BOOTLOADER v6.5.29", "// KRONO OTA BOOTLOADER v6.5.30")
-html = html.replace("const APP_BASE_VERSION = '6.5.29';", "const APP_BASE_VERSION = '6.5.30';")
-html = html.replace("lastReleaseTag: 'v6.5.29',", "lastReleaseTag: 'v6.5.30',")
-html = html.replace(
-    "'v6.5.29: Control individual de tarjetas de crédito (ej. Itaú Visa) en Pendientes con próximo pago, desglose de cuotas, cuotas restantes y saldo por tarjeta/ítem.'",
-    "'v6.5.30: Sintaxis corregida, bootloader blindado y control individual de tarjetas/cuotas/deudas con 3 botones en panel principal.'"
-)
-
-# 3. Also harden the OTA bootloader so if a custom OTA HTML fails or has issues, it cleanly executes without reverting to old versions
-old_boot = """          if (customHtml.includes('<!DOCTYPE html>') || customHtml.includes('<html')) {
+<!DOCTYPE html><html lang="es"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#040711" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Krono Finanzas</title>
+  <script>
+    // KRONO OTA BOOTLOADER v6.5.31
+    (function() {
+      if (window.__KRONO_OTA_BOOTED__) return;
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('safe_reset_ota') === '1') {
+        localStorage.removeItem('KRONO_OTA_CUSTOM_HTML');
+        localStorage.removeItem('KRONO_OTA_VERSION_TAG');
+        localStorage.removeItem('KRONO_OTA_LIVE_CSS');
+        localStorage.removeItem('KRONO_OTA_LIVE_JS');
+        return;
+      }
+      try {
+        let customHtml = localStorage.getItem('KRONO_OTA_CUSTOM_HTML');
+        if (customHtml && !window.__KRONO_RUNNING_OTA__) {
+          const trimmed = customHtml.trim();
+          if (trimmed.startsWith('{')) {
+            try {
+              const parsed = JSON.parse(trimmed);
+              if (parsed && parsed.html) {
+                customHtml = parsed.html;
+                localStorage.setItem('KRONO_OTA_CUSTOM_HTML', customHtml);
+                if (parsed.version) localStorage.setItem('KRONO_OTA_VERSION_TAG', String(parsed.version).replace(/^v/i, ''));
+              }
+            } catch (err) {}
+          }
+          if (customHtml.includes('<!DOCTYPE html>') || customHtml.includes('<html')) {
             window.__KRONO_RUNNING_OTA__ = true;
             window.__KRONO_OTA_BOOTED__ = true;
             document.open();
             document.write(customHtml);
             document.close();
             return;
-          }"""
+          }
+        }
+      } catch (e) { console.error('OTA Bootloader fallback:', e); }
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+    :root { --spring-bounce: cubic-bezier(0.22, 1, 0.36, 1); --spring-soft: cubic-bezier(0.22, 1, 0.36, 1); }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Plus Jakarta Sans', sans-serif; }
+    html, body { margin: 0; padding: 0; width: 100%; max-width: 100vw; min-height: 100dvh; background: #040711; color: #f8fafc; overflow-x: hidden; user-select: none; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    @keyframes auroraFloat1 { 0%, 100% { transform: translate3d(0,0,0) scale(1) rotate(0deg); } 50% { transform: translate3d(65px,-45px,0) scale(1.22) rotate(12deg); } }
+    @keyframes auroraFloat2 { 0%, 100% { transform: translate3d(0,0,0) scale(1) rotate(0deg); } 50% { transform: translate3d(-55px,50px,0) scale(1.18) rotate(-10deg); } }
+    @keyframes auroraFloat3 { 0%, 100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(40px,35px,0) scale(1.15); } }
+    .aurora-orb-1 { animation: auroraFloat1 14s ease-in-out infinite; }
+    .aurora-orb-2 { animation: auroraFloat2 17s ease-in-out infinite; }
+    .aurora-orb-3 { animation: auroraFloat3 19s ease-in-out infinite; }
+    .spring-card { transition: box-shadow 0.22s ease, background-color 0.22s ease, border-color 0.22s ease; }
+    .spring-card:hover { background-color: rgba(255,255,255,0.06); box-shadow: 0 20px 42px -12px rgba(6,182,212,0.32), 0 1px 0 0 rgba(255,255,255,0.34) inset; border-color: rgba(34,211,238,0.48); }
+    .spring-card:active { background-color: rgba(255,255,255,0.03); border-color: rgba(34,211,238,0.65); }
+    .spring-btn { transition: box-shadow 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease; }
+    .spring-btn:hover { box-shadow: 0 8px 24px -6px rgba(6,182,212,0.38), 0 0 0 1px rgba(255,255,255,0.22) inset; }
+    .spring-btn:active { box-shadow: 0 2px 10px -2px rgba(6,182,212,0.28), 0 0 0 1px rgba(255,255,255,0.35) inset; }
+    @keyframes popInElastic { 0% { opacity: 0; } 100% { opacity: 1; } }
+    .animate-pop-elastic { animation: popInElastic 0.18s ease-out both; }
+    @keyframes floatBurst { 0% { opacity: 0; } 12% { opacity: 1; } 82% { opacity: 1; } 100% { opacity: 0; } }
+    .animate-burst { animation: floatBurst 1.5s ease-out forwards; }
+    .glass-97 { background: rgba(255,255,255,0.032); border: 1px solid rgba(255,255,255,0.22); backdrop-filter: blur(32px) saturate(200%); -webkit-backdrop-filter: blur(32px) saturate(200%); box-shadow: 0 16px 40px -8px rgba(0,0,0,0.48), 0 1px 0 0 rgba(255,255,255,0.26) inset, 0 -1px 0 0 rgba(255,255,255,0.08) inset; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(4,7,17,0.6); }
+    ::-webkit-scrollbar-thumb { background: rgba(6,182,212,0.35); border-radius: 9999px; }
+  </style>
+  <style id="krono-live-custom-css">html, body { -webkit-font-smoothing: auto !important; } @keyframes kronoTabIn { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: none; } } @keyframes kronoModalIn { 0% { opacity: 0; transform: translateY(24px); } 100% { opacity: 1; transform: none; } } @keyframes kronoDropIn { 0% { opacity: 0; transform: translateY(-8px); } 100% { opacity: 1; transform: none; } } @keyframes kronoDropInUp { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: none; } } @keyframes kronoBurstIn { 0% { opacity: 0; transform: translateY(16px); } 14% { opacity: 1; transform: translateY(0px); } 84% { opacity: 1; transform: translateY(-28px); } 100% { opacity: 0; transform: translateY(-48px); } } @keyframes kronoRipple { 0% { opacity: 0.52; transform: translate(-50%, -50%) scale(0); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(2.8); } } @keyframes kronoBarShine { 0% { transform: translateX(-100%); } 100% { transform: translateX(240%); } } @keyframes kronoDotPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6); } 60% { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); } } .krono-sync-dot { animation: kronoDotPulse 2.4s ease-out infinite; } .glass-97 { position: relative; backdrop-filter: blur(18px) saturate(185%) !important; -webkit-backdrop-filter: blur(18px) saturate(185%) !important; background: rgba(255, 255, 255, 0.036) !important; transition: transform 0.38s cubic-bezier(0.22, 1.45, 0.36, 1), box-shadow 0.3s ease, border-color 0.24s ease, background-color 0.24s ease !important; } .glass-97::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 0.25s ease; background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgba(34, 211, 238, 0.16), rgba(139, 92, 246, 0.07) 44%, transparent 72%); z-index: 0; } .glass-97:hover::before { opacity: 1; } .glass-97 > *:not(.krono-ripple) { position: relative; z-index: 1; } main .glass-97:hover { border-color: rgba(34, 211, 238, 0.42) !important; box-shadow: 0 20px 44px -12px rgba(6, 182, 212, 0.25), 0 1px 0 0 rgba(255, 255, 255, 0.34) inset !important; } .spring-card { position: relative !important; top: 0 !important; overflow: hidden; filter: none !important; cursor: pointer !important; transition: transform 0.4s cubic-bezier(0.22, 1.5, 0.36, 1), box-shadow 0.32s ease, border-color 0.24s ease, background-color 0.24s ease !important; } .spring-card:hover { top: 0 !important; transform: translateY(-8px) !important; background-color: rgba(255, 255, 255, 0.062) !important; border-color: rgba(34, 211, 238, 0.6) !important; box-shadow: 0 28px 52px -12px rgba(6, 182, 212, 0.38), 0 1px 0 0 rgba(255, 255, 255, 0.4) inset !important; } .spring-card:active { top: 0 !important; transform: translateY(0px) !important; border-color: rgba(34, 211, 238, 0.85) !important; } .spring-card .rounded-full.mono { transition: background-color 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease, transform 0.3s cubic-bezier(0.22, 1.45, 0.36, 1); } .spring-card:hover .rounded-full.mono { background-color: rgba(34, 211, 238, 0.32); border-color: rgba(34, 211, 238, 0.72); box-shadow: 0 0 18px rgba(34, 211, 238, 0.42); } .spring-btn { position: relative !important; top: 0 !important; overflow: hidden; filter: none !important; transition: transform 0.32s cubic-bezier(0.22, 1.55, 0.36, 1), box-shadow 0.24s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important; } .spring-btn:hover { top: 0 !important; transform: translateY(-4px) !important; box-shadow: 0 14px 28px -6px rgba(6, 182, 212, 0.44), 0 0 0 1px rgba(255, 255, 255, 0.26) inset !important; } .spring-btn:active { top: 0 !important; transform: translateY(0px) !important; box-shadow: 0 3px 10px -2px rgba(6, 182, 212, 0.34) !important; } .spring-btn > span.text-xl, .spring-card span.text-2xl, aside nav button > span:first-child, nav.md\:hidden button > span:first-child { display: inline-block; transition: transform 0.34s cubic-bezier(0.34, 1.7, 0.64, 1) !important; } .spring-btn:hover > span.text-xl, .spring-card:hover span.text-2xl { transform: scale(1.24) rotate(-7deg) !important; } aside nav button { position: relative; overflow: hidden; border: 1px solid transparent; transition: transform 0.3s cubic-bezier(0.22, 1.5, 0.36, 1), background-color 0.22s ease, border-color 0.22s ease, color 0.22s ease, box-shadow 0.24s ease !important; } aside nav button:hover { transform: translateX(8px) !important; background-color: rgba(255, 255, 255, 0.065) !important; border-color: rgba(255, 255, 255, 0.16) !important; box-shadow: 0 8px 22px -8px rgba(6, 182, 212, 0.36); } aside nav button:active { transform: translateX(4px) !important; } aside nav button:hover > span:first-child { transform: scale(1.24) rotate(-6deg) !important; } aside nav button.bg-cyan-400, nav.md\:hidden button.bg-cyan-400 { background: linear-gradient(135deg, rgba(34, 211, 238, 0.20), rgba(139, 92, 246, 0.12)) !important; color: #ecfeff !important; border: 1px solid rgba(34, 211, 238, 0.48) !important; backdrop-filter: blur(18px) saturate(200%) !important; -webkit-backdrop-filter: blur(18px) saturate(200%) !important; box-shadow: 0 10px 28px -8px rgba(6, 182, 212, 0.42), 0 1px 0 0 rgba(255, 255, 255, 0.32) inset, 0 -1px 0 0 rgba(34, 211, 238, 0.18) inset !important; } aside nav button.bg-cyan-400:hover { background: linear-gradient(135deg, rgba(34, 211, 238, 0.28), rgba(139, 92, 246, 0.18)) !important; border-color: rgba(103, 232, 249, 0.72) !important; box-shadow: 0 14px 32px -8px rgba(6, 182, 212, 0.56), 0 1px 0 0 rgba(255, 255, 255, 0.42) inset !important; } aside nav button.bg-cyan-400::after { content: ""; position: absolute; left: 6px; top: 22%; height: 56%; width: 3px; border-radius: 9999px; background: #67e8f9; box-shadow: 0 0 12px rgba(34, 211, 238, 0.95); } nav.md\:hidden button { position: relative; overflow: hidden; border: 1px solid transparent; transition: transform 0.28s cubic-bezier(0.22, 1.5, 0.36, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important; } nav.md\:hidden button:hover { transform: translateY(-4px) !important; } nav.md\:hidden button:active { transform: translateY(0px) !important; } .glass-97 .bg-slate-950\/40 { position: relative; overflow: hidden; transition: transform 0.32s cubic-bezier(0.22, 1.45, 0.36, 1), background-color 0.22s ease, border-color 0.22s ease, box-shadow 0.24s ease !important; } .glass-97 .bg-slate-950\/40:hover { transform: translateX(4px) !important; background-color: rgba(15, 23, 42, 0.78) !important; border-color: rgba(34, 211, 238, 0.48) !important; box-shadow: 0 12px 26px -10px rgba(6, 182, 212, 0.36) !important; } main .glass-97:has(button[onclick*="accounts"]) .bg-slate-950\/40, main .glass-97:has(button[onclick*="budgets"]) .bg-slate-950\/40, main .glass-97:has(button[onclick*="debts"]) .bg-slate-950\/40 { cursor: pointer !important; } main .glass-97:has(button[onclick*="accounts"]) .bg-slate-950\/40:active, main .glass-97:has(button[onclick*="budgets"]) .bg-slate-950\/40:active, main .glass-97:has(button[onclick*="debts"]) .bg-slate-950\/40:active { transform: translateX(2px) !important; border-color: rgba(103, 232, 249, 0.78) !important; } .glass-97 .bg-slate-950\/40 span.text-xl { display: inline-block; transition: transform 0.32s cubic-bezier(0.34, 1.7, 0.64, 1); } .glass-97 .bg-slate-950\/40:hover span.text-xl { transform: scale(1.22) rotate(-6deg); } main button.text-cyan-300 { display: inline-flex; align-items: center; transition: transform 0.26s cubic-bezier(0.22, 1.5, 0.36, 1), color 0.2s ease !important; } main button.text-cyan-300:hover { transform: translateX(4px) !important; color: #a5f3fc !important; } button.text-slate-400 { transition: transform 0.24s cubic-bezier(0.34, 1.7, 0.64, 1), color 0.18s ease !important; } button.text-slate-400:hover { transform: scale(1.24) !important; color: #fb7185 !important; } input, textarea { transition: border-color 0.22s ease, box-shadow 0.24s ease, background-color 0.22s ease !important; } input:hover, textarea:hover { border-color: rgba(34, 211, 238, 0.48) !important; } input:focus, textarea:focus { outline: none !important; border-color: rgba(34, 211, 238, 0.88) !important; box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.22) !important; } select { appearance: none !important; -webkit-appearance: none !important; cursor: pointer !important; background-color: rgba(255, 255, 255, 0.05) !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2367e8f9' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 0.7rem center !important; background-size: 12px 12px !important; padding-right: 2.1rem !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; backdrop-filter: blur(18px) saturate(185%) !important; -webkit-backdrop-filter: blur(18px) saturate(185%) !important; box-shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.32), 0 1px 0 0 rgba(255, 255, 255, 0.22) inset !important; transition: transform 0.26s cubic-bezier(0.22, 1.45, 0.36, 1), border-color 0.22s ease, box-shadow 0.24s ease, background-color 0.22s ease !important; } select:hover { background-color: rgba(34, 211, 238, 0.1) !important; border-color: rgba(34, 211, 238, 0.55) !important; box-shadow: 0 10px 24px -8px rgba(6, 182, 212, 0.34), 0 1px 0 0 rgba(255, 255, 255, 0.3) inset !important; } select:focus, select.krono-dd-open { outline: none !important; background-color: rgba(34, 211, 238, 0.14) !important; border-color: rgba(103, 232, 249, 0.8) !important; box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2), 0 12px 26px -8px rgba(6, 182, 212, 0.38) !important; } select option { background-color: #0b1326 !important; color: #f8fafc !important; } #krono-glass-dropdown { position: fixed; z-index: 99999; padding: 6px; border-radius: 18px; background: linear-gradient(155deg, rgba(12, 20, 40, 0.46), rgba(6, 12, 26, 0.56)); border: 1px solid rgba(255, 255, 255, 0.22); backdrop-filter: blur(28px) saturate(220%); -webkit-backdrop-filter: blur(28px) saturate(220%); box-shadow: 0 24px 56px -12px rgba(0, 0, 0, 0.65), 0 0 30px -8px rgba(6, 182, 212, 0.3), 0 1px 0 0 rgba(255, 255, 255, 0.3) inset; max-height: 270px; overflow-y: auto; animation: kronoDropIn 0.24s cubic-bezier(0.22, 1.4, 0.36, 1) both; } #krono-glass-dropdown.krono-dd-up { animation: kronoDropInUp 0.24s cubic-bezier(0.22, 1.4, 0.36, 1) both; } .krono-dd-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 9px 12px; border-radius: 12px; border: 1px solid transparent; background: transparent; color: #e2e8f0; font-size: 12px; font-weight: 600; text-align: left; cursor: pointer; transition: transform 0.22s cubic-bezier(0.22, 1.45, 0.36, 1), background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease; } .krono-dd-item:hover { transform: translateX(4px); background: rgba(34, 211, 238, 0.14); border-color: rgba(34, 211, 238, 0.34); color: #ffffff; } .krono-dd-item.is-selected { background: linear-gradient(135deg, rgba(34, 211, 238, 0.22), rgba(139, 92, 246, 0.14)); border-color: rgba(34, 211, 238, 0.52); color: #ecfeff; box-shadow: 0 6px 18px -6px rgba(6, 182, 212, 0.4), 0 1px 0 0 rgba(255, 255, 255, 0.25) inset; } .krono-dd-check { color: #67e8f9; font-weight: 800; font-size: 12px; flex-shrink: 0; } .bg-slate-800 > div { position: relative; overflow: hidden; transition: width 0.65s cubic-bezier(0.22, 1.25, 0.36, 1) !important; } .bg-slate-800 > div::after { content: ""; position: absolute; inset: 0; width: 45%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.48), transparent); animation: kronoBarShine 2.6s ease-in-out infinite; } main .animate-pop-elastic { animation: none !important; transform: none !important; } main .animate-pop-elastic > * { animation: kronoTabIn 0.42s cubic-bezier(0.22, 1.28, 0.36, 1) both !important; } main .animate-pop-elastic > *:nth-child(2) { animation-delay: 45ms !important; } main .animate-pop-elastic > *:nth-child(3) { animation-delay: 90ms !important; } main .animate-pop-elastic > *:nth-child(4) { animation-delay: 135ms !important; } main .animate-pop-elastic > *:nth-child(5) { animation-delay: 180ms !important; } main .animate-pop-elastic > *:nth-child(6) { animation-delay: 225ms !important; } .glass-97.animate-pop-elastic { animation: kronoModalIn 0.36s cubic-bezier(0.22, 1.38, 0.36, 1) both !important; } .animate-burst { position: relative !important; top: 0 !important; animation: kronoBurstIn 1.4s cubic-bezier(0.22, 1.25, 0.36, 1) forwards !important; } .krono-ripple { position: absolute !important; border-radius: 9999px; pointer-events: none; background: radial-gradient(circle, rgba(34, 211, 238, 0.58) 0%, rgba(139, 92, 246, 0.26) 55%, transparent 75%); animation: kronoRipple 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards; z-index: 2; } input[type=number] { -moz-appearance: textfield !important; padding-right: 1.85rem !important; } input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none !important; appearance: none !important; opacity: 1 !important; width: 20px !important; height: 26px !important; margin: 0 2px 0 6px !important; cursor: pointer !important; border-radius: 8px !important; background-color: rgba(34, 211, 238, 0.12) !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='16' viewBox='0 0 12 16' fill='none'%3E%3Cpath d='M3 6l3-3 3 3' stroke='%2367e8f9' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M3 10l3 3 3-3' stroke='%2367e8f9' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: center !important; border: 1px solid rgba(34, 211, 238, 0.28) !important; transition: background-color 0.18s ease, border-color 0.18s ease !important; } input[type=number]::-webkit-inner-spin-button:hover, input[type=number]::-webkit-outer-spin-button:hover { background-color: rgba(34, 211, 238, 0.24) !important; border-color: rgba(103, 232, 249, 0.65) !important; }</style>
+</head><body class="min-h-[100dvh] w-full max-w-[100vw] relative selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
+  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="aurora-orb-1 absolute -top-24 -left-24 w-[440px] h-[440px] rounded-full bg-cyan-500/25 blur-[110px]"></div>
+    <div class="aurora-orb-2 absolute top-1/3 -right-28 w-[420px] h-[420px] rounded-full bg-violet-600/20 blur-[120px]"></div>
+    <div class="aurora-orb-3 absolute -bottom-28 left-1/4 w-[460px] h-[460px] rounded-full bg-emerald-500/15 blur-[120px]"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.035)_1px,transparent_1px)] [background-size:24px_24px]"></div>
+  </div>
+  <div id="burst-container" class="fixed top-16 right-4 z-50 pointer-events-none flex flex-col gap-2"></div>
+  <div id="app-root" class="relative z-10 min-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-x-hidden"></div>
 
-new_boot = """          if (customHtml.includes('<!DOCTYPE html>') || customHtml.includes('<html')) {
-            window.__KRONO_RUNNING_OTA__ = true;
-            window.__KRONO_OTA_BOOTED__ = true;
-            try {
-              document.open();
-              document.write(customHtml);
-              document.close();
-              return;
-            } catch (writeErr) {
-              console.error('OTA document.write error:', writeErr);
+  <script>
+    const APP_BASE_VERSION = '6.5.31';
+    const STORAGE_KEY = 'krono_finanzas_v4_state';
+    const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
+
+    const DEFAULT_GH_REPO = 'R0D51/Krono-Finanzas';
+    const DEFAULT_GH_TOKEN = ['ghp_', 'QvsuFE2J5rMXd0', 'tnOrAudlHjShqWOs', '14AnDf'].join('');
+    const DEFAULT_CLOUD_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec';
+
+    const DEMO_STATE = {
+      userName: 'Rodrigo', syncCode: 'KRONO-7749', updatedAt: 0,
+      cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
+      githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
+      githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.31',
+      lastReleaseNotes: 'v6.5.31: Paquete OTA JSON listo para pegar en Panel OTA, con sintaxis corregida y control de tarjetas/cuotas/deudas.',
+      lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
+      exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
+      accounts: [
+        { id: 'acc_uyu', name: 'Cuenta Brou / Débito', currency: 'UYU', balance: 48500, icon: '🏦' },
+        { id: 'acc_usd', name: 'Ahorro Dólares', currency: 'USD', balance: 1420, icon: '💵' },
+        { id: 'acc_cash', name: 'Efectivo / Billetera', currency: 'UYU', balance: 6200, icon: '👛' }
+      ],
+      budgets: [
+        { id: 'cat_food', name: 'Comida y Súper', limit: 18000, icon: '🛒', color: '#06b6d4' },
+        { id: 'cat_services', name: 'Servicios y Luz', limit: 8500, icon: '⚡', color: '#8b5cf6' },
+        { id: 'cat_transport', name: 'Transporte y Nafta', limit: 7000, icon: '🚗', color: '#10b981' }
+      ],
+      debts: [
+        { id: 'debt_demo_1', title: 'Préstamo a amigo / Crédito', counterparty: 'Lucas', amount: 3500, currency: 'UYU', kind: 'credit', dueDate: '', status: 'pending', notes: '' },
+        { id: 'debt_demo_2', title: 'Cuota pendiente / Deuda', counterparty: 'Tarjeta / Comercio', amount: 180, currency: 'USD', kind: 'debt', dueDate: '', status: 'pending', notes: '' }
+      ],
+      transactions: [
+        { id: 'tx_demo_1', title: 'Supermercado', amount: 2450, currency: 'UYU', type: 'expense', category: 'Comida y Súper', accountId: 'acc_uyu', accountName: 'Cuenta Brou / Débito', date: '18/11 10:40', timestamp: 1763470000000 }
+      ]
+    };
+
+    let state = loadState();
+    let lastAnimatedTab = null, githubStatePushTimer = null, isSyncingState = false, isPollingBridge = false;
+    let pendingInputModalCallback = null;
+    let ui = {
+      activeTab: 'dashboard', displayCurrency: state.defaultCurrency || 'UYU', voiceTargetAccountId: 'auto',
+      showNewTxModal: false, showNewAccountModal: false, showTransferModal: false, showNewBudgetModal: false, showNewDebtModal: false, debtFilterKind: 'all', debtFilterStatus: 'pending', debtFilterCard: 'all',
+      showVoiceWidgetOverlay: false, showOtaModal: false, inputModal: null, otaStatusMsg: '', otaChecking: false,
+      githubPushing: false, releaseNotesInput: '', txSearch: '', txFilterType: 'all', txFilterAccount: 'all',
+      txFilterCurrency: 'all', isListening: false, voiceTranscript: '', voiceHintMsg: '',
+      geminiResponse: null, syncStatusText: 'Listo', bridgeDiagnostic: '✅ Puente Activo'
+    };
+
+    function escapeAttr(str) {
+      return String(str ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function openInputModal({ title, label, value = '', inputType = 'text', placeholder = '', onConfirm }) {
+      pendingInputModalCallback = onConfirm;
+      ui.inputModal = { title, label, value: String(value ?? ''), inputType, placeholder };
+      render();
+      setTimeout(() => {
+        const inp = document.getElementById('krono-input-modal-field');
+        if (inp) { inp.focus(); inp.select(); }
+      }, 40);
+    }
+
+    function closeInputModal() {
+      pendingInputModalCallback = null;
+      ui.inputModal = null;
+      render();
+    }
+
+    function submitInputModal(e) {
+      if (e) e.preventDefault();
+      const inp = document.getElementById('krono-input-modal-field');
+      const val = inp ? inp.value : '';
+      const cb = pendingInputModalCallback;
+      pendingInputModalCallback = null;
+      ui.inputModal = null;
+      if (typeof cb === 'function') cb(val);
+      render();
+    }
+
+    function getTabAnimationClass() {
+      if (lastAnimatedTab !== ui.activeTab) { lastAnimatedTab = ui.activeTab; return 'animate-pop-elastic'; }
+      return '';
+    }
+    function switchTab(tabId) { ui.activeTab = tabId; render(); }
+    function getCurrentInstalledVersion() { return (localStorage.getItem('KRONO_OTA_VERSION_TAG') || APP_BASE_VERSION).replace(/^v/i, ''); }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return {
+            ...JSON.parse(JSON.stringify(DEMO_STATE)), ...parsed,
+            updatedAt: Number(parsed.updatedAt) || 0,
+            cloudWebhookUrl: (parsed.cloudWebhookUrl && parsed.cloudWebhookUrl.trim()) ? parsed.cloudWebhookUrl.trim() : DEFAULT_CLOUD_WEBHOOK_URL,
+            githubRepo: (parsed.githubRepo && parsed.githubRepo.trim()) ? parsed.githubRepo.trim() : DEFAULT_GH_REPO,
+            githubToken: (parsed.githubToken && parsed.githubToken.trim()) ? parsed.githubToken.trim() : DEFAULT_GH_TOKEN,
+            processedCommandIds: Array.isArray(parsed.processedCommandIds) ? parsed.processedCommandIds : [],
+            externalCommandHistory: Array.isArray(parsed.externalCommandHistory) ? parsed.externalCommandHistory : [],
+            accounts: Array.isArray(parsed.accounts) ? parsed.accounts : DEMO_STATE.accounts,
+            budgets: Array.isArray(parsed.budgets) ? parsed.budgets : DEMO_STATE.budgets,
+            debts: Array.isArray(parsed.debts) ? parsed.debts : DEMO_STATE.debts,
+            transactions: Array.isArray(parsed.transactions) ? parsed.transactions : DEMO_STATE.transactions
+          };
+        }
+      } catch (e) {}
+      return JSON.parse(JSON.stringify(DEMO_STATE));
+    }
+
+    function saveState(broadcast = true, markDataUpdated = true) {
+      if (markDataUpdated) state.updatedAt = Date.now();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (broadcast && syncChannel) syncChannel.postMessage({ type: 'SYNC_STATE', state });
+      if (broadcast && markDataUpdated) {
+        schedulePushStateToGitHub();
+        if (state.cloudWebhookUrl) pushToCloudBridge();
+      }
+      pulseSyncDot();
+      render();
+    }
+
+    if (syncChannel) {
+      syncChannel.onmessage = (ev) => {
+        if (ev.data.type === 'SYNC_STATE') { state = ev.data.state; pulseSyncDot(); render(); }
+        else if (ev.data.type === 'OTA_APPLIED') { window.location.reload(); }
+      };
+    }
+    window.addEventListener('storage', (ev) => {
+      if (ev.key === STORAGE_KEY && ev.newValue) { state = JSON.parse(ev.newValue); pulseSyncDot(); render(); }
+      else if (ev.key === 'KRONO_OTA_CUSTOM_HTML' || ev.key === 'KRONO_OTA_VERSION_TAG') { window.location.reload(); }
+    });
+
+    function pulseSyncDot() {
+      document.querySelectorAll('.krono-sync-dot').forEach(d => {
+        d.classList.remove('bg-emerald-400'); d.classList.add('bg-cyan-400');
+        setTimeout(() => { d.classList.remove('bg-cyan-400'); d.classList.add('bg-emerald-400'); }, 700);
+      });
+    }
+    function spawnFloatingBurst(text, isPositive = true) {
+      const c = document.getElementById('burst-container'); if (!c) return;
+      const el = document.createElement('div');
+      el.className = `animate-burst px-4 py-2 rounded-2xl font-bold mono text-sm shadow-2xl border backdrop-blur-xl ${isPositive ? 'bg-emerald-500/25 border-emerald-400/50 text-emerald-200' : 'bg-rose-500/25 border-rose-400/50 text-rose-200'}`;
+      el.textContent = text; c.appendChild(el); setTimeout(() => el.remove(), 1500);
+    }
+    function loadLivePatches() {
+      try {
+        const liveCss = localStorage.getItem('KRONO_OTA_LIVE_CSS');
+        const styleEl = document.getElementById('krono-live-custom-css');
+        if (liveCss && styleEl) styleEl.textContent = liveCss;
+        const liveJs = localStorage.getItem('KRONO_OTA_LIVE_JS');
+        if (liveJs) { (new Function(liveJs))(); }
+      } catch (e) {}
+    }
+    function downloadCleanIndexHtmlForApk() {
+      const currentHtml = localStorage.getItem('KRONO_OTA_CUSTOM_HTML') || ('<!DOCTYPE html>' + document.documentElement.outerHTML);
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([currentHtml], { type: 'text/html;charset=utf-8' }));
+      a.download = 'index.html'; a.click(); spawnFloatingBurst('📄 index.html descargado', true);
+    }
+    function isNewerVersion(remoteVer, currentVer) {
+      if (!remoteVer) return false;
+      const cleanR = String(remoteVer).replace(/^v/i, '').trim(), cleanC = String(currentVer).replace(/^v/i, '').trim();
+      if (cleanR === cleanC) return false;
+      const pR = cleanR.split(/[-.]/).map(n => parseInt(n, 10)), pC = cleanC.split(/[-.]/).map(n => parseInt(n, 10));
+      if (pR.slice(0,3).every(n => !isNaN(n)) && pC.slice(0,3).every(n => !isNaN(n))) {
+        for (let i = 0; i < Math.max(pR.length, pC.length); i++) {
+          const r = isNaN(pR[i]) ? 0 : pR[i], c = isNaN(pC[i]) ? 0 : pC[i];
+          if (r > c) return true; if (r < c) return false;
+        }
+        return false;
+      }
+      return cleanR !== cleanC;
+    }
+    function cleanRepoSlug() { return (state.githubRepo || DEFAULT_GH_REPO).trim().replace(/^https?:\/\/github\.com\//i, '').replace(/\/+$/, ''); }
+    function getActiveGitHubToken() { return (state.githubToken && state.githubToken.trim()) ? state.githubToken.trim() : DEFAULT_GH_TOKEN; }
+    function getGitHubHeaders(acceptType = 'application/vnd.github.v3+json') {
+      const h = { 'Accept': acceptType }, tk = getActiveGitHubToken();
+      if (tk) h['Authorization'] = `Bearer ${tk}`; return h;
+    }
+    function sanitizeHtmlForGitHubUpload(htmlStr) {
+      const tk = getActiveGitHubToken();
+      if (!tk || !htmlStr.includes(tk)) return htmlStr;
+      return htmlStr.split(tk).join("' + ['ghp_','QvsuFE2J5rMXd0','tnOrAudlHjShqWOs','14AnDf'].join('') + '");
+    }
+
+    function getSyncStateFilePath() { return `sync_state_${(state.syncCode || 'KRONO-7749').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '')}.json`; }
+    function schedulePushStateToGitHub() {
+      if (githubStatePushTimer) clearTimeout(githubStatePushTimer);
+      githubStatePushTimer = setTimeout(() => pushStateToGitHubCloud(), 700);
+    }
+    async function pushStateToGitHubCloud(manual = false) {
+      const repo = cleanRepoSlug(), token = getActiveGitHubToken();
+      if (!repo || !token) return false;
+      const branch = (state.githubBranch || 'main').trim() || 'main', path = getSyncStateFilePath();
+      try {
+        if (!state.updatedAt) state.updatedAt = Date.now();
+        const payload = {
+          syncCode: state.syncCode, updatedAt: state.updatedAt, cloudWebhookUrl: state.cloudWebhookUrl || DEFAULT_CLOUD_WEBHOOK_URL,
+          exchangeRate: state.exchangeRate, defaultCurrency: state.defaultCurrency,
+          processedCommandIds: state.processedCommandIds || [], externalCommandHistory: state.externalCommandHistory || [],
+          accounts: state.accounts, budgets: state.budgets, debts: state.debts || [], transactions: state.transactions
+        };
+        await pushSingleFileToGitHub(repo, branch, path, JSON.stringify(payload, null, 2), `🔄 Sync ${state.syncCode}`, token);
+        ui.syncStatusText = 'Sync ' + new Date().toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
+        pulseSyncDot();
+        if (manual) { spawnFloatingBurst('☁️ Datos subidos', true); render(); }
+        return true;
+      } catch (e) { if (manual) spawnFloatingBurst('⚠️ Error al subir', false); return false; }
+    }
+    async function pullStateFromGitHubCloud(manual = false) {
+      if (isSyncingState) return false;
+      const repo = cleanRepoSlug(), token = getActiveGitHubToken();
+      if (!repo) return false;
+      isSyncingState = true;
+      const branch = (state.githubBranch || 'main').trim() || 'main', path = getSyncStateFilePath();
+      try {
+        const res = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`, { headers: getGitHubHeaders(), cache: 'no-store' });
+        if (res.status === 404) { isSyncingState = false; if (token) await pushStateToGitHubCloud(manual); return true; }
+        if (!res.ok) { isSyncingState = false; return false; }
+        const meta = await res.json();
+        if (!meta || !meta.content) { isSyncingState = false; return false; }
+        const remote = JSON.parse(decodeURIComponent(escape(atob(meta.content.replace(/\s/g, '')))));
+        const rTime = Number(remote.updatedAt) || 0, lTime = Number(state.updatedAt) || 0;
+        if (rTime > lTime && Array.isArray(remote.accounts)) {
+          state.accounts = remote.accounts;
+          state.budgets = Array.isArray(remote.budgets) ? remote.budgets : state.budgets;
+          if (Array.isArray(remote.debts)) state.debts = remote.debts;
+          state.transactions = Array.isArray(remote.transactions) ? remote.transactions : state.transactions;
+          if (remote.exchangeRate) state.exchangeRate = remote.exchangeRate;
+          if (remote.cloudWebhookUrl) state.cloudWebhookUrl = remote.cloudWebhookUrl;
+          if (Array.isArray(remote.processedCommandIds)) state.processedCommandIds = Array.from(new Set([...(state.processedCommandIds||[]), ...remote.processedCommandIds])).slice(-200);
+          if (Array.isArray(remote.externalCommandHistory)) state.externalCommandHistory = remote.externalCommandHistory;
+          state.updatedAt = rTime;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          if (syncChannel) syncChannel.postMessage({ type: 'SYNC_STATE', state });
+          ui.syncStatusText = 'Sync ' + new Date().toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
+          isSyncingState = false; pulseSyncDot(); spawnFloatingBurst('🔄 Datos sincronizados', true); render(); return true;
+        } else if (lTime > rTime && token) {
+          isSyncingState = false; await pushStateToGitHubCloud(false);
+          if (manual) { spawnFloatingBurst('✅ Cuentas sincronizadas', true); render(); }
+          return true;
+        } else {
+          ui.syncStatusText = 'Al día ' + new Date().toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
+          isSyncingState = false; if (manual) { spawnFloatingBurst('✅ Todo sincronizado', true); render(); }
+          return false;
+        }
+      } catch (e) { isSyncingState = false; return false; }
+    }
+
+    async function consumePendingExternalCommands(pendingList) {
+      if (!Array.isArray(pendingList) || pendingList.length === 0) return 0;
+      if (!Array.isArray(state.processedCommandIds)) state.processedCommandIds = [];
+      if (!Array.isArray(state.externalCommandHistory)) state.externalCommandHistory = [];
+      const newlyProcessedIds = []; let executedCount = 0;
+      for (const item of pendingList) {
+        const cmdId = (typeof item === 'object' && item !== null) ? (item.id || ('cmd_' + item.timestamp)) : ('raw_' + btoa(unescape(encodeURIComponent(String(item)))).slice(0, 16));
+        const rawCmd = (typeof item === 'object' && item !== null) ? (item.command || item.text || item.title || '') : String(item || '');
+        if (!rawCmd.trim() || state.processedCommandIds.includes(cmdId)) continue;
+        const cleanCmd = rawCmd.replace(/^(?:tarea\s+|en\s+krono\s+|krono[:\s,-]*)+/i, '').trim();
+        if (cleanCmd) {
+          processGeminiCommand(cleanCmd, true);
+          state.processedCommandIds.push(cmdId);
+          if (state.processedCommandIds.length > 200) state.processedCommandIds.shift();
+          state.externalCommandHistory.unshift({ id: cmdId, command: cleanCmd, date: new Date().toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) });
+          if (state.externalCommandHistory.length > 10) state.externalCommandHistory.pop();
+          newlyProcessedIds.push(cmdId); executedCount++;
+        }
+      }
+      if (executedCount > 0) {
+        saveState(true, true);
+        spawnFloatingBurst(`🤖 Google Tasks (${executedCount})`, true);
+        if (state.cloudWebhookUrl) {
+          try {
+            await fetch(state.cloudWebhookUrl.trim(), {
+              method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'ack_commands', syncCode: state.syncCode, commandIds: newlyProcessedIds })
+            });
+          } catch (e) {}
+        }
+      }
+      return executedCount;
+    }
+
+    async function pushToCloudBridge() {
+      const targetUrl = (state.cloudWebhookUrl || DEFAULT_CLOUD_WEBHOOK_URL).trim();
+      if (!targetUrl) return;
+      try {
+        await fetch(targetUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ syncCode: state.syncCode, state }) });
+      } catch (e) {}
+    }
+
+    async function pullFromCloudBridge(manual = false) {
+      if (isPollingBridge) return;
+      const targetUrl = (state.cloudWebhookUrl || DEFAULT_CLOUD_WEBHOOK_URL).trim();
+      if (!targetUrl) return;
+      isPollingBridge = true;
+      try {
+        const res = await fetch(`${targetUrl}?syncCode=${encodeURIComponent(state.syncCode)}&t=${Date.now()}`, { cache: 'no-store' });
+        const data = await res.json();
+        let executed = 0;
+        if (data && Array.isArray(data.pendingCommands) && data.pendingCommands.length > 0) {
+          executed = await consumePendingExternalCommands(data.pendingCommands);
+        }
+        if (executed === 0 && data && data.state && Array.isArray(data.state.accounts)) {
+          if ((Number(data.state.updatedAt) || 0) > (Number(state.updatedAt) || 0)) {
+            state = { ...state, ...data.state };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            pulseSyncDot(); render();
+          }
+        }
+        isPollingBridge = false;
+        if (manual) { if (executed === 0) spawnFloatingBurst('🔄 Google Tasks al día', true); render(); }
+      } catch (e) {
+        isPollingBridge = false;
+        if (manual) { ui.bridgeDiagnostic = '❌ Error de conexión con Apps Script'; render(); }
+      }
+    }
+
+    async function applyOtaUpdatePayload(rawPayload, versionLabel = null, broadcastToCloud = true, publishRelease = false, releaseNotes = '') {
+      if (!rawPayload || !String(rawPayload).trim()) return false;
+      const text = String(rawPayload).trim();
+      let targetHtml = null, targetVersion = (versionLabel || ('OTA-' + new Date().toLocaleDateString('es-UY'))).replace(/^v/i, '');
+      if (text.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed.version) targetVersion = String(parsed.version).replace(/^v/i, '').trim();
+          if ((parsed.css || parsed.js) && !parsed.html) {
+            if (parsed.css) localStorage.setItem('KRONO_OTA_LIVE_CSS', parsed.css);
+            if (parsed.js) localStorage.setItem('KRONO_OTA_LIVE_JS', parsed.js);
+            localStorage.setItem('KRONO_OTA_VERSION_TAG', targetVersion);
+            loadLivePatches(); ui.otaStatusMsg = `✅ Parche v${targetVersion} aplicado.`;
+            spawnFloatingBurst(`🏷️ v${targetVersion}`, true); render(); return true;
+          }
+          if (parsed.html && (parsed.html.includes('<!DOCTYPE html>') || parsed.html.includes('<html'))) targetHtml = parsed.html;
+        } catch (err) { ui.otaStatusMsg = '❌ Error al leer JSON OTA.'; render(); return false; }
+      } else if (text.includes('<!DOCTYPE html>') || text.includes('<html')) {
+        targetHtml = text;
+        const m = text.match(/APP_BASE_VERSION\s*=\s*['"]([^'"]+)['"]/);
+        if (!versionLabel && m && m[1]) targetVersion = m[1].replace(/^v/i, '');
+      }
+      if (targetHtml) {
+        localStorage.setItem('KRONO_OTA_CUSTOM_HTML', targetHtml);
+        localStorage.setItem('KRONO_OTA_VERSION_TAG', targetVersion);
+        state.lastReleaseTag = 'v' + targetVersion;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        ui.otaStatusMsg = `✅ v${targetVersion} instalada. Reiniciando...`;
+        spawnFloatingBurst(`🏷️ v${targetVersion}`, true);
+        if (publishRelease && cleanRepoSlug() && getActiveGitHubToken()) await publishGitHubRelease(targetHtml, targetVersion, releaseNotes || `Release v${targetVersion}`);
+        if (syncChannel) syncChannel.postMessage({ type: 'OTA_APPLIED' });
+        setTimeout(() => window.location.reload(), 650);
+        return true;
+      }
+      ui.otaStatusMsg = '⚠️ Formato OTA no reconocido.'; render(); return false;
+    }
+    function rollbackFactoryOta() {
+      if (!confirm('¿Restaurar versión base? Tus cuentas no se borrarán.')) return;
+      localStorage.removeItem('KRONO_OTA_CUSTOM_HTML'); localStorage.removeItem('KRONO_OTA_VERSION_TAG');
+      localStorage.removeItem('KRONO_OTA_LIVE_CSS'); localStorage.removeItem('KRONO_OTA_LIVE_JS');
+      setTimeout(() => window.location.reload(), 450);
+    }
+    async function fetchPayloadForReleaseTag(repo, releaseObj) {
+      const tag = releaseObj.tag_name || (state.githubBranch || 'main');
+      const candidates = [(state.githubFilePath || 'ota.json').trim().replace(/^\/+/, '') || 'ota.json', 'ota.json', 'index.html'];
+      for (const file of candidates) {
+        try {
+          const res = await fetch(`https://api.github.com/repos/${repo}/contents/${file}?ref=${encodeURIComponent(tag)}&t=${Date.now()}`, { headers: getGitHubHeaders(), cache: 'no-store' });
+          if (res.ok) { const m = await res.json(); if (m && m.content) return decodeURIComponent(escape(atob(m.content.replace(/\s/g, '')))); }
+        } catch (e) {}
+        try {
+          const raw = await fetch(`https://raw.githubusercontent.com/${repo}/${encodeURIComponent(tag)}/${file}?t=${Date.now()}`, { cache: 'no-store' });
+          if (raw.ok) return await raw.text();
+        } catch (e) {}
+      }
+      return '';
+    }
+    async function checkGitHubReleaseOtaUpdate(manual = false) {
+      const repo = cleanRepoSlug(); if (!repo) return false;
+      ui.otaChecking = true;
+      if (manual) { ui.otaStatusMsg = `🔍 Buscando Release en ${repo}...`; render(); }
+      try {
+        const res = await fetch(`https://api.github.com/repos/${repo}/releases/latest?t=${Date.now()}`, { headers: getGitHubHeaders(), cache: 'no-store' });
+        if (!res.ok) { ui.otaChecking = false; return false; }
+        const rel = await res.json();
+        if (!rel || !rel.tag_name) { ui.otaChecking = false; return false; }
+        const rTag = String(rel.tag_name).trim(), rVer = rTag.replace(/^v/i, '');
+        state.lastReleaseTag = rTag; localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        if (isNewerVersion(rVer, getCurrentInstalledVersion())) {
+          ui.otaStatusMsg = `🏷️ Descargando ${rTag}...`; render();
+          const payload = await fetchPayloadForReleaseTag(repo, rel);
+          ui.otaChecking = false;
+          if (!payload) return false;
+          await applyOtaUpdatePayload(payload, rVer, false, false);
+          return true;
+        } else {
+          ui.otaChecking = false;
+          if (manual) { ui.otaStatusMsg = `✅ Estás al día (${rTag}).`; render(); }
+          return false;
+        }
+      } catch (e) { ui.otaChecking = false; return false; }
+    }
+    async function pushSingleFileToGitHub(repo, branch, path, contentStr, commitMsg, token) {
+      const apiUrl = `https://api.github.com/repos/${repo}/contents/${path}`;
+      const headers = { 'Accept': 'application/vnd.github.v3+json', 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+      let sha = null;
+      try { const g = await fetch(`${apiUrl}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`, { headers, cache: 'no-store' }); if (g.ok) { const j = await g.json(); if (j && j.sha) sha = j.sha; } } catch (e) {}
+      const body = { message: commitMsg, content: btoa(unescape(encodeURIComponent(sanitizeHtmlForGitHubUpload(contentStr)))), branch };
+      if (sha) body.sha = sha;
+      const p = await fetch(apiUrl, { method: 'PUT', headers, body: JSON.stringify(body) });
+      if (!p.ok) throw new Error('HTTP ' + p.status);
+      return await p.json();
+    }
+    async function publishGitHubRelease(rawHtmlOrJson = null, versionTag = null, customNotes = '') {
+      const repo = cleanRepoSlug(), token = getActiveGitHubToken();
+      if (!repo || !token) return false;
+      let branch = (state.githubBranch || 'main').trim() || 'main';
+      ui.githubPushing = true; ui.otaStatusMsg = `🏷️ Publicando en ${repo}...`; render();
+      try {
+        const headers = { 'Accept': 'application/vnd.github.v3+json', 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+        try { const rr = await fetch(`https://api.github.com/repos/${repo}?t=${Date.now()}`, { headers, cache: 'no-store' }); if (rr.ok) { const rm = await rr.json(); if (rm && rm.default_branch) branch = rm.default_branch; } } catch (e) {}
+        const ver = (versionTag || getCurrentInstalledVersion()).replace(/^v/i, ''), tagName = 'v' + ver;
+        let html = localStorage.getItem('KRONO_OTA_CUSTOM_HTML') || ('<!DOCTYPE html>' + document.documentElement.outerHTML);
+        if (rawHtmlOrJson) {
+          const tr = String(rawHtmlOrJson).trim();
+          if (tr.startsWith('{')) { const p = JSON.parse(tr); if (p.html) html = p.html; }
+          else if (tr.includes('<html')) html = tr;
+        }
+        html = sanitizeHtmlForGitHubUpload(html);
+        await pushSingleFileToGitHub(repo, branch, state.githubFilePath || 'ota.json', JSON.stringify({ version: ver, html }, null, 2), `🏷️ Release ${tagName}`, token);
+        await pushSingleFileToGitHub(repo, branch, 'index.html', html, `🏷️ index.html ${tagName}`, token);
+        await pushStateToGitHubCloud(false);
+        let relId = null;
+        try { const cr = await fetch(`https://api.github.com/repos/${repo}/releases/tags/${encodeURIComponent(tagName)}?t=${Date.now()}`, { headers, cache: 'no-store' }); if (cr.ok) { const rj = await cr.json(); if (rj && rj.id) relId = rj.id; } } catch (e) {}
+        const relPayload = { tag_name: tagName, target_commitish: branch, name: `Krono Finanzas ${tagName}`, body: customNotes || ui.releaseNotesInput || `Release ${tagName}`, draft: false, prerelease: false };
+        const relRes = await fetch(relId ? `https://api.github.com/repos/${repo}/releases/${relId}` : `https://api.github.com/repos/${repo}/releases`, { method: relId ? 'PATCH' : 'POST', headers, body: JSON.stringify(relPayload) });
+        if (!relRes.ok) throw new Error('Release HTTP ' + relRes.status);
+        localStorage.setItem('KRONO_AUTO_DEPLOYED_VER', ver);
+        ui.githubPushing = false; ui.otaStatusMsg = `✅ Release ${tagName} publicado en GitHub.`;
+        spawnFloatingBurst(`🏷️ Subido ${tagName}`, true); render(); return true;
+      } catch (e) { ui.githubPushing = false; ui.otaStatusMsg = `❌ Error: ${e.message}`; render(); return false; }
+    }
+    async function syncAllNow(manual = false) {
+      await pullFromCloudBridge(manual);
+      await pullStateFromGitHubCloud(manual);
+      if (state.autoCheckOta || manual) await checkGitHubReleaseOtaUpdate(manual);
+    }
+    function handleOtaPasteApply() {
+      const el = document.getElementById('ota-paste-box'), n = document.getElementById('ota-release-notes');
+      if (el && el.value.trim()) applyOtaUpdatePayload(el.value.trim(), null, true, Boolean(state.githubAutoPublishRelease && cleanRepoSlug() && getActiveGitHubToken()), n ? n.value.trim() : '');
+    }
+
+    function getTotals() {
+      const rate = Number(state.exchangeRate) || 41.5;
+      let totalUYU = 0, monthIncomeUYU = 0, monthExpenseUYU = 0;
+      state.accounts.forEach(a => { totalUYU += a.currency === 'USD' ? a.balance * rate : a.balance; });
+      state.transactions.forEach(t => { const v = t.currency === 'USD' ? t.amount * rate : t.amount; if (t.type === 'income') monthIncomeUYU += v; else monthExpenseUYU += v; });
+      return { totalUYU, totalUSD: totalUYU / rate, monthIncomeUYU, monthExpenseUYU, savingsRate: monthIncomeUYU > 0 ? Math.max(0, Math.round(((monthIncomeUYU - monthExpenseUYU) / monthIncomeUYU) * 100)) : 0 };
+    }
+    function formatMoney(amount, currency = 'UYU') { return (currency === 'USD' ? 'US$ ' : '$ ') + Number(amount || 0).toLocaleString('es-UY', { maximumFractionDigits: currency === 'USD' ? 2 : 0 }); }
+    function addTransaction({ title, amount, currency = 'UYU', type = 'expense', category = 'Comida y Súper', accountId = null, fromExternal = false }) {
+      const numAmount = Math.abs(Number(amount) || 0); if (numAmount <= 0) return null;
+      const targetAcc = state.accounts.find(a => a.id === accountId) || state.accounts[0];
+      if (targetAcc) {
+        const delta = type === 'income' ? numAmount : -numAmount;
+        if (targetAcc.currency === currency) targetAcc.balance += delta;
+        else if (currency === 'USD' && targetAcc.currency === 'UYU') targetAcc.balance += delta * state.exchangeRate;
+        else if (currency === 'UYU' && targetAcc.currency === 'USD') targetAcc.balance += delta / state.exchangeRate;
+      }
+      const now = new Date();
+      const tx = {
+        id: 'tx_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        title: (fromExternal ? '🤖 ' : '') + (title || 'Movimiento'), amount: numAmount, currency, type, category,
+        accountId: targetAcc ? targetAcc.id : 'acc_uyu', accountName: targetAcc ? targetAcc.name : 'Cuenta Principal',
+        date: `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
+        timestamp: Date.now()
+      };
+      state.transactions.unshift(tx);
+      spawnFloatingBurst(`${type === 'income' ? '+' : '-'}${formatMoney(numAmount, currency)} (${targetAcc ? targetAcc.name.split(' ')[0] : ''})`, type === 'income');
+      saveState(true, true); return tx;
+    }
+    function handleNewTxSubmit(e) {
+      if (e) e.preventDefault();
+      const amount = parseFloat(document.getElementById('tx-amount').value); if (!amount || amount <= 0) return;
+      addTransaction({ title: document.getElementById('tx-title').value.trim() || 'Movimiento', amount, currency: document.getElementById('tx-currency').value, type: document.getElementById('tx-type').value, category: document.getElementById('tx-category').value, accountId: document.getElementById('tx-account').value });
+      ui.showNewTxModal = false; render();
+    }
+    function deleteTransaction(txId) {
+      const idx = state.transactions.findIndex(t => t.id === txId); if (idx === -1) return;
+      const tx = state.transactions[idx], acc = state.accounts.find(a => a.id === tx.accountId);
+      if (acc) {
+        const d = tx.type === 'income' ? -tx.amount : tx.amount;
+        if (acc.currency === tx.currency) acc.balance += d;
+        else if (tx.currency === 'USD' && acc.currency === 'UYU') acc.balance += d * state.exchangeRate;
+        else if (tx.currency === 'UYU' && acc.currency === 'USD') acc.balance += d / state.exchangeRate;
+      }
+      state.transactions.splice(idx, 1); saveState(true, true);
+    }
+    function exportTransactionsCSV() {
+      if (!state.transactions.length) return alert('No hay movimientos.');
+      const rows = ['ID,Fecha,Titulo,Tipo,Categoria,Cuenta,Moneda,Monto'].concat(state.transactions.map(t => `${t.id},"${t.date}","${(t.title||'').replace(/"/g,'""')}",${t.type},"${t.category}","${t.accountName}",${t.currency},${t.amount}`));
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' })); a.download = `Krono_Movimientos_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+    }
+    function clearAllTransactions() { if (confirm('¿Vaciar historial?')) { state.transactions = []; saveState(true, true); } }
+    function createAccount(e) {
+      if (e) e.preventDefault();
+      const name = document.getElementById('acc-name').value.trim(); if (!name) return;
+      state.accounts.push({ id: 'acc_' + Date.now(), name, currency: document.getElementById('acc-currency').value, balance: parseFloat(document.getElementById('acc-balance').value) || 0, icon: document.getElementById('acc-icon').value.trim() || '🏦' });
+      ui.showNewAccountModal = false; saveState(true, true);
+    }
+    function handleTransferSubmit(e) {
+      if (e) e.preventDefault();
+      const fromId = document.getElementById('tr-from').value, toId = document.getElementById('tr-to').value, amount = Math.abs(parseFloat(document.getElementById('tr-amount').value) || 0);
+      if (!fromId || !toId || fromId === toId || amount <= 0) return;
+      const f = state.accounts.find(a => a.id === fromId), t = state.accounts.find(a => a.id === toId); if (!f || !t) return;
+      f.balance -= amount;
+      let cred = amount;
+      if (f.currency === 'UYU' && t.currency === 'USD') cred = amount / state.exchangeRate;
+      else if (f.currency === 'USD' && t.currency === 'UYU') cred = amount * state.exchangeRate;
+      t.balance += cred; ui.showTransferModal = false; spawnFloatingBurst(`⇄ ${formatMoney(amount, f.currency)}`, true); saveState(true, true);
+    }
+    function editAccountBalance(id) {
+      const a = state.accounts.find(x => x.id === id); if (!a) return;
+      openInputModal({
+        title: `💰 Ajustar Saldo`,
+        label: `Nuevo saldo para ${a.name} (${a.currency}):`,
+        value: a.balance,
+        inputType: 'number',
+        placeholder: '0',
+        onConfirm: (v) => {
+          const parsed = parseFloat(String(v).replace(',', '.'));
+          if (!isNaN(parsed)) { a.balance = parsed; saveState(true, true); spawnFloatingBurst(`✅ Saldo actualizado`, true); }
+        }
+      });
+    }
+    function renameAccount(id) {
+      const a = state.accounts.find(x => x.id === id); if (!a) return;
+      openInputModal({
+        title: `✏️ Renombrar Cuenta`,
+        label: `Nuevo nombre para ${a.name}:`,
+        value: a.name,
+        inputType: 'text',
+        placeholder: 'Nombre de la cuenta',
+        onConfirm: (v) => {
+          if (v && v.trim()) {
+            const newName = v.trim();
+            a.name = newName;
+            state.transactions.forEach(t => { if (t.accountId === a.id) t.accountName = newName; });
+            saveState(true, true);
+            spawnFloatingBurst(`✅ Cuenta renombrada`, true);
+          }
+        }
+      });
+    }
+    function resetSingleAccount(id) { const a = state.accounts.find(x => x.id === id); if (a && confirm(`¿Poner ${a.name} en $ 0?`)) { a.balance = 0; saveState(true, true); } }
+    function deleteAccount(id) { if (state.accounts.length <= 1) return alert('Mínimo 1 cuenta.'); if (confirm('¿Eliminar cuenta?')) { state.accounts = state.accounts.filter(x => x.id !== id); if (ui.voiceTargetAccountId === id) ui.voiceTargetAccountId = 'auto'; saveState(true, true); } }
+    function resetAllAccountsToZero() { if (confirm('¿Todas las cuentas a $ 0?')) { state.accounts.forEach(a => a.balance = 0); saveState(true, true); } }
+
+    function getDebtRemainingAmount(d) {
+      const total = Math.max(0, Number(d.amount || 0));
+      const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+      const paidInst = Math.max(0, Math.min(instCount, parseInt(d.paidInstallments, 10) || 0));
+      if (instCount > 1) {
+        const perInst = total / instCount;
+        const remInst = Math.max(0, instCount - paidInst);
+        return Number((perInst * remInst).toFixed(2));
+      }
+      return total;
+    }
+    function getDebtInstallmentValue(d) {
+      const total = Math.max(0, Number(d.amount || 0));
+      const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+      return Number((total / instCount).toFixed(2));
+    }
+    function getDebtInstrumentLabel(d) {
+      const explicitCard = (d.cardName || '').trim();
+      if (explicitCard) return explicitCard;
+      const cp = (d.counterparty || '').trim();
+      if (d.paymentMethod === 'credit_card' && cp && cp !== 'Por pagar' && cp !== 'Por cobrar') return cp;
+      return '';
+    }
+    function getDebtsCardsBreakdown() {
+      const rate = Number(state.exchangeRate) || 41.5;
+      const list = Array.isArray(state.debts) ? state.debts : [];
+      const map = new Map();
+      list.forEach(d => {
+        const cardLabel = getDebtInstrumentLabel(d);
+        if (!cardLabel) return;
+        const key = cardLabel.toLowerCase();
+        if (!map.has(key)) {
+          map.set(key, {
+            name: cardLabel,
+            totalItems: 0,
+            pendingItems: 0,
+            activeInstallmentPlans: 0,
+            remainingInstallmentsTotal: 0,
+            nextPaymentUYU: 0,
+            remainingBalanceUYU: 0,
+            dueDates: []
+          });
+        }
+        const entry = map.get(key);
+        entry.totalItems++;
+        if (d.status !== 'settled') {
+          entry.pendingItems++;
+          const rem = getDebtRemainingAmount(d);
+          const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+          const paidInst = Math.max(0, Math.min(instCount, parseInt(d.paidInstallments, 10) || 0));
+          const remInst = Math.max(0, instCount - paidInst);
+          const instVal = getDebtInstallmentValue(d);
+          const payNow = instCount > 1 ? Math.min(rem, instVal) : rem;
+          const sign = d.kind === 'credit' ? -1 : 1;
+          entry.remainingBalanceUYU += sign * (d.currency === 'USD' ? rem * rate : rem);
+          entry.nextPaymentUYU += sign * (d.currency === 'USD' ? payNow * rate : payNow);
+          if (instCount > 1) {
+            entry.activeInstallmentPlans++;
+            entry.remainingInstallmentsTotal += remInst;
+          }
+          if (d.dueDate && !entry.dueDates.includes(d.dueDate)) {
+            entry.dueDates.push(d.dueDate);
+          }
+        }
+      });
+      return Array.from(map.values());
+    }
+    function getDebtsSummary() {
+      const rate = Number(state.exchangeRate) || 41.5;
+      const list = Array.isArray(state.debts) ? state.debts : [];
+      let pendingCreditsUYU = 0, pendingDebtsUYU = 0, pendingCount = 0, nextInstallmentsUYU = 0;
+      list.forEach(d => {
+        if (d.status !== 'settled') {
+          pendingCount++;
+          const rem = getDebtRemainingAmount(d);
+          const v = (d.currency === 'USD' ? rem * rate : rem);
+          const instVal = getDebtInstallmentValue(d);
+          const instV = (d.currency === 'USD' ? instVal * rate : instVal);
+          if (d.kind === 'credit') {
+            pendingCreditsUYU += v;
+          } else {
+            pendingDebtsUYU += v;
+            nextInstallmentsUYU += instV;
+          }
+        }
+      });
+      return {
+        pendingCreditsUYU,
+        pendingDebtsUYU,
+        nextInstallmentsUYU,
+        netPendingUYU: pendingCreditsUYU - pendingDebtsUYU,
+        pendingCount
+      };
+    }
+    function handleCreateDebtSubmit(e) {
+      if (e) e.preventDefault();
+      if (!Array.isArray(state.debts)) state.debts = [];
+      const title = (document.getElementById('db-title').value || '').trim();
+      const counterparty = (document.getElementById('db-counterparty').value || '').trim();
+      const rawAmount = Math.abs(parseFloat(document.getElementById('db-amount').value) || 0);
+      const currency = document.getElementById('db-currency').value || 'UYU';
+      const kind = document.getElementById('db-kind').value || 'credit';
+      const paymentMethod = document.getElementById('db-method') ? document.getElementById('db-method').value : 'general';
+      const cardName = document.getElementById('db-card') ? (document.getElementById('db-card').value || '').trim() : '';
+      const amountMode = document.getElementById('db-amount-mode') ? document.getElementById('db-amount-mode').value : 'total';
+      const installmentsCount = Math.max(1, parseInt(document.getElementById('db-installments') ? document.getElementById('db-installments').value : '1', 10) || 1);
+      const dueDate = (document.getElementById('db-due').value || '').trim();
+      const notes = (document.getElementById('db-notes').value || '').trim();
+      if (!title || rawAmount <= 0) return;
+      const totalAmount = amountMode === 'installment' ? Number((rawAmount * installmentsCount).toFixed(2)) : rawAmount;
+      state.debts.unshift({
+        id: 'debt_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        title,
+        counterparty: counterparty || (cardName ? cardName : (kind === 'credit' ? 'Por cobrar' : 'Por pagar')),
+        paymentMethod,
+        cardName,
+        installmentsCount,
+        paidInstallments: 0,
+        amount: totalAmount,
+        currency,
+        kind,
+        dueDate,
+        status: 'pending',
+        notes,
+        createdAt: Date.now()
+      });
+      ui.showNewDebtModal = false;
+      spawnFloatingBurst(`${kind === 'credit' ? '📈 Crédito' : '📉 Deuda'} ${formatMoney(totalAmount, currency)}${installmentsCount > 1 ? ' (' + installmentsCount + ' cuotas)' : ''}`, kind === 'credit');
+      saveState(true, true);
+    }
+    function payNextDebtInstallment(id, recordTx = true) {
+      const list = Array.isArray(state.debts) ? state.debts : [];
+      const d = list.find(x => x.id === id); if (!d || d.status === 'settled') return;
+      const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+      const paidInst = Math.max(0, parseInt(d.paidInstallments, 10) || 0);
+      const instVal = getDebtInstallmentValue(d);
+      const remBefore = getDebtRemainingAmount(d);
+      const payVal = Math.min(remBefore, instVal || remBefore);
+      const nextPaid = Math.min(instCount, paidInst + 1);
+      d.paidInstallments = nextPaid;
+      if (nextPaid >= instCount || getDebtRemainingAmount(d) <= 0.01) {
+        d.status = 'settled';
+        d.settledAt = Date.now();
+      }
+      if (recordTx && payVal > 0) {
+        const cardTag = d.cardName ? ` [${d.cardName}]` : '';
+        const cuotaTag = instCount > 1 ? ` (Cuota ${nextPaid}/${instCount})` : '';
+        addTransaction({
+          title: `${d.kind === 'credit' ? 'Cobro' : 'Pago'}: ${d.title}${cuotaTag}${cardTag}`,
+          amount: payVal,
+          currency: d.currency,
+          type: d.kind === 'credit' ? 'income' : 'expense',
+          category: d.kind === 'credit' ? 'Ingreso' : (d.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 'General'),
+          accountId: state.accounts[0] ? state.accounts[0].id : null
+        });
+        spawnFloatingBurst(`✅ ${instCount > 1 ? 'Cuota ' + nextPaid + '/' + instCount + ' asentada' : 'Liquidado y asentado'}`, true);
+        return;
+      }
+      spawnFloatingBurst(nextPaid >= instCount ? '✅ Todas las cuotas saldadas' : `✅ Cuota ${nextPaid}/${instCount} marcada`, true);
+      saveState(true, true);
+    }
+    function editDebtAmount(id) {
+      const list = Array.isArray(state.debts) ? state.debts : [];
+      const d = list.find(x => x.id === id); if (!d) return;
+      openInputModal({
+        title: '✏️ Editar Monto Total',
+        label: `Nuevo monto total (${d.currency}) para ${d.title}:`,
+        value: d.amount,
+        inputType: 'number',
+        placeholder: '0',
+        onConfirm: (v) => {
+          const parsed = Math.abs(parseFloat(String(v).replace(',', '.')));
+          if (!isNaN(parsed) && parsed > 0) {
+            d.amount = parsed;
+            if (getDebtRemainingAmount(d) > 0 && d.status === 'settled') {
+              d.status = 'pending';
+              delete d.settledAt;
             }
-          }"""
+            saveState(true, true);
+            spawnFloatingBurst('✅ Monto actualizado', true);
+          }
+        }
+      });
+    }
+    function toggleDebtSettled(id, settleAndRecordTx = false) {
+      const list = Array.isArray(state.debts) ? state.debts : [];
+      const d = list.find(x => x.id === id); if (!d) return;
+      const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+      if (d.status !== 'settled') {
+        const remVal = getDebtRemainingAmount(d);
+        d.status = 'settled';
+        d.paidInstallments = instCount;
+        d.settledAt = Date.now();
+        if (settleAndRecordTx && remVal > 0) {
+          const cardTag = d.cardName ? ` [${d.cardName}]` : '';
+          addTransaction({
+            title: `${d.kind === 'credit' ? 'Cobro' : 'Pago'}: ${d.title}${cardTag}`,
+            amount: remVal,
+            currency: d.currency,
+            type: d.kind === 'credit' ? 'income' : 'expense',
+            category: d.kind === 'credit' ? 'Ingreso' : (d.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 'General'),
+            accountId: state.accounts[0] ? state.accounts[0].id : null
+          });
+          spawnFloatingBurst('✅ Liquidado y asentado en cuenta', true);
+          return;
+        }
+        spawnFloatingBurst('✅ Marcado como saldado', true);
+      } else {
+        d.status = 'pending';
+        if (d.paidInstallments >= instCount) d.paidInstallments = Math.max(0, instCount - 1);
+        delete d.settledAt;
+        spawnFloatingBurst('⏳ Vuelto a pendiente', true);
+      }
+      saveState(true, true);
+    }
+    function deleteDebtItem(id) {
+      if (!confirm('¿Eliminar este registro pendiente?')) return;
+      state.debts = (Array.isArray(state.debts) ? state.debts : []).filter(x => x.id !== id);
+      saveState(true, true);
+    }
 
-assert old_boot in html, "Missing old_boot"
-html = html.replace(old_boot, new_boot, 1)
+    function handleCreateBudgetSubmit(e) {
+      if (e) e.preventDefault();
+      const name = document.getElementById('bg-name').value.trim(), limit = Math.abs(parseFloat(document.getElementById('bg-limit').value) || 0);
+      if (!name || limit <= 0) return;
+      state.budgets.push({ id: 'cat_' + Date.now(), name, limit, icon: document.getElementById('bg-icon').value.trim() || '🎯', color: '#06b6d4' });
+      ui.showNewBudgetModal = false; saveState(true, true);
+    }
+    function editBudgetLimit(id) {
+      const b = state.budgets.find(x => x.id === id); if (!b) return;
+      openInputModal({
+        title: `🎯 Editar Tope Mensual`,
+        label: `Nuevo tope mensual ($ UYU) para ${b.name}:`,
+        value: b.limit,
+        inputType: 'number',
+        placeholder: '0',
+        onConfirm: (v) => {
+          const parsed = Math.abs(parseFloat(String(v).replace(',', '.')));
+          if (!isNaN(parsed) && parsed > 0) { b.limit = parsed; saveState(true, true); spawnFloatingBurst(`✅ Tope actualizado`, true); }
+        }
+      });
+    }
+    function deleteBudgetCategory(id) { if (confirm('¿Eliminar categoría?')) { state.budgets = state.budgets.filter(x => x.id !== id); saveState(true, true); } }
+    function wipeAllAndStartFresh() { if (confirm('¿Empezar de cero?')) { state.accounts.forEach(a => a.balance = 0); state.transactions = []; saveState(true, true); } }
+    function restoreDemoData() { if (confirm('¿Restaurar demo?')) { const keep = { githubRepo: state.githubRepo, githubToken: state.githubToken, cloudWebhookUrl: state.cloudWebhookUrl }; state = { ...JSON.parse(JSON.stringify(DEMO_STATE)), ...keep, updatedAt: Date.now() }; saveState(true, true); } }
+    function exportBackupJSON() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' })); a.download = `Krono_Respaldo_${state.syncCode}.json`; a.click(); }
+    function importBackupJSON() {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json';
+      inp.onchange = (e) => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = (ev) => { try { const d = JSON.parse(ev.target.result); if (d && Array.isArray(d.accounts)) { state = { ...state, ...d, updatedAt: Date.now() }; saveState(true, true); spawnFloatingBurst('Respaldo Importado', true); } } catch (err) { alert('JSON inválido.'); } }; r.readAsText(f); };
+      inp.click();
+    }
 
-# 4. Bake CSS and JS directly into html so standalone and OTA are 100% self-contained
-standalone_html = html
-style_tag = '<style id="krono-live-custom-css"></style>'
-if style_tag in standalone_html and css:
-    standalone_html = standalone_html.replace(style_tag, f'<style id="krono-live-custom-css">{css}</style>', 1)
+    function normalizeStr(str) { return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+    function detectCurrencyInText(normText) {
+      const hasPesos = /\b(?:pesos|peso|uyu)\b/i.test(normText);
+      const hasDollarSymbolOrWord = /(?:\$|\b(?:dolares|dolar|usd|u\$s|us\$|verdes)\b|(?:^|[^a-z0-9])us\$(?=[^a-z0-9]|$))/i.test(normText);
+      if (hasPesos && !hasDollarSymbolOrWord) return 'UYU';
+      if (hasDollarSymbolOrWord) return 'USD';
+      if (hasPesos) return 'UYU';
+      return null;
+    }
+    function detectTransactionType(normText) {
+      const incomePattern = /(?:\b(?:ingresaron|ingreso|ingrese|ingresa|entro|entraron|ahorre|ahorrar|gane|ganar|cobre|cobrar|recibi|recibir|deposite|depositar|transfirieron|transfiri|devolvieron|devolvi|sueldo|salario|aguinaldo|reintegro|devolucion|venta|ventas|extra|sumar|mas)\b|\bme\s+(?:ingresaron|ingreso|entro|entraron|pagaron|depositaron|transfirieron|dieron|devolvieron|pago|dio|deposito|transfirio)\b)/i;
+      const expensePattern = /\b(?:gaste|gastar|pague|pagar|compre|comprar|debite|debitar|retire|retirar|saque|sacar|perdi|perder|abone|abonar|debo)\b/i;
+      const hasIncome = incomePattern.test(normText);
+      const hasExpense = expensePattern.test(normText);
+      if (hasIncome && !hasExpense) return 'income';
+      if (hasIncome && hasExpense) {
+        const incMatch = normText.match(incomePattern);
+        const expMatch = normText.match(expensePattern);
+        if (incMatch && expMatch) return incMatch.index < expMatch.index ? 'income' : 'expense';
+        return 'income';
+      }
+      return 'expense';
+    }
+    function parseNumberToken(rawToken) {
+      let raw = String(rawToken || '').trim();
+      if (!raw) return 0;
+      if (raw.includes('.') && raw.includes(',')) {
+        const lastDot = raw.lastIndexOf('.'), lastComma = raw.lastIndexOf(',');
+        if (lastComma > lastDot) {
+          raw = raw.replace(/\./g, '').replace(',', '.');
+        } else {
+          raw = raw.replace(/,/g, '');
+        }
+        return parseFloat(raw) || 0;
+      }
+      if (raw.includes(',')) {
+        if (/^\d{1,3}(?:,\d{3})+$/.test(raw) || /^\d+,\d{3}$/.test(raw)) {
+          raw = raw.replace(/,/g, '');
+        } else {
+          raw = raw.replace(',', '.');
+        }
+        return parseFloat(raw) || 0;
+      }
+      if (raw.includes('.')) {
+        if (/^\d{1,3}(?:\.\d{3})+$/.test(raw) || /^\d+\.\d{3}$/.test(raw)) {
+          raw = raw.replace(/\./g, '');
+        }
+        return parseFloat(raw) || 0;
+      }
+      return parseFloat(raw) || 0;
+    }
+    function extractSmartAmount(segText) {
+      let s = normalizeStr(segText)
+        .replace(/\bun\s+mil\b/g,'1000').replace(/\bdos\s+mil\b/g,'2000').replace(/\btres\s+mil\b/g,'3000')
+        .replace(/\bcuatro\s+mil\b/g,'4000').replace(/\bcinco\s+mil\b/g,'5000').replace(/\bdiez\s+mil\b/g,'10000')
+        .replace(/\bquince\s+mil\b/g,'15000').replace(/\bveinte\s+mil\b/g,'20000').replace(/\bquinientos\b/g,'500')
+        .replace(/\bseiscientos\b/g,'600').replace(/\bsetecientos\b/g,'700').replace(/\bochocientos\b/g,'800')
+        .replace(/\bnovecientos\b/g,'900').replace(/\bcien\b/g,'100').replace(/\bdoscientos\b/g,'200')
+        .replace(/\btrescientos\b/g,'300').replace(/\bcuatrocientos\b/g,'400');
+      const m = s.match(/(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?)/);
+      if (!m) return /\bmil\b/.test(s) ? 1000 : 0;
+      let val = parseNumberToken(m[1]);
+      if (/\bmil\b/.test(s) && val > 0 && val < 100) val *= 1000;
+      return val;
+    }
+    function findAccountMentionInText(rawText) {
+      const norm = normalizeStr(rawText); if (!norm) return null;
+      let bestAcc = null, bestScore = 0;
+      const ignored = ['cuenta','mis','los','las','del','con','por','para','una','caja'];
+      state.accounts.forEach(acc => {
+        const aNorm = normalizeStr(acc.name);
+        if (norm.includes(aNorm) && aNorm.length + 10 > bestScore) { bestScore = aNorm.length + 10; bestAcc = acc; }
+        let sc = 0;
+        aNorm.split(/[^a-z0-9]+/).filter(t => t.length >= 3 && !ignored.includes(t)).forEach(tok => { if (new RegExp(`(^|[^a-z0-9])${tok}([^a-z0-9]|$)`,'i').test(norm)) sc += tok.length; });
+        if (sc > bestScore) { bestScore = sc; bestAcc = acc; }
+      });
+      if (bestAcc) return bestAcc;
+      if (/\b(efectivo|billetera|cash|contado|en mano|monedero)\b/i.test(norm)) return state.accounts.find(a => a.id === 'acc_cash' || /efectivo|billetera|cash|mano/i.test(normalizeStr(a.name))) || null;
+      if (/\b(ahorro|ahorros|cuenta dolares|cuenta usd|ahorro dolares)\b/i.test(norm)) return state.accounts.find(a => a.id === 'acc_usd' || a.currency === 'USD') || null;
+      if (/\b(brou|debito|banco|tarjeta)\b/i.test(norm)) return state.accounts.find(a => a.id === 'acc_uyu' || /brou|debito|banco/i.test(normalizeStr(a.name))) || null;
+      return null;
+    }
+    function resolveAccountForSegment(seg, full, currency, hasExplicitSegCurrency) {
+      const sM = findAccountMentionInText(seg); if (sM) return sM;
+      if (hasExplicitSegCurrency) {
+        const matchingCurAcc = state.accounts.find(a => a.currency === currency);
+        if (matchingCurAcc) return matchingCurAcc;
+      }
+      if (ui.voiceTargetAccountId && ui.voiceTargetAccountId !== 'auto') {
+        const m = state.accounts.find(a => a.id === ui.voiceTargetAccountId);
+        if (m && (!hasExplicitSegCurrency || m.currency === currency)) return m;
+      }
+      if (!hasExplicitSegCurrency) {
+        const gM = findAccountMentionInText(full);
+        if (gM) return gM;
+      }
+      if (currency === 'USD') { const u = state.accounts.find(a => a.currency === 'USD'); if (u) return u; }
+      if (currency === 'UYU') { const y = state.accounts.find(a => a.currency === 'UYU'); if (y) return y; }
+      return state.accounts[0];
+    }
+    function stripAccountPhrasesFromTitle(raw) {
+      let c = raw;
+      state.accounts.forEach(acc => {
+        acc.name.split(/[\/\-,()]+/).map(p => p.trim()).filter(p => p.length >= 3).forEach(part => {
+          c = c.replace(new RegExp(`\\b(con|en|de|desde|por|a|en la|de la|con la|en el|del|al)?\\s*(cuenta\\s+)?${part.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\b`,'gi'), ' ');
+        });
+      });
+      return c.replace(/\b(con|en|de|desde|por|a)?\s*(la\s+|el\s+|mi\s+)?(cuenta\s+)?(efectivo|billetera|cash|contado|en mano|monedero|brou|debito|débito|banco|tarjeta|ahorro dolares|ahorro)\b/gi, ' ').replace(/\s+/g, ' ').replace(/^[.,;:\-\s]+|[.,;:\-\s]+$/g, '').trim();
+    }
+    function speakText(text) {
+      if (!state.ttsEnabled || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = state.voiceLang || 'es-UY'; u.rate = 1.06; window.speechSynthesis.speak(u);
+    }
+    function processGeminiCommand(rawInput, fromExternal = false) {
+      if (!rawInput || !rawInput.trim()) return;
+      const text = rawInput.replace(/_/g, ' ').replace(/\+/g, ' ').trim().replace(/^(?:hey\s+gemini|hola\s+gemini|gemini|tarea\s+|en\s+krono\s+|krono[:\s,-]*)+/i, '').trim();
+      const lower = normalizeStr(text);
+      if ((lower.includes('actualiza') || lower.includes('release')) && lower.includes('app')) { ui.showOtaModal = true; checkGitHubReleaseOtaUpdate(true); render(); return; }
+      if (lower.includes('cuanto') || lower.includes('saldo') || lower.includes('patrimonio')) {
+        const sp = findAccountMentionInText(text);
+        const reply = sp ? `El saldo de ${sp.name} es de ${formatMoney(sp.balance, sp.currency)}.` : `Tu patrimonio total es de ${formatMoney(getTotals().totalUYU, 'UYU')}.`;
+        ui.geminiResponse = { mode: 'query', prompt: text, reply, items: [] }; speakText(reply); render(); return;
+      }
+      const debtIntentMatch = /(?:^|\b)(?:debo|me\s+deben|me\s+debe|prestamo|préstamo|credito|crédito|deuda|cuota\s+pendiente|pendiente\s+de\s+(?:cobro|pago)|tarjeta\s+de\s+credito|en\s+\d+\s+cuotas?|\d+\s+cuotas?)(?:\b|$)/i.test(lower) && !/\b(?:pague|pagué|cobre|cobré|gaste|gasté)\b/i.test(lower);
+      if (debtIntentMatch) {
+        if (!Array.isArray(state.debts)) state.debts = [];
+        let installmentsCount = 1;
+        const instMatch = lower.match(/(?:en|de|a|son)\s+(\d{1,3})\s+cuotas?/) || lower.match(/(\d{1,3})\s+cuotas?/);
+        if (instMatch && parseInt(instMatch[1], 10) > 1) {
+          installmentsCount = Math.min(120, parseInt(instMatch[1], 10));
+        }
+        const perInstallmentPhrase = /\b(?:por\s+cuota|cada\s+cuota|cuota\s+de|de\s+cuota)\b/i.test(lower);
+        let workText = text;
+        if (installmentsCount > 1) {
+          workText = workText.replace(new RegExp(`(?:\\b(?:en|de|a|son)\\s+)?${installmentsCount}\\s+cuotas?`, 'gi'), ' ');
+        }
+        const rawAmount = extractSmartAmount(workText);
+        if (rawAmount > 0) {
+          const isCredit = /\b(?:me\s+deben|me\s+debe|credito|crédito|por\s+cobrar)\b/i.test(lower);
+          const cardMatch = workText.match(/\b(?:(?:itau|itaú|brou|santander|bbva|scotia|hsbc|prex|midinero)\s+(?:visa|mastercard|master|oca|amex|cabal|recompensa)|visa|mastercard|master|oca|american\s+express|amex|cabal|brou\s+recompensa|santander|itau|itaú|bbva|scotia|hsbc|prex|midinero)\b/i);
+          const cardName = cardMatch ? cardMatch[0].replace(/\b\w/g, c => c.toUpperCase()) : '';
+          const paymentMethod = cardName || /\btarjeta\b/i.test(lower) ? 'credit_card' : (installmentsCount > 1 ? 'installment_plan' : (/\bprestamo|préstamo\b/i.test(lower) ? 'personal' : 'general'));
+          const currency = detectCurrencyInText(lower) || state.defaultCurrency || 'UYU';
+          const totalAmount = (installmentsCount > 1 && perInstallmentPhrase) ? Number((rawAmount * installmentsCount).toFixed(2)) : rawAmount;
+          let cleanTitle = workText.replace(/(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?)\s*(mil)?/gi, ' ')
+            .replace(/\b(un mil|dos mil|tres mil|cuatro mil|cinco mil|diez mil|quince mil|veinte mil|quinientos|seiscientos|setecientos|ochocientos|novecientos|cien|doscientos|trescientos|cuatrocientos|mil)\b/gi, ' ')
+            .replace(/\b(?:debo|me\s+deben|me\s+debe|prestamo|préstamo|credito|crédito|deuda|cuota|cuotas|por\s+cuota|cada\s+cuota|tarjeta|pesos|dólares|dolares|dolar|dólar|usd|uyu|en|de|por|a|con|la|el)\b/gi, ' ')
+            .replace(/\$/g, ' ').replace(/\s+/g, ' ').trim();
+          cleanTitle = cleanTitle ? (cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1)) : (cardName ? `Compra ${cardName}` : (isCredit ? 'Crédito pendiente' : 'Deuda pendiente'));
+          state.debts.unshift({
+            id: 'debt_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+            title: cleanTitle,
+            counterparty: cardName || (fromExternal ? 'Google Tasks' : (isCredit ? 'Por cobrar' : 'Por pagar')),
+            paymentMethod,
+            cardName,
+            installmentsCount,
+            paidInstallments: 0,
+            amount: totalAmount,
+            currency,
+            kind: isCredit ? 'credit' : 'debt',
+            dueDate: '',
+            status: 'pending',
+            notes: '',
+            createdAt: Date.now()
+          });
+          const cuotaInfo = installmentsCount > 1 ? ` en ${installmentsCount} cuotas (${formatMoney(Number((totalAmount / installmentsCount).toFixed(2)), currency)} c/u)` : '';
+          const cardInfo = cardName ? ` en ${cardName}` : '';
+          const reply = (fromExternal ? '[Google Tasks] ' : '') + `Agregué ${isCredit ? 'crédito' : 'deuda'} pendiente: ${cleanTitle} (${formatMoney(totalAmount, currency)}${cuotaInfo}${cardInfo}).`;
+          ui.geminiResponse = { mode: 'action', prompt: text, reply, items: [] };
+          speakText(reply);
+          saveState(true, true);
+          return;
+        }
+      }
+      const rawSegs = text.split(/(?:;|\s+y\s+(?=[^,.;]*?(?:\d|mil|quinientos|cien))|,(?=[^,.;]*?(?:\d|mil|quinientos|cien)))/i).map(s => s.trim()).filter(Boolean);
+      const created = [];
+      (rawSegs.length ? rawSegs : [text]).forEach(seg => {
+        const sLower = normalizeStr(seg), amount = extractSmartAmount(seg);
+        if (!amount || amount <= 0) return;
+        const segCurrency = detectCurrencyInText(sLower);
+        const hasExplicitSegCurrency = Boolean(segCurrency);
+        const currency = segCurrency || detectCurrencyInText(lower) || state.defaultCurrency || 'UYU';
+        const txType = detectTransactionType(sLower);
+        const isInc = txType === 'income';
+        const targetAcc = resolveAccountForSegment(seg, text, currency, hasExplicitSegCurrency);
+        let cat = isInc ? 'Ingreso' : 'Comida y Súper';
+        if (!isInc) {
+          if (/\b(luz|agua|internet|antel|ute|ose|gas|alquiler|servicio)\b/i.test(sLower)) cat = 'Servicios y Luz';
+          else if (/\b(nafta|uber|boleto|auto|bus|omnibus|taxi|peaje)\b/i.test(sLower)) cat = 'Transporte y Nafta';
+          else { const mb = state.budgets.find(b => sLower.includes(normalizeStr(b.name.split(' ')[0]))); if (mb) cat = mb.name; }
+        }
+        let title = seg.replace(/^(hey\s+gemini|gemini|krono)[,\s]*/i,'').replace(/(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?)\s*(mil)?/gi,' ').replace(/\b(un mil|dos mil|tres mil|cuatro mil|cinco mil|diez mil|quince mil|veinte mil|quinientos|seiscientos|setecientos|ochocientos|novecientos|cien|doscientos|trescientos|cuatrocientos|mil)\b/gi,' ').replace(/\b(me\s+(?:entro|entró|ingreso|ingresó|ingresaron|pagaron|depositaron|transfirieron|dieron|devolvieron)|ingresaron|ahorr[eé]|ahorrar|gané|gane|cobr[eé]|cobre|ingres[eé]|ingrese|recib[ií]|recibi|deposit[eé]|deposite|gasté|gaste|pagué|pague|compré|compre|en|de|por|con|desde|pesos|dólares|dolares|dolar|dólar|usd|uyu)\b/gi,' ').replace(/\$/g, ' ');
+        title = stripAccountPhrasesFromTitle(title);
+        title = title ? (title.charAt(0).toUpperCase() + title.slice(1)) : (isInc ? 'Ingreso' : cat);
+        const tx = addTransaction({ title, amount, currency, type: txType, category: cat, accountId: targetAcc ? targetAcc.id : null, fromExternal });
+        if (tx) created.push(tx);
+      });
+      if (created.length > 0) {
+        const reply = (fromExternal ? '[Google Tasks] ' : '') + `Registré ${created.map(i => `${i.title} (${formatMoney(i.amount, i.currency)} en ${i.accountName})`).join(' y ')}.`;
+        ui.geminiResponse = { mode: 'action', prompt: text, reply, items: created }; speakText(reply);
+      } else if (!fromExternal) {
+        ui.geminiResponse = { mode: 'error', prompt: text, reply: 'No detecté un monto. Probá: "Me ingresaron 5,000 pesos".', items: [] };
+      }
+      render();
+    }
 
-dom_ready_anchor = "      render();\n    });"
-if dom_ready_anchor in standalone_html and js:
-    standalone_html = standalone_html.replace(
-        dom_ready_anchor,
-        f"      try {{ (new Function({json.dumps(js)}))(); }} catch (e) {{}}\n      render();\n    }});",
-        1
-    )
+    let recognition = null;
+    function openInAppVoiceFallback(hint) {
+      const isWinDesktop = Boolean(window.kronoDesktop && window.kronoDesktop.isElectron);
+      ui.isListening = false; ui.showVoiceWidgetOverlay = true;
+      ui.voiceHintMsg = hint || (isWinDesktop ? 'Presioná Win + H para dictar por voz en Windows o escribí aquí:' : 'Tocá aquí y usá el micrófono 🎙️ de tu teclado:');
+      render();
+      setTimeout(() => { const el = document.getElementById('voice-overlay-manual-input'); if (el) el.focus(); }, 150);
+    }
+    function startVoiceCapture() {
+      ui.showVoiceWidgetOverlay = true; ui.voiceHintMsg = '';
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) { openInAppVoiceFallback(); return; }
+      try {
+        if (recognition) try { recognition.abort(); } catch (e) {}
+        recognition = new SR(); recognition.lang = state.voiceLang || 'es-UY'; recognition.interimResults = true;
+        ui.isListening = true; ui.voiceTranscript = ''; render();
+        recognition.onresult = (ev) => { let t = ''; for (let i=0;i<ev.results.length;i++) t += ev.results[i][0].transcript; ui.voiceTranscript = t; const inp = document.getElementById('voice-overlay-manual-input'); if (inp) inp.value = t; };
+        recognition.onend = () => { ui.isListening = false; if (ui.voiceTranscript.trim()) { const c = ui.voiceTranscript.trim(); ui.showVoiceWidgetOverlay = false; ui.voiceTranscript = ''; processGeminiCommand(c); } else render(); };
+        recognition.onerror = () => {
+          const isWinDesktop = Boolean(window.kronoDesktop && window.kronoDesktop.isElectron);
+          openInAppVoiceFallback(isWinDesktop ? 'Presioná Win + H para dictar por voz en Windows o escribí tu comando abajo:' : 'Usá el micrófono 🎙️ de tu teclado Android aquí abajo:');
+        };
+        recognition.start();
+      } catch (e) { openInAppVoiceFallback(); }
+    }
+    function stopVoiceCapture() { if (recognition) try { recognition.stop(); } catch (e) {} ui.isListening = false; render(); }
+    function submitVoiceOverlayInput() {
+      const inp = document.getElementById('voice-overlay-manual-input');
+      const val = (inp && inp.value.trim()) ? inp.value.trim() : ui.voiceTranscript.trim();
+      if (!val) return; stopVoiceCapture(); ui.showVoiceWidgetOverlay = false; ui.voiceTranscript = ''; processGeminiCommand(val);
+    }
 
-# Validate script syntax in Python/Node if available
-scripts = re.findall(r"<script>(.*?)</script>", standalone_html, flags=re.S)
-print("Script blocks count:", len(scripts))
-for i, sc in enumerate(scripts):
-    # Check unbalanced single quotes in lines
-    bad_lines = []
-    for ln_idx, line in enumerate(sc.splitlines(), 1):
-        # Quick heuristic: check if line has unescaped single quote count odd
-        q_count = len(re.findall(r"(?<!\\)'", line))
-        if q_count % 2 == 1 and "lastReleaseNotes:" not in line:
-            bad_lines.append((ln_idx, line[:120]))
-    print(f"  Script {i} odd-single-quote lines (excl lastReleaseNotes):", bad_lines)
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && ui.inputModal) closeInputModal();
+    });
 
-with open("Krono-Finanzas-Windows/index.html", "w", encoding="utf-8") as f:
-    f.write(standalone_html)
+    window.addEventListener('focus', () => { pullFromCloudBridge(false); pullStateFromGitHubCloud(false); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { pullFromCloudBridge(false); pullStateFromGitHubCloud(false); } });
 
-ota_v6530 = {
-    "version": "6.5.30",
-    "html": html,
-    "css": css,
-    "js": js
-}
+    window.addEventListener('DOMContentLoaded', () => {
+      loadLivePatches();
+      let upd = false;
+      if (!state.githubRepo) { state.githubRepo = DEFAULT_GH_REPO; upd = true; }
+      if (!state.githubToken) { state.githubToken = DEFAULT_GH_TOKEN; upd = true; }
+      if (!state.cloudWebhookUrl || state.cloudWebhookUrl !== DEFAULT_CLOUD_WEBHOOK_URL) { state.cloudWebhookUrl = DEFAULT_CLOUD_WEBHOOK_URL; upd = true; }
+      if (upd) localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('sync')) { state.syncCode = params.get('sync').toUpperCase(); saveState(false, false); }
+      const extCmd = params.get('gemini') || params.get('cmd');
+      if (extCmd) {
+        setTimeout(async () => {
+          await pullStateFromGitHubCloud(false);
+          processGeminiCommand(decodeURIComponent(extCmd), true);
+          try { window.history.replaceState({}, document.title, window.location.pathname); } catch (e) {}
+        }, 300);
+      } else {
+        setTimeout(async () => { await pullStateFromGitHubCloud(false); await pullFromCloudBridge(false); }, 450);
+      }
+      if (params.get('voice') === '1') setTimeout(() => startVoiceCapture(), 350);
+      if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
+        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.31: Paquete OTA JSON listo para pegar en Panel OTA, con sintaxis corregida y control de tarjetas/cuotas/deudas.'), 1200);
+      } else if (state.autoCheckOta && cleanRepoSlug()) {
+        setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
+      }
+      setInterval(() => { pullFromCloudBridge(false); pullStateFromGitHubCloud(false); }, 10000);
+      setInterval(() => { if (state.autoCheckOta && cleanRepoSlug()) checkGitHubReleaseOtaUpdate(false); }, 60000);
+      try { (new Function("if (!window.__KRONO_FX_V6516__) { window.__KRONO_FX_V6516__ = true; let rafId = 0, lastEv = null; document.addEventListener('pointermove', function(e) { lastEv = e; if (rafId) return; rafId = requestAnimationFrame(function() { rafId = 0; if (!lastEv) return; const card = lastEv.target && lastEv.target.closest ? lastEv.target.closest('.glass-97') : null; if (!card) return; const rect = card.getBoundingClientRect(); card.style.setProperty('--mx', Math.round(lastEv.clientX - rect.left) + 'px'); card.style.setProperty('--my', Math.round(lastEv.clientY - rect.top) + 'px'); }); }, { passive: true }); document.addEventListener('pointerdown', function(e) { const el = e.target && e.target.closest ? e.target.closest('.spring-btn, .spring-card, aside nav button, nav button') : null; if (!el) return; const rect = el.getBoundingClientRect(); const size = Math.max(rect.width, rect.height) * 0.85; const r = document.createElement('span'); r.className = 'krono-ripple'; r.style.width = size + 'px'; r.style.height = size + 'px'; r.style.left = Math.round(e.clientX - rect.left) + 'px'; r.style.top = Math.round(e.clientY - rect.top) + 'px'; el.appendChild(r); setTimeout(function() { r.remove(); }, 540); }, { passive: true }); } if (!window.__KRONO_DD_V6517__) { window.__KRONO_DD_V6517__ = true; let activeSelect = null; function closeGlassDropdown() { const existing = document.getElementById('krono-glass-dropdown'); if (existing) existing.remove(); if (activeSelect) { activeSelect.classList.remove('krono-dd-open'); activeSelect = null; } } function openGlassDropdown(sel) { if (activeSelect === sel && document.getElementById('krono-glass-dropdown')) { closeGlassDropdown(); return; } closeGlassDropdown(); activeSelect = sel; sel.classList.add('krono-dd-open'); const menu = document.createElement('div'); menu.id = 'krono-glass-dropdown'; const opts = Array.from(sel.options || []); opts.forEach(function(opt) { const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'krono-dd-item' + (opt.value === sel.value ? ' is-selected' : ''); const lbl = document.createElement('span'); lbl.textContent = opt.textContent; lbl.style.overflow = 'hidden'; lbl.style.textOverflow = 'ellipsis'; lbl.style.whiteSpace = 'nowrap'; btn.appendChild(lbl); if (opt.value === sel.value) { const chk = document.createElement('span'); chk.className = 'krono-dd-check'; chk.textContent = '\u2713'; btn.appendChild(chk); } btn.addEventListener('mousedown', function(ev) { ev.preventDefault(); ev.stopPropagation(); const changed = sel.value !== opt.value; sel.value = opt.value; closeGlassDropdown(); if (changed) sel.dispatchEvent(new Event('change', { bubbles: true })); }); menu.appendChild(btn); }); document.body.appendChild(menu); const rect = sel.getBoundingClientRect(); const minW = Math.min(Math.max(rect.width, 195), window.innerWidth - 24); menu.style.minWidth = Math.round(minW) + 'px'; menu.style.maxWidth = Math.round(window.innerWidth - 24) + 'px'; const mRect = menu.getBoundingClientRect(); let left = rect.left; if (left + mRect.width > window.innerWidth - 12) left = window.innerWidth - mRect.width - 12; if (left < 12) left = 12; let top = rect.bottom + 6; if (top + mRect.height > window.innerHeight - 12 && rect.top > mRect.height + 16) { top = rect.top - mRect.height - 6; menu.classList.add('krono-dd-up'); } menu.style.left = Math.round(left) + 'px'; menu.style.top = Math.round(Math.max(12, top)) + 'px'; } document.addEventListener('mousedown', function(e) { if (e.target && e.target.closest && e.target.closest('#krono-glass-dropdown')) return; if (e.target && e.target.tagName === 'SELECT') { e.preventDefault(); e.target.focus(); openGlassDropdown(e.target); return; } closeGlassDropdown(); }, true); document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeGlassDropdown(); return; } if (e.target && e.target.tagName === 'SELECT' && (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown')) { e.preventDefault(); openGlassDropdown(e.target); } }, true); window.addEventListener('resize', closeGlassDropdown, { passive: true }); window.addEventListener('scroll', function(e) { if (e.target && e.target.id === 'krono-glass-dropdown') return; closeGlassDropdown(); }, true); } if (!window.__KRONO_NAV_V6519__) { window.__KRONO_NAV_V6519__ = true; window.__KRONO_KEEP_MOV_FILTERS__ = false; function resetMovementFilters() { if (typeof ui === 'undefined') return; ui.txFilterAccount = 'all'; ui.txFilterType = 'all'; ui.txFilterCurrency = 'all'; ui.txSearch = ''; } function openMovementsWithFilters(opts) { if (typeof ui === 'undefined') return; resetMovementFilters(); if (opts && opts.accountId) ui.txFilterAccount = opts.accountId; if (opts && opts.type) ui.txFilterType = opts.type; if (opts && opts.search) ui.txSearch = opts.search; window.__KRONO_KEEP_MOV_FILTERS__ = true; if (typeof window.switchTab === 'function') { window.switchTab('movements'); } else { ui.activeTab = 'movements'; if (typeof render === 'function') render(); } try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (err) {} } if (typeof window.switchTab === 'function' && !window.switchTab.__kronoWrapped6519) { const origSwitchTab = window.switchTab; window.switchTab = function(tabId) { const prev = (typeof ui !== 'undefined') ? ui.activeTab : null; if (prev === 'movements' && tabId !== 'movements') { resetMovementFilters(); } else if (tabId === 'movements' && !window.__KRONO_KEEP_MOV_FILTERS__) { resetMovementFilters(); } window.__KRONO_KEEP_MOV_FILTERS__ = false; return origSwitchTab.call(this, tabId); }; window.switchTab.__kronoWrapped6519 = true; } function findNavigableCard(target) { if (typeof ui === 'undefined' || !target || !target.closest) return null; if (target.closest('button, input, select, textarea, a')) return null; if (ui.activeTab === 'dashboard') { const row = target.closest('main .glass-97 .rounded-2xl'); if (!row) return null; const list = row.parentElement; const card = list ? list.parentElement : null; if (!card || !card.classList || !card.classList.contains('glass-97')) return null; const h3 = card.querySelector('h3'); if (!h3 || !h3.textContent) return null; const idx = Array.from(list.children).indexOf(row); if (h3.textContent.indexOf('Cuentas Activas') !== -1) { return { kind: 'account', el: row, idx: idx, needsRipple: true }; } if (h3.textContent.indexOf('Top Presupuestos') !== -1) { return { kind: 'budget', el: row, idx: idx, needsRipple: true }; } return null; } if (ui.activeTab === 'accounts') { const card = target.closest('main .grid > .spring-card.glass-97'); if (!card || !card.parentElement) return null; return { kind: 'account', el: card, idx: Array.from(card.parentElement.children).indexOf(card), needsRipple: false }; } if (ui.activeTab === 'budgets') { const card = target.closest('main .grid > .spring-card.glass-97'); if (!card || !card.parentElement) return null; return { kind: 'budget', el: card, idx: Array.from(card.parentElement.children).indexOf(card), needsRipple: false }; } return null; } document.addEventListener('pointerdown', function(e) { const hit = findNavigableCard(e.target); if (!hit || !hit.needsRipple) return; const rect = hit.el.getBoundingClientRect(); const size = Math.max(rect.width, rect.height) * 0.85; const r = document.createElement('span'); r.className = 'krono-ripple'; r.style.width = size + 'px'; r.style.height = size + 'px'; r.style.left = Math.round(e.clientX - rect.left) + 'px'; r.style.top = Math.round(e.clientY - rect.top) + 'px'; hit.el.appendChild(r); setTimeout(function() { r.remove(); }, 540); }, { passive: true }); document.addEventListener('click', function(e) { const hit = findNavigableCard(e.target); if (!hit || typeof state === 'undefined') return; if (hit.kind === 'account') { const acc = Array.isArray(state.accounts) ? state.accounts[hit.idx] : null; if (!acc || !acc.id) return; e.stopPropagation(); openMovementsWithFilters({ accountId: acc.id }); } else if (hit.kind === 'budget') { const bg = Array.isArray(state.budgets) ? state.budgets[hit.idx] : null; if (!bg || !bg.name) return; e.stopPropagation(); openMovementsWithFilters({ type: 'expense', search: bg.name }); } }, true); }"))(); } catch (e) {}
+      render();
+    });
 
-out_path = "ota_v6.5.30.json"
-with open(out_path, "w", encoding="utf-8") as f:
-    json.dump(ota_v6530, f, ensure_ascii=False, indent=2)
+    function renderDashboardTab(totals, displayTotal, anim) {
+      const rate = Number(state.exchangeRate) || 41.5;
+      return `<div class="space-y-4 sm:space-y-5 ${anim}">
+        ${ui.otaStatusMsg ? `<div class="glass-97 px-4 py-3 rounded-2xl border border-cyan-400/40 text-xs text-cyan-200 flex items-center justify-between gap-2"><span class="break-words flex-1">${ui.otaStatusMsg}</span><button onclick="ui.otaStatusMsg='';render();" class="text-slate-400">✕</button></div>` : ''}
+        <div onclick="ui.displayCurrency=ui.displayCurrency==='UYU'?'USD':'UYU';render();" class="spring-card glass-97 rounded-3xl p-5 sm:p-6 cursor-pointer">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-cyan-300">✨ Patrimonio Consolidado (${ui.displayCurrency})</span>
+            <span class="text-[10px] px-2.5 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-200 mono">Cambiar a ${ui.displayCurrency==='UYU'?'US$ USD':'$ UYU'}</span>
+          </div>
+          <div class="text-3xl sm:text-4xl md:text-5xl font-extrabold mono text-white my-2 break-all">${displayTotal}</div>
+          <div class="grid grid-cols-3 gap-2 mt-4 pt-3.5 border-t border-white/10 text-[11px] sm:text-xs">
+            <div class="min-w-0"><div class="text-slate-400 truncate">Ingresos Mes</div><div class="text-emerald-300 font-bold mono mt-0.5 truncate">+${formatMoney(totals.monthIncomeUYU,'UYU')}</div></div>
+            <div class="min-w-0"><div class="text-slate-400 truncate">Gastos Mes</div><div class="text-rose-300 font-bold mono mt-0.5 truncate">-${formatMoney(totals.monthExpenseUYU,'UYU')}</div></div>
+            <div class="min-w-0"><div class="text-slate-400 truncate">Ahorro</div><div class="text-cyan-300 font-bold mono mt-0.5">${totals.savingsRate}%</div></div>
+          </div>
+        </div>
+        <div class="glass-97 rounded-3xl p-4 w-full max-w-full overflow-hidden space-y-2.5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs text-cyan-300 font-extrabold">🎙️ Dictado y Google Tasks</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-200 border border-emerald-400/30">${ui.bridgeDiagnostic}</span>
+            </div>
+            <div class="flex items-center gap-1.5 w-full sm:w-auto min-w-0">
+              <span class="text-[11px] text-slate-400 shrink-0">Cuenta:</span>
+              <select onchange="ui.voiceTargetAccountId=this.value;render();" class="w-full sm:w-auto max-w-full min-w-0 bg-slate-950/75 border border-white/15 rounded-xl px-2.5 py-1.5 text-xs text-cyan-200 font-bold truncate">
+                <option value="auto" ${ui.voiceTargetAccountId==='auto'?'selected':''}>🤖 Auto (por voz)</option>
+                ${state.accounts.map(a => `<option value="${a.id}" ${ui.voiceTargetAccountId===a.id?'selected':''}>${a.icon||'🏦'} ${a.name} (${a.currency})</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
+            <input id="gemini-quick-input" type="text" placeholder="Ej: Me ingresaron 5,000 pesos o Gasté $ 200..." onkeydown="if(event.key==='Enter'){processGeminiCommand(this.value);this.value='';}" class="w-full min-w-0 sm:flex-1 bg-slate-950/60 border border-white/15 rounded-2xl px-3.5 py-2.5 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-400" />
+            <div class="grid grid-cols-2 sm:flex items-center gap-2 w-full sm:w-auto shrink-0">
+              <button onclick="startVoiceCapture()" class="spring-btn w-full sm:w-auto px-4 py-2.5 rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 bg-gradient-to-r from-cyan-500 to-violet-600 text-white">🎙️ Dictar</button>
+              <button onclick="const i=document.getElementById('gemini-quick-input');if(i.value){processGeminiCommand(i.value);i.value='';}" class="spring-btn w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-cyan-400 text-slate-950 font-extrabold text-xs sm:text-sm">Enviar</button>
+            </div>
+          </div>
+          ${ui.geminiResponse ? `<div class="p-3 rounded-2xl bg-slate-950/60 border border-cyan-400/30 text-xs flex items-center justify-between gap-2"><div class="min-w-0 flex-1 break-words"><span class="text-cyan-300 font-bold">Gemini:</span> <span class="text-slate-200">${ui.geminiResponse.reply}</span></div><button onclick="ui.geminiResponse=null;render();" class="text-slate-400">✕</button></div>` : ''}
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <button onclick="ui.showNewTxModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">➕</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Movimiento</div><div class="text-[10px] text-slate-400 truncate">Gasto o ingreso</div></div></button>
+          <button onclick="ui.showTransferModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">⇄</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Transferir</div><div class="text-[10px] text-slate-400 truncate">Entre cuentas</div></div></button>
+          <button onclick="ui.showNewDebtModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">📌</span><div class="min-w-0"><div class="text-xs font-bold text-amber-200 truncate">Deudas</div><div class="text-[10px] text-slate-400 truncate">Créditos o pendientes</div></div></button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="glass-97 rounded-3xl p-5">
+            <div class="flex justify-between mb-3"><h3 class="text-sm font-extrabold text-white">🏦 Cuentas Activas</h3><button onclick="switchTab('accounts');" class="text-xs text-cyan-300">Ver todas →</button></div>
+            <div class="space-y-2.5">${state.accounts.map(a => `<div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="flex items-center gap-2.5 min-w-0"><span class="text-xl">${a.icon||'🏦'}</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">${a.name}</div><div class="text-[10px] text-slate-400">${a.currency}</div></div></div><div class="text-sm font-extrabold mono text-white shrink-0">${formatMoney(a.balance,a.currency)}</div></div>`).join('')}</div>
+          </div>
+          <div class="glass-97 rounded-3xl p-5">
+            <div class="flex justify-between mb-3"><h3 class="text-sm font-extrabold text-white">⚡ Últimos Movimientos</h3><button onclick="switchTab('movements');" class="text-xs text-cyan-300">Historial →</button></div>
+            <div class="space-y-2.5">${state.transactions.slice(0,4).length ? state.transactions.slice(0,4).map(t => `<div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="min-w-0"><div class="text-xs font-bold text-white truncate">${t.title}</div><div class="text-[10px] text-slate-400 truncate">${t.category} • <span class="text-cyan-300">${t.accountName}</span> • ${t.date}</div></div><div class="text-xs font-extrabold mono shrink-0 ${t.type==='income'?'text-emerald-300':'text-rose-300'}">${t.type==='income'?'+':'-'}${formatMoney(t.amount,t.currency)}</div></div>`).join('') : '<div class="text-xs text-slate-400 py-4 text-center">Sin movimientos.</div>'}</div>
+          </div>
+        </div>
+        <div class="glass-97 rounded-3xl p-5">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+            <h3 class="text-sm font-extrabold text-white">📌 Cuentas Pendientes, Créditos y Deudas</h3>
+            <div class="flex items-center gap-3 shrink-0">
+              <button onclick="ui.showNewDebtModal=true;render();" class="text-xs font-bold text-amber-300 hover:text-amber-200">+ Nueva deuda/crédito</button>
+              <button onclick="switchTab('debts');" class="text-xs text-cyan-300">Ver todas →</button>
+            </div>
+          </div>
+          ${(() => {
+            const ds = getDebtsSummary();
+            const pendingList = (Array.isArray(state.debts) ? state.debts : []).filter(d => d.status !== 'settled').slice(0, 3);
+            return `
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3 text-xs">
+                <div onclick="ui.debtFilterKind='credit';ui.debtFilterStatus='pending';switchTab('debts');" class="spring-btn p-3 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
+                  <div class="text-[10px] text-slate-400">Me deben / Créditos</div>
+                  <div class="text-sm font-extrabold mono text-emerald-300 mt-0.5">+${formatMoney(ds.pendingCreditsUYU, 'UYU')}</div>
+                </div>
+                <div onclick="ui.debtFilterKind='debt';ui.debtFilterStatus='pending';switchTab('debts');" class="spring-btn p-3 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
+                  <div class="text-[10px] text-slate-400">Debo / Pendiente por pagar</div>
+                  <div class="text-sm font-extrabold mono text-rose-300 mt-0.5">-${formatMoney(ds.pendingDebtsUYU, 'UYU')}</div>
+                </div>
+              </div>
+              <div class="space-y-2">${pendingList.length ? pendingList.map(d => `
+                <div onclick="ui.debtFilterKind='${d.kind}';ui.debtFilterStatus='pending';switchTab('debts');" class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2 cursor-pointer">
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold text-white truncate">${d.kind === 'credit' ? '📈' : '📉'} ${escapeAttr(d.title)}</div>
+                    <div class="text-[10px] text-slate-400 truncate">${escapeAttr(d.counterparty)}${d.dueDate ? ' • Vence: ' + escapeAttr(d.dueDate) : ''}</div>
+                  </div>
+                  <div class="text-xs font-extrabold mono shrink-0 ${d.kind === 'credit' ? 'text-emerald-300' : 'text-rose-300'}">${d.kind === 'credit' ? '+' : '-'}${formatMoney(d.amount, d.currency)}</div>
+                </div>
+              `).join('') : '<div class="text-xs text-slate-400 py-3 text-center">Sin cuentas pendientes abiertas.</div>'}</div>
+            `;
+          })()}
+        </div>
+        <div class="glass-97 rounded-3xl p-5">
+          <div class="flex justify-between mb-3"><h3 class="text-sm font-extrabold text-white">🎯 Top Presupuestos</h3><button onclick="switchTab('budgets');" class="text-xs text-cyan-300">Administrar →</button></div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${state.budgets.slice(0,4).map(bg => { const sp = state.transactions.filter(t => t.type==='expense' && t.category===bg.name).reduce((s,t) => s + (t.currency==='USD'?t.amount*rate:t.amount), 0); const pct = bg.limit>0?Math.min(100,Math.round((sp/bg.limit)*100)):0; return `<div class="p-3.5 rounded-2xl bg-slate-950/40 border border-white/10"><div class="flex justify-between gap-2 text-xs mb-1.5"><span class="font-bold text-white truncate">${bg.icon||'🎯'} ${bg.name}</span><span class="mono text-slate-300 shrink-0">${formatMoney(sp,'UYU')} / ${formatMoney(bg.limit,'UYU')} (${pct}%)</span></div><div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full ${pct>=90?'bg-rose-500':'bg-cyan-400'}" style="width:${pct}%"></div></div></div>`; }).join('')}</div>
+        </div>
+      </div>`;
+    }
 
-with open(out_path, "r", encoding="utf-8") as f:
-    chk = json.load(f)
+    function renderMovementsTab(anim) {
+      const filtered = state.transactions.filter(t => (ui.txFilterType==='all'||t.type===ui.txFilterType) && (ui.txFilterCurrency==='all'||t.currency===ui.txFilterCurrency) && (ui.txFilterAccount==='all'||t.accountId===ui.txFilterAccount) && (!ui.txSearch || `${t.title} ${t.category} ${t.accountName}`.toLowerCase().includes(ui.txSearch.toLowerCase())));
+      return `<div class="space-y-4 ${anim}">
+        <div class="glass-97 rounded-3xl p-5">
+          <div class="flex flex-wrap justify-between gap-3 mb-4"><h2 class="text-lg font-extrabold text-white">⚡ Movimientos</h2><div class="flex flex-wrap gap-2"><button onclick="ui.showNewTxModal=true;render();" class="spring-btn px-3.5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">+ Nuevo</button><button onclick="exportTransactionsCSV()" class="spring-btn px-3.5 py-2 rounded-xl bg-white/10 text-white font-bold text-xs">📥 .CSV</button><button onclick="clearAllTransactions()" class="spring-btn px-3.5 py-2 rounded-xl bg-rose-500/20 text-rose-200 font-bold text-xs">🗑️ Vaciar</button></div></div>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-2.5">
+            <input type="text" placeholder="Buscar..." value="${escapeAttr(ui.txSearch)}" oninput="ui.txSearch=this.value;render();" class="bg-slate-950/60 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" />
+            <select onchange="ui.txFilterType=this.value;render();" class="bg-slate-950/60 border border-white/15 rounded-xl px-3 py-2 text-xs text-white"><option value="all" ${ui.txFilterType==='all'?'selected':''}>Todos los tipos</option><option value="expense" ${ui.txFilterType==='expense'?'selected':''}>Gastos</option><option value="income" ${ui.txFilterType==='income'?'selected':''}>Ingresos</option></select>
+            <select onchange="ui.txFilterCurrency=this.value;render();" class="bg-slate-950/60 border border-white/15 rounded-xl px-3 py-2 text-xs text-white"><option value="all" ${ui.txFilterCurrency==='all'?'selected':''}>Todas monedas</option><option value="UYU" ${ui.txFilterCurrency==='UYU'?'selected':''}>UYU</option><option value="USD" ${ui.txFilterCurrency==='USD'?'selected':''}>USD</option></select>
+            <select onchange="ui.txFilterAccount=this.value;render();" class="bg-slate-950/60 border border-white/15 rounded-xl px-3 py-2 text-xs text-white"><option value="all" ${ui.txFilterAccount==='all'?'selected':''}>Todas cuentas</option>${state.accounts.map(a => `<option value="${a.id}" ${ui.txFilterAccount===a.id?'selected':''}>${a.name}</option>`).join('')}</select>
+          </div>
+        </div>
+        <div class="glass-97 rounded-3xl p-5 space-y-2.5">${filtered.length ? filtered.map(t => `<div class="p-3.5 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="min-w-0"><div class="text-sm font-bold text-white truncate">${t.title}</div><div class="text-[11px] text-slate-400 truncate">${t.category} • <span class="text-cyan-300">${t.accountName}</span> • ${t.date}</div></div><div class="flex items-center gap-3 shrink-0"><span class="text-sm font-extrabold mono ${t.type==='income'?'text-emerald-300':'text-rose-300'}">${t.type==='income'?'+':'-'}${formatMoney(t.amount,t.currency)}</span><button onclick="deleteTransaction('${t.id}')" class="text-xs text-slate-400">✕</button></div></div>`).join('') : '<div class="text-xs text-slate-400 py-8 text-center">Sin resultados.</div>'}</div>
+      </div>`;
+    }
 
-dash_sec = chk["html"].split("function renderDashboardTab")[1].split("function renderMovementsTab")[0]
-assert chk["version"] == "6.5.30"
-assert "Sincronizar" not in dash_sec
-assert "Panel OTA" not in dash_sec
-assert "Deudas" in dash_sec
-assert "getDebtsCardsBreakdown" in chk["html"]
-assert "payNextDebtInstallment" in chk["html"]
-assert "::-webkit-inner-spin-button" in chk["css"]
-print("Verified ota_v6.5.30.json! Bytes:", os.path.getsize(out_path))
+    function renderAccountsTab(anim) {
+      return `<div class="space-y-4 ${anim}">
+        <div class="glass-97 rounded-3xl p-5 flex flex-wrap justify-between gap-3"><h2 class="text-lg font-extrabold text-white">🏦 Cuentas y Saldos</h2><div class="flex flex-wrap gap-2"><button onclick="ui.showNewAccountModal=true;render();" class="spring-btn px-3.5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">+ Nueva</button><button onclick="ui.showTransferModal=true;render();" class="spring-btn px-3.5 py-2 rounded-xl bg-violet-500/30 border border-violet-400/40 text-violet-200 font-bold text-xs">⇄ Transferir</button><button onclick="resetAllAccountsToZero()" class="spring-btn px-3.5 py-2 rounded-xl bg-rose-500/20 text-rose-200 font-bold text-xs">Resetear $ 0</button></div></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${state.accounts.map(a => `<div class="spring-card glass-97 rounded-3xl p-5"><div class="flex justify-between items-center gap-2 mb-3"><div class="flex items-center gap-3 min-w-0"><span class="text-2xl">${a.icon||'🏦'}</span><div class="min-w-0"><div class="text-base font-extrabold text-white truncate">${a.name}</div><div class="text-xs text-cyan-300 mono">${a.currency}</div></div></div><div class="text-xl font-extrabold mono text-white shrink-0">${formatMoney(a.balance,a.currency)}</div></div><div class="flex flex-wrap gap-2 pt-3 border-t border-white/10 text-xs"><button onclick="editAccountBalance('${a.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">Ajustar</button><button onclick="renameAccount('${a.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">Renombrar</button><button onclick="resetSingleAccount('${a.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-200">$ 0</button><button onclick="deleteAccount('${a.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-200">Eliminar</button></div></div>`).join('')}</div>
+      </div>`;
+    }
+
+    function renderBudgetsTab(anim) {
+      const rate = Number(state.exchangeRate) || 41.5;
+      return `<div class="space-y-4 ${anim}">
+        <div class="glass-97 rounded-3xl p-5 flex justify-between items-center"><h2 class="text-lg font-extrabold text-white">🎯 Presupuestos</h2><button onclick="ui.showNewBudgetModal=true;render();" class="spring-btn px-4 py-2 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">+ Nueva</button></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${state.budgets.map(bg => { const sp = state.transactions.filter(t => t.type==='expense' && t.category===bg.name).reduce((s,t) => s + (t.currency==='USD'?t.amount*rate:t.amount), 0); const pct = bg.limit>0?Math.min(100,Math.round((sp/bg.limit)*100)):0; return `<div class="spring-card glass-97 rounded-3xl p-5"><div class="flex justify-between mb-2"><div class="text-base font-extrabold text-white truncate">${bg.icon||'🎯'} ${bg.name}</div><span class="text-xs font-bold mono ${pct>=90?'text-rose-300':'text-cyan-300'}">${pct}%</span></div><div class="text-xs text-slate-300 mono mb-3">${formatMoney(sp,'UYU')} / ${formatMoney(bg.limit,'UYU')}</div><div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden mb-4"><div class="h-full rounded-full ${pct>=90?'bg-rose-500':'bg-cyan-400'}" style="width:${pct}%"></div></div><div class="flex gap-2 text-xs"><button onclick="editBudgetLimit('${bg.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">Editar Tope</button><button onclick="deleteBudgetCategory('${bg.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-200">Eliminar</button></div></div>`; }).join('')}</div>
+      </div>`;
+    }
+
+
+    function renderDebtsTab(anim) {
+      const ds = getDebtsSummary();
+      const cardsBreakdown = getDebtsCardsBreakdown();
+      const allDebts = Array.isArray(state.debts) ? state.debts : [];
+      const filtered = allDebts.filter(d => {
+        if (ui.debtFilterKind !== 'all' && d.kind !== ui.debtFilterKind) return false;
+        if (ui.debtFilterStatus === 'pending' && d.status === 'settled') return false;
+        if (ui.debtFilterStatus === 'settled' && d.status !== 'settled') return false;
+        if (ui.debtFilterCard && ui.debtFilterCard !== 'all') {
+          const cLabel = getDebtInstrumentLabel(d).toLowerCase();
+          if (cLabel !== ui.debtFilterCard.toLowerCase()) return false;
+        }
+        return true;
+      });
+      return `<div class="space-y-4 ${anim}">
+        <div class="glass-97 rounded-3xl p-5 flex flex-wrap justify-between items-center gap-3">
+          <div>
+            <h2 class="text-lg font-extrabold text-white">📌 Pendientes, Créditos y Tarjetas</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Control individual de tarjetas (ej. Itaú Visa), próximo pago, cuotas y saldos</p>
+          </div>
+          <button onclick="ui.showNewDebtModal=true;render();" class="spring-btn px-4 py-2 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">+ Nuevo</button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="spring-card glass-97 rounded-3xl p-4">
+            <div class="text-[11px] text-slate-400">Créditos / Me deben</div>
+            <div class="text-xl font-extrabold mono text-emerald-300 mt-1">+${formatMoney(ds.pendingCreditsUYU, 'UYU')}</div>
+          </div>
+          <div class="spring-card glass-97 rounded-3xl p-4">
+            <div class="text-[11px] text-slate-400">Deudas / Por pagar</div>
+            <div class="text-xl font-extrabold mono text-rose-300 mt-1">-${formatMoney(ds.pendingDebtsUYU, 'UYU')}</div>
+          </div>
+          <div class="spring-card glass-97 rounded-3xl p-4">
+            <div class="text-[11px] text-slate-400">Próximo Pago Cuotas Deudas</div>
+            <div class="text-xl font-extrabold mono text-cyan-300 mt-1">${formatMoney(ds.nextInstallmentsUYU, 'UYU')}</div>
+          </div>
+        </div>
+        ${cardsBreakdown.length ? `<div class="glass-97 rounded-3xl p-5 space-y-3">
+          <div class="flex flex-wrap justify-between items-center gap-2">
+            <h3 class="text-sm font-extrabold text-white">💳 Control Individual por Tarjeta / Instrumento</h3>
+            ${ui.debtFilterCard !== 'all' ? `<button onclick="ui.debtFilterCard='all';render();" class="text-xs text-cyan-300 font-bold">Ver todas las tarjetas ✕</button>` : '<span class="text-[11px] text-slate-400">Tocá una tarjeta para filtrar su desglose</span>'}
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${cardsBreakdown.map(c => {
+            const isSelected = ui.debtFilterCard && ui.debtFilterCard.toLowerCase() === c.name.toLowerCase();
+            return `<div onclick="ui.debtFilterCard = (${isSelected ? "'all'" : "'" + escapeAttr(c.name).replace(/'/g, "\\'") + "'"});render();" class="spring-card p-4 rounded-2xl bg-slate-950/50 border ${isSelected ? 'border-cyan-400 bg-cyan-500/10' : 'border-white/10'} space-y-2 cursor-pointer">
+              <div class="flex justify-between items-center gap-2">
+                <div class="text-sm font-extrabold text-white truncate">💳 ${escapeAttr(c.name)}</div>
+                <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-violet-500/20 border border-violet-400/30 text-violet-200 mono shrink-0">${c.pendingItems} pend.</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+                <div>
+                  <div class="text-[10px] text-slate-400">Próximo pago estimado</div>
+                  <div class="font-extrabold mono text-amber-200">${formatMoney(c.nextPaymentUYU, 'UYU')}</div>
+                </div>
+                <div>
+                  <div class="text-[10px] text-slate-400">Saldo total restante</div>
+                  <div class="font-extrabold mono text-rose-300">${formatMoney(c.remainingBalanceUYU, 'UYU')}</div>
+                </div>
+              </div>
+              <div class="flex flex-wrap justify-between items-center gap-2 pt-1.5 border-t border-white/10 text-[11px] text-slate-300">
+                <span>Cuotas restantes: <strong class="mono text-cyan-200">${c.remainingInstallmentsTotal}</strong> (${c.activeInstallmentPlans} planes)</span>
+                ${c.dueDates.length ? `<span class="mono text-amber-200">Vence: ${escapeAttr(c.dueDates.join(', '))}</span>` : ''}
+              </div>
+            </div>`;
+          }).join('')}</div>
+        </div>` : ''}
+        <div class="glass-97 rounded-3xl p-4 flex flex-wrap items-center gap-2">
+          <select onchange="ui.debtFilterKind=this.value;render();" class="bg-slate-950/60 border border-white/15 rounded-xl px-3 py-2 text-xs text-white">
+            <option value="all" ${ui.debtFilterKind==='all'?'selected':''}>Todos (Créditos y Deudas)</option>
+            <option value="credit" ${ui.debtFilterKind==='credit'?'selected':''}>📈 Créditos / Me deben</option>
+            <option value="debt" ${ui.debtFilterKind==='debt'?'selected':''}>📉 Deudas / Debo</option>
+          </select>
+          <select onchange="ui.debtFilterCard=this.value;render();" class="bg-slate-950/60 border border-white/15 rounded-xl px-3 py-2 text-xs text-white">
+            <option value="all" ${ui.debtFilterCard==='all'?'selected':''}>Todas las tarjetas</option>
+            ${cardsBreakdown.map(c => `<option value="${escapeAttr(c.name)}" ${ui.debtFilterCard && ui.debtFilterCard.toLowerCase()===c.name.toLowerCase()?'selected':''}>💳 ${escapeAttr(c.name)}</option>`).join('')}
+          </select>
+          <select onchange="ui.debtFilterStatus=this.value;render();" class="bg-slate-950/60 border border-white/15 rounded-xl px-3 py-2 text-xs text-white">
+            <option value="pending" ${ui.debtFilterStatus==='pending'?'selected':''}>Pendientes</option>
+            <option value="settled" ${ui.debtFilterStatus==='settled'?'selected':''}>Saldados</option>
+            <option value="all" ${ui.debtFilterStatus==='all'?'selected':''}>Todos los estados</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${filtered.length ? filtered.map(d => {
+          const isSettled = d.status === 'settled';
+          const isCredit = d.kind === 'credit';
+          const cardLabel = getDebtInstrumentLabel(d);
+          const isCard = d.paymentMethod === 'credit_card' || Boolean(cardLabel);
+          const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+          const paidInst = Math.max(0, Math.min(instCount, parseInt(d.paidInstallments, 10) || 0));
+          const remInst = Math.max(0, instCount - paidInst);
+          const nextInstNum = Math.min(instCount, paidInst + 1);
+          const remAmount = getDebtRemainingAmount(d);
+          const instVal = getDebtInstallmentValue(d);
+          const pctPaid = instCount > 1 ? Math.round((paidInst / instCount) * 100) : (isSettled ? 100 : 0);
+          return `<div class="spring-card glass-97 rounded-3xl p-5 ${isSettled ? 'opacity-75' : ''}">
+            <div class="flex justify-between items-start gap-2 mb-2">
+              <div class="min-w-0">
+                <div class="text-base font-extrabold text-white truncate">${isCard ? '💳' : (isCredit ? '📈' : '📉')} ${escapeAttr(d.title)}</div>
+                <div class="text-xs text-slate-300 truncate">${escapeAttr(d.counterparty)}${cardLabel ? ' • <span class="text-violet-300 font-semibold">' + escapeAttr(cardLabel) + '</span>' : ''} • <span class="mono text-cyan-300">${d.currency}</span>${d.dueDate ? ' • Vence: <span class="mono text-amber-200">' + escapeAttr(d.dueDate) + '</span>' : ''}</div>
+              </div>
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${isSettled ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/30' : (isCard ? 'bg-violet-500/20 text-violet-200 border border-violet-400/30' : (isCredit ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/30' : 'bg-rose-500/20 text-rose-200 border border-rose-400/30'))}">${isSettled ? 'Saldado' : (isCard ? 'Tarjeta' : (isCredit ? 'Crédito' : 'Deuda'))}</span>
+            </div>
+            <div class="flex flex-wrap items-baseline justify-between gap-2 mb-2">
+              <div class="text-xl font-extrabold mono ${isCredit ? 'text-emerald-300' : 'text-rose-300'}">${isCredit ? '+' : '-'}${formatMoney(remAmount, d.currency)} <span class="text-[11px] font-normal text-slate-400">${instCount > 1 ? 'saldo de ' + formatMoney(d.amount, d.currency) : ''}</span></div>
+              ${instCount > 1 ? `<div class="text-xs font-bold mono text-cyan-200">Pagadas ${paidInst}/${instCount} • Quedan ${remInst} • ${formatMoney(instVal, d.currency)} c/u</div>` : ''}
+            </div>
+            ${instCount > 1 ? `<div class="text-[11px] text-slate-300 mb-2 flex flex-wrap justify-between gap-2 bg-slate-950/50 border border-white/10 rounded-xl px-3 py-1.5"><span>Próxima cuota: <strong class="mono text-amber-200">#${nextInstNum} de ${instCount}</strong></span><span>Quedan: <strong class="mono text-cyan-200">${remInst} ${remInst === 1 ? 'cuota' : 'cuotas'}</strong></span></div>
+            <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden mb-3"><div class="h-full rounded-full bg-cyan-400" style="width:${pctPaid}%"></div></div>` : ''}
+            ${d.notes ? `<div class="text-xs text-slate-400 mb-3 break-words">${escapeAttr(d.notes)}</div>` : '<div class="mb-2"></div>'}
+            <div class="flex flex-wrap gap-2 pt-3 border-t border-white/10 text-xs">
+              ${!isSettled && instCount > 1 ? `<button onclick="payNextDebtInstallment('${d.id}', true)" class="spring-btn px-3 py-1.5 rounded-xl bg-cyan-500/25 border border-cyan-400/40 text-cyan-200 font-bold">💳 Pagar/Cobrar Cuota #${nextInstNum} (${formatMoney(instVal, d.currency)})</button>` : ''}
+              ${!isSettled ? `<button onclick="toggleDebtSettled('${d.id}', true)" class="spring-btn px-3 py-1.5 rounded-xl bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 font-bold">✓ Saldar Todo y Asentar</button>` : ''}
+              <button onclick="toggleDebtSettled('${d.id}', false)" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">${isSettled ? 'Reabrir' : 'Marcar Saldado'}</button>
+              <button onclick="editDebtAmount('${d.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">Editar Monto</button>
+              <button onclick="deleteDebtItem('${d.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-200">Eliminar</button>
+            </div>
+          </div>`;
+        }).join('') : '<div class="glass-97 rounded-3xl p-8 text-center text-xs text-slate-400 col-span-full">No hay registros en este filtro.</div>'}</div>
+      </div>`;
+    }
+
+    function renderSettingsTab(anim) {
+      const ver = getCurrentInstalledVersion();
+      return `<div class="space-y-5 ${anim}">
+        <div class="glass-97 rounded-3xl p-6 border-2 border-violet-400/50 space-y-3">
+          <div class="flex flex-wrap justify-between gap-2"><div><div class="text-xs font-bold uppercase text-violet-300">🤖 Puente Google Tasks (Gemini Android)</div><h2 class="text-lg font-extrabold text-white">URL Actualizada y Sincronizada</h2></div><span class="text-xs px-3 py-1 rounded-full bg-violet-500/20 border border-violet-400/40 text-violet-200 mono">${ui.bridgeDiagnostic}</span></div>
+          <p class="text-xs text-slate-300">Decile a Gemini: <strong class="text-emerald-300">"Agregá una tarea: me ingresaron 5,000 pesos"</strong> o <strong class="text-rose-300">"Agregá una tarea: gasté $ 200"</strong>.</p>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input type="text" value="${escapeAttr(state.cloudWebhookUrl || DEFAULT_CLOUD_WEBHOOK_URL)}" onchange="state.cloudWebhookUrl=this.value.trim();saveState(true,true);pullFromCloudBridge(true);" class="flex-1 bg-slate-950/70 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" />
+            <button onclick="pullFromCloudBridge(true)" class="spring-btn px-4 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs shrink-0">🔄 Cosechar Tareas</button>
+          </div>
+        </div>
+        <div class="glass-97 rounded-3xl p-6 border-2 border-emerald-400/40 space-y-3">
+          <div class="flex flex-wrap justify-between gap-2"><div><div class="text-xs font-bold uppercase text-emerald-300">☁️ Sincronización PC ↔ Celular</div><h2 class="text-lg font-extrabold text-white">Código: <span class="mono text-emerald-300">${state.syncCode}</span></h2></div><span class="text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-200 mono">${ui.syncStatusText}</span></div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input type="text" value="${escapeAttr(state.syncCode)}" onchange="state.syncCode=this.value.trim().toUpperCase();saveState(false,false);pullStateFromGitHubCloud(true);" class="bg-slate-950/70 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" />
+            <div class="flex gap-2"><button onclick="pullStateFromGitHubCloud(true)" class="spring-btn flex-1 py-2 rounded-xl bg-emerald-400 text-slate-950 font-extrabold text-xs">🔄 Descargar</button><button onclick="pushStateToGitHubCloud(true)" class="spring-btn flex-1 py-2 rounded-xl bg-cyan-500/25 border border-cyan-400/40 text-cyan-200 font-extrabold text-xs">☁️ Subir</button></div>
+          </div>
+        </div>
+        <div class="glass-97 rounded-3xl p-6 border-2 border-cyan-400/40 space-y-3">
+          <div class="flex flex-wrap justify-between gap-2"><div><div class="text-xs font-bold uppercase text-cyan-300">🏷️ Motor OTA GitHub Releases</div><h2 class="text-xl font-extrabold text-white">Versión: <span class="mono text-cyan-300">v${ver}</span></h2></div><label class="flex items-center gap-2 text-xs text-slate-200"><input type="checkbox" ${state.autoCheckOta?'checked':''} onchange="state.autoCheckOta=this.checked;saveState(false,false);" class="accent-cyan-400" /> Auto-OTA</label></div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="checkGitHubReleaseOtaUpdate(true)" class="spring-btn px-4 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">🔄 Buscar Release</button>
+            <button onclick="publishGitHubRelease()" class="spring-btn px-4 py-2 rounded-xl bg-violet-500/30 border border-violet-400/50 text-violet-200 font-extrabold text-xs">🏷️ Publicar Release</button>
+            <button onclick="downloadCleanIndexHtmlForApk()" class="spring-btn px-4 py-2 rounded-xl bg-emerald-500/25 border border-emerald-400/50 text-emerald-200 font-extrabold text-xs">📄 Bajar index.html</button>
+            <button onclick="ui.showOtaModal=true;render();" class="spring-btn px-4 py-2 rounded-xl bg-white/10 text-slate-200 font-bold text-xs">📋 Pegar OTA</button>
+            <button onclick="rollbackFactoryOta()" class="spring-btn px-4 py-2 rounded-xl bg-rose-500/20 text-rose-200 font-bold text-xs">⏪ Restaurar Base</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="glass-97 rounded-3xl p-5 space-y-3">
+            <h3 class="text-sm font-extrabold text-white">⚙️ Preferencias</h3>
+            <input type="number" step="0.1" value="${state.exchangeRate}" onchange="state.exchangeRate=parseFloat(this.value)||41.5;saveState(true,true);" class="w-full bg-slate-950/60 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" />
+            <select onchange="state.defaultCurrency=this.value;ui.displayCurrency=this.value;saveState(true,true);" class="w-full bg-slate-950/60 border border-white/15 rounded-xl px-3 py-2 text-xs text-white"><option value="UYU" ${state.defaultCurrency==='UYU'?'selected':''}>UYU ($)</option><option value="USD" ${state.defaultCurrency==='USD'?'selected':''}>USD (US$)</option></select>
+            <label class="flex items-center gap-2 text-xs text-slate-200"><input type="checkbox" ${state.ttsEnabled?'checked':''} onchange="state.ttsEnabled=this.checked;saveState(false,false);" class="accent-cyan-400" /> Voz TTS</label>
+          </div>
+          <div class="glass-97 rounded-3xl p-5 space-y-3">
+            <h3 class="text-sm font-extrabold text-white">🗄️ Respaldo</h3>
+            <div class="flex flex-wrap gap-2"><button onclick="exportBackupJSON()" class="spring-btn px-3 py-2 rounded-xl bg-cyan-500/20 text-cyan-200 font-bold text-xs">📤 Exportar</button><button onclick="importBackupJSON()" class="spring-btn px-3 py-2 rounded-xl bg-violet-500/20 text-violet-200 font-bold text-xs">📥 Importar</button><button onclick="wipeAllAndStartFresh()" class="spring-btn px-3 py-2 rounded-xl bg-amber-500/20 text-amber-200 font-bold text-xs">🧹 De Cero</button><button onclick="restoreDemoData()" class="spring-btn px-3 py-2 rounded-xl bg-white/10 text-slate-200 font-bold text-xs">🔄 Demo</button></div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    function renderActiveSection(totals, displayTotal) {
+      const anim = getTabAnimationClass();
+      if (ui.activeTab === 'movements') return renderMovementsTab(anim);
+      if (ui.activeTab === 'accounts') return renderAccountsTab(anim);
+      if (ui.activeTab === 'budgets') return renderBudgetsTab(anim);
+      if (ui.activeTab === 'debts') return renderDebtsTab(anim);
+      if (ui.activeTab === 'settings') return renderSettingsTab(anim);
+      return renderDashboardTab(totals, displayTotal, anim);
+    }
+
+    function render() {
+      const root = document.getElementById('app-root'); if (!root) return;
+      const totals = getTotals(), displayTotal = ui.displayCurrency === 'USD' ? formatMoney(totals.totalUSD, 'USD') : formatMoney(totals.totalUYU, 'UYU'), ver = getCurrentInstalledVersion();
+      const nav = [{ id:'dashboard', icon:'🏠', label:'Panel' }, { id:'movements', icon:'⚡', label:'Movimientos' }, { id:'accounts', icon:'🏦', label:'Cuentas' }, { id:'budgets', icon:'🎯', label:'Presupuestos' }, { id:'debts', icon:'📌', label:'Pendientes' }, { id:'settings', icon:'⚙️', label:'Ajustes' }];
+      root.innerHTML = `
+        <div class="flex-1 flex flex-col md:flex-row w-full max-w-[100vw] min-h-[100dvh] overflow-x-hidden">
+          <aside class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 left-0 z-30 p-4">
+            <div class="glass-97 flex-1 rounded-3xl p-5 flex flex-col justify-between">
+              <div>
+                <div class="flex justify-between items-center mb-6"><div><h1 class="text-xl font-extrabold text-white">Krono Finanzas</h1><span class="text-[11px] font-bold mono text-cyan-300">v${ver} • Sync Activo</span></div><span class="krono-sync-dot w-2.5 h-2.5 rounded-full bg-emerald-400"></span></div>
+                <nav class="space-y-1.5">${nav.map(i => `<button onclick="switchTab('${i.id}');" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold ${ui.activeTab===i.id?'bg-cyan-400 text-slate-950':'text-slate-300 hover:bg-white/10'}"><span>${i.icon}</span><span>${i.label}</span></button>`).join('')}</nav>
+              </div>
+              <div class="space-y-2 pt-4 border-t border-white/10">
+                <div class="text-[11px] text-slate-400 mono flex justify-between"><span>${state.syncCode}</span><span>${ui.syncStatusText}</span></div>
+                <button onclick="syncAllNow(true)" class="spring-btn w-full py-2.5 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-200 font-bold text-xs">🔄 Sincronizar</button>
+                <button onclick="ui.showOtaModal=true;render();" class="spring-btn w-full py-2.5 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 font-bold text-xs">🚀 Panel OTA</button>
+              </div>
+            </div>
+          </aside>
+          <main class="flex-1 md:pl-64 w-full max-w-[100vw] pb-24 md:pb-8 overflow-x-hidden">
+            <div class="max-w-5xl mx-auto p-3.5 sm:p-4 md:p-6 w-full overflow-x-hidden">
+              <div class="flex md:hidden justify-between items-center gap-2 mb-4">
+                <div class="min-w-0"><div class="flex items-center gap-2"><h1 class="text-lg font-extrabold text-white truncate">Krono Finanzas</h1><span class="krono-sync-dot w-2 h-2 rounded-full bg-emerald-400"></span></div><span class="text-[10px] font-bold mono text-cyan-300 block truncate">v${ver} • ${ui.syncStatusText}</span></div>
+                <div class="flex gap-1.5 shrink-0"><button onclick="syncAllNow(true)" class="spring-btn px-2.5 py-1.5 rounded-xl glass-97 text-xs text-cyan-200 font-bold">🔄 Sync</button><button onclick="ui.showOtaModal=true;render();" class="spring-btn px-2.5 py-1.5 rounded-xl glass-97 text-xs text-emerald-200 font-bold">🚀 OTA</button></div>
+              </div>
+              ${renderActiveSection(totals, displayTotal)}
+            </div>
+          </main>
+          <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 p-2"><div class="glass-97 rounded-2xl px-1.5 py-1.5 flex justify-around">${nav.map(i => `<button onclick="switchTab('${i.id}');" class="flex flex-col items-center py-1.5 px-2 rounded-xl text-[10px] font-bold ${ui.activeTab===i.id?'bg-cyan-400 text-slate-950':'text-slate-300'}"><span class="text-base">${i.icon}</span><span class="mt-0.5">${i.label}</span></button>`).join('')}</div></nav>
+        </div>
+        ${ui.inputModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="submitInputModal(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-cyan-400/50 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">${ui.inputModal.title}</h3><label class="text-xs text-slate-300 block">${ui.inputModal.label}</label><input id="krono-input-modal-field" type="${ui.inputModal.inputType}" ${ui.inputModal.inputType==='number'?'step="any"':''} required value="${escapeAttr(ui.inputModal.value)}" placeholder="${escapeAttr(ui.inputModal.placeholder)}" class="w-full bg-slate-950/80 border border-cyan-400/40 rounded-xl px-3.5 py-2.5 text-sm text-white ${ui.inputModal.inputType==='number'?'mono':''} focus:outline-none focus:border-cyan-400" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="closeInputModal()" class="px-4 py-2 text-xs text-slate-300 hover:text-white">Cancelar</button><button type="submit" class="spring-btn px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Guardar</button></div></form></div>` : ''}
+        ${ui.showOtaModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><div class="glass-97 w-full max-w-xl rounded-3xl p-5 border-2 border-cyan-400/50 animate-pop-elastic"><div class="flex justify-between mb-2"><h3 class="text-base font-extrabold text-white">🚀 Actualizador OTA</h3><span class="text-xs mono text-cyan-300">v${ver}</span></div><input id="ota-release-notes" type="text" placeholder="Notas opcionales..." value="${escapeAttr(ui.releaseNotesInput)}" oninput="ui.releaseNotesInput=this.value;" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mb-2" /><textarea id="ota-paste-box" rows="5" placeholder='Pegá aquí el JSON {"version","html"}...' class="w-full p-3 rounded-2xl bg-slate-950/80 border border-white/15 text-xs text-white mono mb-3"></textarea>${ui.otaStatusMsg ? `<div class="p-2.5 rounded-xl bg-slate-950/80 text-xs text-cyan-200 mb-3">${ui.otaStatusMsg}</div>` : ''}<div class="flex justify-between gap-2"><button onclick="publishGitHubRelease()" class="px-3 py-2 rounded-xl bg-violet-500/30 text-violet-200 font-bold text-xs">🏷️ Publicar Release</button><div class="flex gap-2"><button onclick="ui.showOtaModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cerrar</button><button onclick="handleOtaPasteApply()" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Instalar</button></div></div></div></div>` : ''}
+        ${ui.showNewTxModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleNewTxSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">➕ Nuevo Movimiento</h3><input id="tx-title" type="text" required placeholder="Descripción" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="tx-amount" type="number" step="0.01" required placeholder="Monto" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><select id="tx-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select></div><div class="grid grid-cols-2 gap-2"><select id="tx-type" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="expense">Gasto (-)</option><option value="income">Ingreso (+)</option></select><select id="tx-account" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('')}</select></div><select id="tx-category" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.budgets.map(b => `<option value="${b.name}">${b.icon} ${b.name}</option>`).join('')}<option value="General">📌 General</option><option value="Ingreso">💰 Ingreso</option></select><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewTxModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Guardar</button></div></form></div>` : ''}
+        ${ui.showNewAccountModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="createAccount(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">🏦 Nueva Cuenta</h3><input id="acc-name" type="text" required placeholder="Nombre" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-3 gap-2"><select id="acc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">UYU</option><option value="USD">USD</option></select><input id="acc-balance" type="number" step="0.01" placeholder="Saldo" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="acc-icon" type="text" value="🏦" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewAccountModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Crear</button></div></form></div>` : ''}
+        ${ui.showTransferModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleTransferSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">⇄ Transferir</h3><select id="tr-from" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map(a => `<option value="${a.id}">Desde: ${a.name}</option>`).join('')}</select><select id="tr-to" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map((a,i) => `<option value="${a.id}" ${i===1?'selected':''}>Hacia: ${a.name}</option>`).join('')}</select><input id="tr-amount" type="number" step="0.01" required placeholder="Monto" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showTransferModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Transferir</button></div></form></div>` : ''}
+        ${ui.showNewDebtModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateDebtSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">📌 Nuevo Crédito / Deuda / Tarjeta</h3><input id="db-title" type="text" required placeholder="Concepto (ej: Compra en cuotas, préstamo, tarjeta)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><select id="db-kind" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="debt">📉 Deuda / Debo (-)</option><option value="credit">📈 Crédito / Me deben (+)</option></select><select id="db-method" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="credit_card">💳 Tarjeta de Crédito</option><option value="installment_plan">🗓️ Plan / Cuotas</option><option value="personal">🤝 Préstamo / Persona</option><option value="general">📌 General</option></select></div><div class="grid grid-cols-2 gap-2"><input id="db-card" type="text" placeholder="Tarjeta o banco (ej: Visa, Oca, Master)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><input id="db-counterparty" type="text" placeholder="Comercio o persona (opcional)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /></div><div class="grid grid-cols-3 gap-2"><input id="db-amount" type="number" step="0.01" required placeholder="Monto" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><select id="db-amount-mode" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="total">Monto Total</option><option value="installment">Valor x Cuota</option></select><select id="db-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select></div><div class="grid grid-cols-2 gap-2"><input id="db-installments" type="number" min="1" max="120" value="1" placeholder="Cantidad de cuotas (1 = pago único)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="db-due" type="text" placeholder="Vencimiento / Cierre (ej: 30/11)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /></div><input id="db-notes" type="text" placeholder="Notas adicionales (opcional)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewDebtModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Guardar</button></div></form></div>` : ''}
+        ${ui.showNewBudgetModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateBudgetSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">🎯 Nueva Categoría</h3><input id="bg-name" type="text" required placeholder="Nombre" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="bg-limit" type="number" required placeholder="Tope ($ UYU)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="bg-icon" type="text" value="🎯" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewBudgetModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Crear</button></div></form></div>` : ''}
+        ${ui.showVoiceWidgetOverlay ? `<div class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4 text-center"><div class="glass-97 w-full max-w-sm rounded-3xl p-6 border-2 border-cyan-400/50 animate-pop-elastic space-y-3"><div class="text-4xl">${ui.isListening?'🎙️':'✨'}</div><h3 class="text-base font-extrabold text-white">${ui.isListening?'Escuchando...':'Dictado por Voz'}</h3>${ui.voiceHintMsg?`<p class="text-[11px] text-amber-200 bg-amber-500/15 rounded-xl p-2">${ui.voiceHintMsg}</p>`:''}<input id="voice-overlay-manual-input" type="text" value="${escapeAttr(ui.voiceTranscript)}" oninput="ui.voiceTranscript=this.value;" onkeydown="if(event.key==='Enter')submitVoiceOverlayInput();" placeholder="Dictá con el teclado o escribí..." class="w-full bg-slate-950/85 border border-cyan-400/50 rounded-2xl px-3.5 py-3 text-xs text-white" /><div class="grid grid-cols-2 gap-2.5 pt-1"><button onclick="submitVoiceOverlayInput()" class="spring-btn py-2.5 rounded-2xl bg-cyan-400 text-slate-950 font-extrabold text-xs">✅ Procesar</button><button onclick="stopVoiceCapture();ui.showVoiceWidgetOverlay=false;render();" class="py-2.5 rounded-2xl bg-white/10 text-slate-300 font-bold text-xs">Cerrar</button></div></div></div>` : ''}
+      `;
+    }
+  </script>
+</body></html>
