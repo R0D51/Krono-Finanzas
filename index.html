@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.32
+    // KRONO OTA BOOTLOADER v6.5.33
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -83,7 +83,7 @@
   <div id="app-root" class="relative z-10 min-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-x-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.32';
+    const APP_BASE_VERSION = '6.5.33';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -96,8 +96,8 @@
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.32',
-      lastReleaseNotes: 'v6.5.32: Tercer panel en Cuentas Pendientes del dashboard para próximo cierre de tarjeta, más control individual de tarjetas/cuotas.',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.33',
+      lastReleaseNotes: 'v6.5.33: Movimientos de deudas/créditos integrados en Últimos Movimientos y quitados de la lista inferior de Cuentas Pendientes.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
       accounts: [
@@ -778,6 +778,21 @@
         notes,
         createdAt: Date.now()
       });
+      const now = new Date();
+      const cardTag = cardName ? ` (${cardName})` : (counterparty ? ` (${counterparty})` : '');
+      const cuotaTag = installmentsCount > 1 ? ` • ${installmentsCount} cuotas` : '';
+      state.transactions.unshift({
+        id: 'tx_debt_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        title: `${kind === 'credit' ? '📈 Crédito' : '📉 Deuda'}: ${title}${cardTag}${cuotaTag}`,
+        amount: totalAmount,
+        currency,
+        type: kind === 'credit' ? 'income' : 'expense',
+        category: cardName ? 'Tarjeta / Crédito' : (kind === 'credit' ? 'Crédito pendiente' : 'Deuda pendiente'),
+        accountId: 'debt_ledger',
+        accountName: cardName || counterparty || (kind === 'credit' ? 'Crédito / Por cobrar' : 'Deuda / Por pagar'),
+        date: `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
+        timestamp: Date.now()
+      });
       ui.showNewDebtModal = false;
       spawnFloatingBurst(`${kind === 'credit' ? '📈 Crédito' : '📉 Deuda'} ${formatMoney(totalAmount, currency)}${installmentsCount > 1 ? ' (' + installmentsCount + ' cuotas)' : ''}`, kind === 'credit');
       saveState(true, true);
@@ -1170,7 +1185,7 @@
       }
       if (params.get('voice') === '1') setTimeout(() => startVoiceCapture(), 350);
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
-        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.32: Tercer panel en Cuentas Pendientes del dashboard para próximo cierre de tarjeta, más control individual de tarjetas/cuotas.'), 1200);
+        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.33: Movimientos de deudas/créditos integrados en Últimos Movimientos y quitados de la lista inferior de Cuentas Pendientes.'), 1200);
       } else if (state.autoCheckOta && cleanRepoSlug()) {
         setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
       }
@@ -1244,9 +1259,8 @@
           </div>
           ${(() => {
             const ds = getDebtsSummary();
-            const pendingList = (Array.isArray(state.debts) ? state.debts : []).filter(d => d.status !== 'settled').slice(0, 3);
             return `
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-3 text-xs">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
                 <div onclick="ui.debtFilterKind='credit';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn p-3 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
                   <div class="text-[10px] text-slate-400">Me deben / Créditos</div>
                   <div class="text-sm font-extrabold mono text-emerald-300 mt-0.5">+${formatMoney(ds.pendingCreditsUYU, 'UYU')}</div>
@@ -1260,15 +1274,6 @@
                   <div class="text-sm font-extrabold mono text-amber-200 mt-0.5">-${formatMoney(ds.nextCardClosingUYU, 'UYU')}</div>
                 </div>
               </div>
-              <div class="space-y-2">${pendingList.length ? pendingList.map(d => `
-                <div onclick="ui.debtFilterKind='${d.kind}';ui.debtFilterStatus='pending';switchTab('debts');" class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2 cursor-pointer">
-                  <div class="min-w-0">
-                    <div class="text-xs font-bold text-white truncate">${d.kind === 'credit' ? '📈' : '📉'} ${escapeAttr(d.title)}</div>
-                    <div class="text-[10px] text-slate-400 truncate">${escapeAttr(d.counterparty)}${d.dueDate ? ' • Vence: ' + escapeAttr(d.dueDate) : ''}</div>
-                  </div>
-                  <div class="text-xs font-extrabold mono shrink-0 ${d.kind === 'credit' ? 'text-emerald-300' : 'text-rose-300'}">${d.kind === 'credit' ? '+' : '-'}${formatMoney(d.amount, d.currency)}</div>
-                </div>
-              `).join('') : '<div class="text-xs text-slate-400 py-3 text-center">Sin cuentas pendientes abiertas.</div>'}</div>
             `;
           })()}
         </div>
