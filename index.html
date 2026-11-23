@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.31
+    // KRONO OTA BOOTLOADER v6.5.32
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -83,7 +83,7 @@
   <div id="app-root" class="relative z-10 min-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-x-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.31';
+    const APP_BASE_VERSION = '6.5.32';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -96,8 +96,8 @@
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.31',
-      lastReleaseNotes: 'v6.5.31: Paquete OTA JSON listo para pegar en Panel OTA, con sintaxis corregida y control de tarjetas/cuotas/deudas.',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.32',
+      lastReleaseNotes: 'v6.5.32: Tercer panel en Cuentas Pendientes del dashboard para próximo cierre de tarjeta, más control individual de tarjetas/cuotas.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
       accounts: [
@@ -724,10 +724,24 @@
           }
         }
       });
+      let nextCardClosingUYU = 0;
+      list.forEach(d => {
+        if (d.status !== 'settled' && d.kind !== 'credit') {
+          const hasCard = d.paymentMethod === 'credit_card' || Boolean((d.cardName || '').trim()) || /tarjeta|visa|master|oca|amex|cabal|zodimac|brou|itau|itaú|santander|bbva|scotia|prex|midinero/i.test(`${d.title || ''} ${d.counterparty || ''}`);
+          if (hasCard) {
+            const rem = getDebtRemainingAmount(d);
+            const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+            const instVal = getDebtInstallmentValue(d);
+            const payClosing = instCount > 1 ? Math.min(rem, instVal) : rem;
+            nextCardClosingUYU += (d.currency === 'USD' ? payClosing * rate : payClosing);
+          }
+        }
+      });
       return {
         pendingCreditsUYU,
         pendingDebtsUYU,
         nextInstallmentsUYU,
+        nextCardClosingUYU,
         netPendingUYU: pendingCreditsUYU - pendingDebtsUYU,
         pendingCount
       };
@@ -1156,7 +1170,7 @@
       }
       if (params.get('voice') === '1') setTimeout(() => startVoiceCapture(), 350);
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
-        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.31: Paquete OTA JSON listo para pegar en Panel OTA, con sintaxis corregida y control de tarjetas/cuotas/deudas.'), 1200);
+        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.32: Tercer panel en Cuentas Pendientes del dashboard para próximo cierre de tarjeta, más control individual de tarjetas/cuotas.'), 1200);
       } else if (state.autoCheckOta && cleanRepoSlug()) {
         setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
       }
@@ -1232,14 +1246,18 @@
             const ds = getDebtsSummary();
             const pendingList = (Array.isArray(state.debts) ? state.debts : []).filter(d => d.status !== 'settled').slice(0, 3);
             return `
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3 text-xs">
-                <div onclick="ui.debtFilterKind='credit';ui.debtFilterStatus='pending';switchTab('debts');" class="spring-btn p-3 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-3 text-xs">
+                <div onclick="ui.debtFilterKind='credit';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn p-3 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
                   <div class="text-[10px] text-slate-400">Me deben / Créditos</div>
                   <div class="text-sm font-extrabold mono text-emerald-300 mt-0.5">+${formatMoney(ds.pendingCreditsUYU, 'UYU')}</div>
                 </div>
-                <div onclick="ui.debtFilterKind='debt';ui.debtFilterStatus='pending';switchTab('debts');" class="spring-btn p-3 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
+                <div onclick="ui.debtFilterKind='debt';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn p-3 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
                   <div class="text-[10px] text-slate-400">Debo / Pendiente por pagar</div>
                   <div class="text-sm font-extrabold mono text-rose-300 mt-0.5">-${formatMoney(ds.pendingDebtsUYU, 'UYU')}</div>
+                </div>
+                <div onclick="ui.debtFilterKind='debt';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn p-3 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
+                  <div class="text-[10px] text-slate-400">Próximo cierre tarjeta</div>
+                  <div class="text-sm font-extrabold mono text-amber-200 mt-0.5">-${formatMoney(ds.nextCardClosingUYU, 'UYU')}</div>
                 </div>
               </div>
               <div class="space-y-2">${pendingList.length ? pendingList.map(d => `
