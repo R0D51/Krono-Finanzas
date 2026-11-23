@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795318733832,
+  "updatedAt": 1795461189346,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -161,6 +161,22 @@
     }
   ],
   "debts": [
+    {
+      "id": "debt_1795461189346_365",
+      "title": "Porton",
+      "counterparty": "Zodimac",
+      "paymentMethod": "credit_card",
+      "cardName": "Itaú Visa",
+      "installmentsCount": 12,
+      "paidInstallments": 0,
+      "amount": 13000,
+      "currency": "UYU",
+      "kind": "debt",
+      "dueDate": "23/11",
+      "status": "pending",
+      "notes": "",
+      "createdAt": 1795461189346
+    },
     {
       "id": "debt_demo_1",
       "title": "Préstamo a amigo / Crédito",
