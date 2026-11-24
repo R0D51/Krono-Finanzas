@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.55
+    // KRONO OTA BOOTLOADER v6.5.56
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.55';
+    const APP_BASE_VERSION = '6.5.56';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,7 +230,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.55',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.56',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -1643,79 +1643,93 @@ input[type=number]::-webkit-outer-spin-button:hover {
       };
     }
 
-    async function interpretWithGeminiAI(commandText, apiKey) {
-      const cleanKey = String(apiKey || '').trim();
-      if (!cleanKey) return null;
-      const ctx = buildCompactContextForAI();
-      const systemPrompt = [
-        'Sos el motor inteligente de Krono Finanzas. Interpreta español natural (incluyendo modismos rioplatenses / uruguayos: "plata", "mango", "lucas", "al contado", "en cuotas", "tarjeta", "prestamo").',
-        'Tu trabajo es traducir lo que dijo el usuario a acciones exactas sin inventar números ni saldar deudas de más.',
-        'Reglas estrictas:',
-        '1. Gasto o ingreso AL CONTADO (con efectivo, débito, BROU, ahorro, etc.): usá "add_transaction" con "accountQuery" (ej: "efectivo", "brou", "ahorro").',
-        '2. Compra/gasto/ingreso FINANCIADO CON TARJETA DE CRÉDITO: usá "add_debt" con "paymentMethod":"credit_card", "cardName", "installmentsCount", "perInstallment", y "kind":"debt" (o "credit").',
-        '3. PRÉSTAMO: usá "add_debt" con "paymentMethod":"personal", "counterparty", "installmentsCount", "perInstallment", y "kind":"debt" o "credit".',
-        '4. PAGO de tarjetas/deudas/cuotas: usá "pay_obligations" con "scope": "current_installments" si paga las cuotas de este mes / cuota mensual, "full_balance" si paga todo el saldo total, o "exact_amount" si indica un monto puntual.',
-        '5. Consulta de saldo: usá "query_balance".',
-        'Devolvé EXCLUSIVAMENTE un JSON válido con esta forma:',
-        '{"actions":[{"op":"add_transaction","title":"","amount":0,"currency":"UYU|USD","type":"expense|income","category":"","accountQuery":""},{"op":"add_debt","title":"","amount":0,"currency":"UYU|USD","kind":"debt|credit","paymentMethod":"credit_card|personal","cardName":"","counterparty":"","installmentsCount":1,"perInstallment":false,"dueDate":""},{"op":"pay_obligations","scope":"current_installments|full_balance|exact_amount","amount":0,"currency":"UYU|USD","cardQuery":"","accountQuery":"","note":""},{"op":"query_balance","accountQuery":""}]}'
-      ].join('\n');
-
-      const promptBodyText = `${systemPrompt}\n\nContexto actual:\n${JSON.stringify(ctx)}\n\nInstrucción del usuario:\n"${commandText}"`;
-
-      let candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    async function resolveBestGeminiModel(cleanKey) {
+      const cached = localStorage.getItem('KRONO_GEMINI_MODEL');
+      if (cached && cached.trim()) return cached.trim();
+      const fallbackModel = 'gemini-2.5-flash';
       try {
-        const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(cleanKey)}`);
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 2200);
+        const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(cleanKey)}`, { signal: ctrl.signal });
+        clearTimeout(tid);
         if (listRes.ok) {
           const listJson = await listRes.json();
           const available = (listJson.models || [])
             .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
             .map(m => String(m.name || '').replace(/^models\//, ''))
             .filter(Boolean);
-          if (available.length) {
-            const preferred = available.filter(n => /flash/i.test(n));
-            candidateModels = [...preferred, ...available.filter(n => !/flash/i.test(n))].slice(0, 4);
-          }
+          const pick = available.find(n => /gemini-2\.5-flash/i.test(n))
+            || available.find(n => /gemini-2\.0-flash/i.test(n))
+            || available.find(n => /flash/i.test(n))
+            || available[0]
+            || fallbackModel;
+          localStorage.setItem('KRONO_GEMINI_MODEL', pick);
+          return pick;
         }
       } catch (e) {}
+      return fallbackModel;
+    }
+
+    async function interpretWithGeminiAI(commandText, apiKey) {
+      const cleanKey = String(apiKey || '').trim();
+      if (!cleanKey) return null;
+      const ctx = buildCompactContextForAI();
+      const systemPrompt = [
+        'Sos el motor rápido y preciso de Krono Finanzas. Traducí lenguaje natural a acciones JSON.',
+        'REGLA CRÍTICA DE CUOTAS/TARJETA:',
+        '- Si el usuario dice "pagué la tarjeta de crédito" / "pagué la tarjeta" / "pagué las cuotas" SIN decir explícitamente "todo", "saldo total" o "cancelé todo": usá scope="current_installments" (paga SOLO la cuota corriente de este mes, NUNCA liquida todas las cuotas futuras ni el saldo total).',
+        '- Solo usá scope="full_balance" si dice explícitamente "todo", "saldo total", "toda la deuda" o "cancelé todo".',
+        '- Si indica un monto concreto (ej: "pagué 2500 de la tarjeta"): usá scope="exact_amount" con ese amount.',
+        '- Gasto/ingreso al contado: op="add_transaction" con accountQuery (ej: "efectivo", "brou").',
+        '- Compra financiada con tarjeta o préstamo: op="add_debt" con paymentMethod ("credit_card" o "personal"), installmentsCount, perInstallment.',
+        'Devolvé EXCLUSIVAMENTE JSON válido: {"actions":[...]}'
+      ].join('\n');
+
+      const promptBodyText = `${systemPrompt}\n\nContexto:\n${JSON.stringify(ctx)}\n\nFrase: "${commandText}"`;
+      const chosenModel = await resolveBestGeminiModel(cleanKey);
+      const modelsToTry = [chosenModel, 'gemini-2.5-flash', 'gemini-2.0-flash'].filter((v, i, a) => v && a.indexOf(v) === i);
 
       let lastErrMsg = 'sin respuesta de Gemini';
-      for (const modelName of candidateModels) {
-        for (const useJsonMime of [true, false]) {
-          try {
-            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(cleanKey)}`;
-            const payload = {
-              contents: [{ role: 'user', parts: [{ text: promptBodyText }] }]
-            };
-            if (useJsonMime) {
-              payload.generationConfig = { temperature: 0.1, responseMimeType: 'application/json' };
-            } else {
-              payload.generationConfig = { temperature: 0.1 };
-            }
-            const res = await fetch(endpoint, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-              const apiErr = (data && data.error && data.error.message) ? data.error.message : `HTTP ${res.status}`;
-              lastErrMsg = `${modelName}: ${apiErr}`;
-              if (res.status === 400 && useJsonMime) continue;
-              if (res.status === 404) break;
+      for (const modelName of modelsToTry) {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 4500);
+        try {
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(cleanKey)}`;
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: ctrl.signal,
+            body: JSON.stringify({
+              contents: [{ role: 'user', parts: [{ text: promptBodyText }] }],
+              generationConfig: { temperature: 0.05, responseMimeType: 'application/json' }
+            })
+          });
+          clearTimeout(tid);
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            const apiErr = (data && data.error && data.error.message) ? data.error.message : `HTTP ${res.status}`;
+            lastErrMsg = `${modelName}: ${apiErr}`;
+            if (res.status === 404) {
+              if (localStorage.getItem('KRONO_GEMINI_MODEL') === modelName) localStorage.removeItem('KRONO_GEMINI_MODEL');
               continue;
             }
-            const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            if (!rawText.trim()) {
-              lastErrMsg = `${modelName}: respuesta vacía`;
-              continue;
-            }
-            const cleanedJson = rawText.replace(/^```json\s*|\s*```$/gi, '').trim();
-            const parsed = JSON.parse(cleanedJson);
-            if (Array.isArray(parsed.actions)) return parsed.actions;
-            lastErrMsg = `${modelName}: JSON sin campo actions`;
-          } catch (err) {
-            lastErrMsg = `${modelName}: ${(err && err.message) ? err.message : 'error de red'}`;
+            continue;
           }
+          const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          if (!rawText.trim()) {
+            lastErrMsg = `${modelName}: respuesta vacía`;
+            continue;
+          }
+          const cleanedJson = rawText.replace(/^```json\s*|\s*```$/gi, '').trim();
+          const parsed = JSON.parse(cleanedJson);
+          if (Array.isArray(parsed.actions)) {
+            localStorage.setItem('KRONO_GEMINI_MODEL', modelName);
+            return parsed.actions;
+          }
+          lastErrMsg = `${modelName}: JSON sin actions`;
+        } catch (err) {
+          clearTimeout(tid);
+          lastErrMsg = (err && err.name === 'AbortError') ? `${modelName}: demoró más de 4.5s` : `${modelName}: ${(err && err.message) ? err.message : 'error de red'}`;
         }
       }
       throw new Error(lastErrMsg);
@@ -1759,7 +1773,9 @@ input[type=number]::-webkit-outer-spin-button:hover {
         if (!act || !act.op) continue;
 
         if (act.op === 'pay_obligations') {
-          const scope = act.scope || 'current_installments';
+          const rawScope = act.scope || 'current_installments';
+          const explicitlyAskedFull = /\b(?:todo|toda|todas|saldo\s+total|totalidad|completo|completa|cancele\s+todo|liquide\s+todo)\b/i.test(normalizeStr(originalText || ''));
+          const scope = (rawScope === 'full_balance' && !explicitlyAskedFull) ? 'current_installments' : rawScope;
           const sourceAcc = matchAccount(act.accountQuery);
           const targets = matchOpenDebts(act.cardQuery);
           if (!targets.length) continue;
@@ -2082,8 +2098,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
         const targetCurrency = detectCurrencyInText(lower) || (sourceAcc ? sourceAcc.currency : (state.defaultCurrency || 'UYU'));
 
         // Distinguish whether user asked for THIS MONTH'S installments ("cuotas de este mes" / "cuotas del mes" / "cuota de este mes" / "cuotas") vs FULL BALANCE ("todo" / "saldo total")
-        const wantsCurrentInstallmentsOnly = /\b(?:cuotas?\s+(?:de\s+este\s+mes|del\s+mes|mensuales?|corrientes?)|la\s+cuota|las\s+cuotas)\b/i.test(lower)
-          && !/\b(?:todo|toda|todas|saldo\s+total|totalidad|completo|completa)\b/i.test(lower);
+        const wantsCurrentInstallmentsOnly = !/\b(?:todo|toda|todas|saldo\s+total|totalidad|completo|completa|cancele\s+todo|liquide\s+todo)\b/i.test(lower);
 
         let candidateDebts = state.debts.filter(d => {
           if (d.status === 'settled' || d.kind === 'credit') return false;
