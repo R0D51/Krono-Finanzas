@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.52
+    // KRONO OTA BOOTLOADER v6.5.53
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.52';
+    const APP_BASE_VERSION = '6.5.53';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,7 +230,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.52',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.53',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -469,6 +469,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
           state.accounts = remote.accounts;
           state.budgets = Array.isArray(remote.budgets) ? remote.budgets : state.budgets;
           if (Array.isArray(remote.debts)) state.debts = remote.debts;
+          if (Array.isArray(remote.creditCards)) state.creditCards = remote.creditCards;
           state.transactions = Array.isArray(remote.transactions) ? remote.transactions : state.transactions;
           if (remote.exchangeRate) state.exchangeRate = remote.exchangeRate;
           if (remote.cloudWebhookUrl) state.cloudWebhookUrl = remote.cloudWebhookUrl;
@@ -1327,20 +1328,39 @@ input[type=number]::-webkit-outer-spin-button:hover {
     }
     function deleteCreditCard(cardIdOrName) {
       const list = Array.isArray(state.creditCards) ? state.creditCards : [];
-      const target = list.find(c => c.id === cardIdOrName || String(c.name || '').trim().toLowerCase() === String(cardIdOrName || '').trim().toLowerCase());
-      const targetName = target ? target.name : String(cardIdOrName || '').trim();
-      const targetId = target ? target.id : cardIdOrName;
+      const rawKey = String(cardIdOrName || '').trim();
+      const target = list.find(c =>
+        String(c.id || '').trim() === rawKey ||
+        String(c.name || '').trim().toLowerCase() === rawKey.toLowerCase()
+      );
+      const targetName = target ? String(target.name || '').trim() : rawKey;
+      const targetId = target ? String(target.id || '').trim() : rawKey;
+
       openConfirmModal({
         title: '💳 Eliminar Tarjeta',
         message: `¿Querés eliminar la tarjeta "${targetName}"?`,
         confirmText: 'Eliminar Tarjeta',
         danger: true,
         onConfirm: () => {
-          state.creditCards = (Array.isArray(state.creditCards) ? state.creditCards : []).filter(c => c.id !== targetId && String(c.name || '').trim().toLowerCase() !== String(targetName || '').trim().toLowerCase());
-          if (targetName && ui.debtFilterCard && ui.debtFilterCard.toLowerCase() === String(targetName).toLowerCase()) {
+          state.creditCards = (Array.isArray(state.creditCards) ? state.creditCards : []).filter(c => {
+            const cId = String(c.id || '').trim();
+            const cName = String(c.name || '').trim().toLowerCase();
+            if (targetId && cId === targetId) return false;
+            if (targetName && cName === targetName.toLowerCase()) return false;
+            return true;
+          });
+          if (Array.isArray(state.debts) && targetName) {
+            state.debts.forEach(d => {
+              if (String(d.cardName || '').trim().toLowerCase() === targetName.toLowerCase()) {
+                d.cardName = '';
+                if (d.paymentMethod === 'credit_card') d.paymentMethod = 'general';
+              }
+            });
+          }
+          if (targetName && ui.debtFilterCard && ui.debtFilterCard.toLowerCase() === targetName.toLowerCase()) {
             ui.debtFilterCard = 'all';
           }
-          if (ui.editingCardId === targetId) {
+          if (ui.editingCardId && (String(ui.editingCardId) === targetId || String(ui.editingCardId) === rawKey)) {
             ui.showEditCardModal = false;
             ui.editingCardId = null;
           }
@@ -1348,18 +1368,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
           spawnFloatingBurst('🗑️ Tarjeta eliminada', false);
         }
       });
-      return;
-      state.creditCards = list.filter(c => c.id !== cardId);
-      if (target && ui.debtFilterCard && ui.debtFilterCard.toLowerCase() === String(target.name || '').toLowerCase()) {
-        ui.debtFilterCard = 'all';
-      }
-      if (ui.editingCardId === cardId) {
-        ui.showEditCardModal = false;
-        ui.editingCardId = null;
-      }
-      saveState(true, true);
     }
-
     function handleCreateBudgetSubmit(e) {
       if (e) e.preventDefault();
       const name = document.getElementById('bg-name').value.trim(), limit = Math.abs(parseFloat(document.getElementById('bg-limit').value) || 0);
@@ -2466,7 +2475,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
                 <div class="flex items-center gap-1.5 shrink-0" onclick="event.stopPropagation();">
                   <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-violet-500/20 border border-violet-400/30 text-violet-200 mono">${c.pendingItems} pend.</span>
                   ${savedCardObj ? `<button type="button" onclick="openEditCreditCardModal('${savedCardObj.id}')" title="Editar tarjeta" class="px-2 py-1 rounded-lg bg-white/10 hover:bg-cyan-500/25 border border-white/10 hover:border-cyan-400/40 text-[11px] text-cyan-200 font-bold">✏️</button>
-                  <button type="button" onclick="deleteCreditCard('${savedCardObj.id}')" title="Borrar tarjeta" class="px-2 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 border border-rose-400/25 text-[11px] text-rose-200 font-bold">🗑️</button>` : ''}
+                  <button type="button" onclick="deleteCreditCard('${escapeAttr(savedCardObj.id || c.name)}')" title="Borrar tarjeta" class="px-2 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 border border-rose-400/25 text-[11px] text-rose-200 font-bold">🗑️</button>` : ''}
                 </div>
               </div>
               <div class="grid grid-cols-2 gap-2 text-xs pt-1">
