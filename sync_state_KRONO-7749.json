@@ -162,54 +162,6 @@
   ],
   "debts": [
     {
-      "id": "debt_1795461994607_298",
-      "title": "Prueba",
-      "counterparty": "Milonga",
-      "paymentMethod": "credit_card",
-      "cardName": "Itaú",
-      "installmentsCount": 3,
-      "paidInstallments": 0,
-      "amount": 456,
-      "currency": "UYU",
-      "kind": "debt",
-      "dueDate": "",
-      "status": "pending",
-      "notes": "Cosso Pero Pum",
-      "createdAt": 1795461994607
-    },
-    {
-      "id": "debt_1795461568642_995",
-      "title": "Compu",
-      "counterparty": "CDR",
-      "paymentMethod": "credit_card",
-      "cardName": "Itaú Visa",
-      "installmentsCount": 12,
-      "paidInstallments": 0,
-      "amount": 36000,
-      "currency": "UYU",
-      "kind": "debt",
-      "dueDate": "",
-      "status": "pending",
-      "notes": "",
-      "createdAt": 1795461568642
-    },
-    {
-      "id": "debt_1795461189346_365",
-      "title": "Porton",
-      "counterparty": "Zodimac",
-      "paymentMethod": "credit_card",
-      "cardName": "Itaú Visa",
-      "installmentsCount": 12,
-      "paidInstallments": 0,
-      "amount": 13000,
-      "currency": "UYU",
-      "kind": "debt",
-      "dueDate": "23/11",
-      "status": "pending",
-      "notes": "",
-      "createdAt": 1795461189346
-    },
-    {
       "id": "debt_demo_1",
       "title": "Préstamo a amigo / Crédito",
       "counterparty": "Lucas",
@@ -217,9 +169,8 @@
       "currency": "UYU",
       "kind": "credit",
       "dueDate": "",
-      "status": "settled",
-      "notes": "",
-      "settledAt": 1795318631934
+      "status": "pending",
+      "notes": ""
     },
     {
       "id": "debt_demo_2",
@@ -229,9 +180,8 @@
       "currency": "USD",
       "kind": "debt",
       "dueDate": "",
-      "status": "settled",
-      "notes": "",
-      "settledAt": 1795318733832
+      "status": "pending",
+      "notes": ""
     }
   ],
   "transactions": [
