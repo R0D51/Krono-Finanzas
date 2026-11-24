@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.43
+    // KRONO OTA BOOTLOADER v6.5.44
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -48,7 +48,7 @@
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
     :root { --spring-bounce: cubic-bezier(0.22, 1, 0.36, 1); --spring-soft: cubic-bezier(0.22, 1, 0.36, 1); }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Plus Jakarta Sans', sans-serif; }
-    html, body { margin: 0; padding: 0; width: 100%; max-width: 100vw; min-height: 100dvh; background: #040711; color: #f8fafc; overflow-x: hidden; user-select: none; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    html, body { margin: 0; padding: 0; width: 100%; max-width: 100vw; height: 100dvh; max-height: 100dvh; background: #040711; color: #f8fafc; overflow: hidden; overscroll-behavior: none; user-select: none; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
     .mono { font-family: 'JetBrains Mono', monospace; }
     @keyframes auroraFloat1 { 0%, 100% { transform: translate3d(0,0,0) scale(1) rotate(0deg); } 50% { transform: translate3d(65px,-45px,0) scale(1.22) rotate(12deg); } }
     @keyframes auroraFloat2 { 0%, 100% { transform: translate3d(0,0,0) scale(1) rotate(0deg); } 50% { transform: translate3d(-55px,50px,0) scale(1.18) rotate(-10deg); } }
@@ -213,10 +213,10 @@ input[type=number]::-webkit-outer-spin-button:hover {
     <div class="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.035)_1px,transparent_1px)] [background-size:24px_24px]"></div>
   </div>
   <div id="burst-container" class="fixed top-16 right-4 z-50 pointer-events-none flex flex-col gap-2"></div>
-  <div id="app-root" class="relative z-10 min-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-x-hidden"></div>
+  <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.43';
+    const APP_BASE_VERSION = '6.5.44';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -229,7 +229,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.43',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.44',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -262,7 +262,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
     let ui = {
       activeTab: 'dashboard', displayCurrency: state.defaultCurrency || 'UYU', voiceTargetAccountId: 'auto',
       showNewTxModal: false, showNewAccountModal: false, showTransferModal: false, showNewBudgetModal: false, showNewDebtModal: false, showNewCardModal: false, showEditDebtModal: false, editingDebtId: null, showEditCardModal: false, editingCardId: null, debtFilterKind: 'all', debtFilterStatus: 'pending', debtFilterCard: 'all',
-      showVoiceWidgetOverlay: false, showOtaModal: false, inputModal: null, otaStatusMsg: '', otaChecking: false,
+      showVoiceWidgetOverlay: false, showOtaModal: false, inputModal: null, confirmModal: null, otaStatusMsg: '', otaChecking: false,
       githubPushing: false, releaseNotesInput: '', txSearch: '', txFilterType: 'all', txFilterAccount: 'all',
       txFilterCurrency: 'all', isListening: false, voiceTranscript: '', voiceHintMsg: '',
       geminiResponse: null, syncStatusText: 'Listo', bridgeDiagnostic: '✅ Puente Activo'
@@ -299,11 +299,30 @@ input[type=number]::-webkit-outer-spin-button:hover {
       render();
     }
 
+    let pendingConfirmCallback = null;
+    function openConfirmModal({ title = 'Confirmar acción', message = '¿Estás seguro?', confirmText = 'Confirmar', cancelText = 'Cancelar', danger = true, onConfirm }) {
+      pendingConfirmCallback = onConfirm;
+      ui.confirmModal = { title, message, confirmText, cancelText, danger: Boolean(danger) };
+      render();
+    }
+    function closeConfirmModal() {
+      pendingConfirmCallback = null;
+      ui.confirmModal = null;
+      render();
+    }
+    function executeConfirmModal() {
+      const cb = pendingConfirmCallback;
+      pendingConfirmCallback = null;
+      ui.confirmModal = null;
+      if (typeof cb === 'function') cb();
+      render();
+    }
+
     function getTabAnimationClass() {
       if (lastAnimatedTab !== ui.activeTab) { lastAnimatedTab = ui.activeTab; return 'animate-pop-elastic'; }
       return '';
     }
-    function switchTab(tabId) { ui.activeTab = tabId; render(); }
+    function switchTab(tabId) { ui.activeTab = tabId; render(); const m = document.getElementById('krono-main-scroll'); if (m) m.scrollTop = 0; }
     function getCurrentInstalledVersion() { return (localStorage.getItem('KRONO_OTA_VERSION_TAG') || APP_BASE_VERSION).replace(/^v/i, ''); }
 
     function loadState() {
@@ -575,7 +594,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       ui.otaStatusMsg = '⚠️ Formato OTA no reconocido.'; render(); return false;
     }
     function rollbackFactoryOta() {
-      if (!confirm('¿Restaurar versión base? Tus cuentas no se borrarán.')) return;
+      openConfirmModal({ title: '⏪ Restaurar Versión Base', message: '¿Querés restaurar la versión base de Krono Finanzas? Tus cuentas y datos no se borrarán.', confirmText: 'Restaurar Base', danger: false, onConfirm: () => { localStorage.removeItem('KRONO_OTA_CUSTOM_HTML'); localStorage.removeItem('KRONO_OTA_VERSION_TAG'); localStorage.removeItem('KRONO_OTA_LIVE_CSS'); localStorage.removeItem('KRONO_OTA_LIVE_JS'); setTimeout(() => window.location.reload(), 450); } }); return;
       localStorage.removeItem('KRONO_OTA_CUSTOM_HTML'); localStorage.removeItem('KRONO_OTA_VERSION_TAG');
       localStorage.removeItem('KRONO_OTA_LIVE_CSS'); localStorage.removeItem('KRONO_OTA_LIVE_JS');
       setTimeout(() => window.location.reload(), 450);
@@ -721,7 +740,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       const rows = ['ID,Fecha,Titulo,Tipo,Categoria,Cuenta,Moneda,Monto'].concat(state.transactions.map(t => `${t.id},"${t.date}","${(t.title||'').replace(/"/g,'""')}",${t.type},"${t.category}","${t.accountName}",${t.currency},${t.amount}`));
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' })); a.download = `Krono_Movimientos_${new Date().toISOString().slice(0,10)}.csv`; a.click();
     }
-    function clearAllTransactions() { if (confirm('¿Vaciar historial?')) { state.transactions = []; saveState(true, true); } }
+    function clearAllTransactions() { openConfirmModal({ title: '🗑️ Vaciar Historial', message: '¿Seguro que querés vaciar todo el historial de movimientos?', confirmText: 'Vaciar Todo', danger: true, onConfirm: () => { state.transactions = []; saveState(true, true); spawnFloatingBurst('🗑️ Historial vaciado', false); } }); }
     function createAccount(e) {
       if (e) e.preventDefault();
       const name = document.getElementById('acc-name').value.trim(); if (!name) return;
@@ -772,9 +791,9 @@ input[type=number]::-webkit-outer-spin-button:hover {
         }
       });
     }
-    function resetSingleAccount(id) { const a = state.accounts.find(x => x.id === id); if (a && confirm(`¿Poner ${a.name} en $ 0?`)) { a.balance = 0; saveState(true, true); } }
-    function deleteAccount(id) { if (state.accounts.length <= 1) return alert('Mínimo 1 cuenta.'); if (confirm('¿Eliminar cuenta?')) { state.accounts = state.accounts.filter(x => x.id !== id); if (ui.voiceTargetAccountId === id) ui.voiceTargetAccountId = 'auto'; saveState(true, true); } }
-    function resetAllAccountsToZero() { if (confirm('¿Todas las cuentas a $ 0?')) { state.accounts.forEach(a => a.balance = 0); saveState(true, true); } }
+    function resetSingleAccount(id) { const a = state.accounts.find(x => x.id === id); if (a) { openConfirmModal({ title: '💰 Resetear Cuenta', message: `¿Querés poner el saldo de "${a.name}" en $ 0?`, confirmText: 'Poner en $ 0', danger: true, onConfirm: () => { a.balance = 0; saveState(true, true); spawnFloatingBurst('✅ Cuenta en $ 0', true); } }); } }
+    function deleteAccount(id) { if (state.accounts.length <= 1) return alert('Mínimo 1 cuenta.'); openConfirmModal({ title: '🏦 Eliminar Cuenta', message: '¿Querés eliminar esta cuenta de tu panel?', confirmText: 'Eliminar Cuenta', danger: true, onConfirm: () => { state.accounts = state.accounts.filter(x => x.id !== id); if (ui.voiceTargetAccountId === id) ui.voiceTargetAccountId = 'auto'; saveState(true, true); spawnFloatingBurst('🗑️ Cuenta eliminada', false); } }); }
+    function resetAllAccountsToZero() { openConfirmModal({ title: '⚠️ Resetear Todas las Cuentas', message: '¿Querés poner el saldo de TODAS las cuentas en $ 0?', confirmText: 'Resetear a $ 0', danger: true, onConfirm: () => { state.accounts.forEach(a => a.balance = 0); saveState(true, true); spawnFloatingBurst('✅ Cuentas en $ 0', true); } }); }
 
     function getDebtRemainingAmount(d) {
       const total = Math.max(0, Number(d.amount || 0));
@@ -1043,7 +1062,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       saveState(true, true);
     }
     function deleteDebtItem(id) {
-      if (!confirm('¿Eliminar este registro pendiente?')) return;
+      openConfirmModal({ title: '🗑️ Eliminar Registro', message: '¿Querés eliminar este registro pendiente? Esta acción no se puede deshacer.', confirmText: 'Eliminar', danger: true, onConfirm: () => { state.debts = (Array.isArray(state.debts) ? state.debts : []).filter(x => x.id !== id); if (ui.editingDebtId === id) { ui.showEditDebtModal = false; ui.editingDebtId = null; } saveState(true, true); spawnFloatingBurst('🗑️ Registro eliminado', false); } }); return;
       state.debts = (Array.isArray(state.debts) ? state.debts : []).filter(x => x.id !== id);
       if (ui.editingDebtId === id) { ui.showEditDebtModal = false; ui.editingDebtId = null; }
       saveState(true, true);
@@ -1181,7 +1200,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
     function deleteCreditCard(cardId) {
       const list = Array.isArray(state.creditCards) ? state.creditCards : [];
       const target = list.find(c => c.id === cardId);
-      if (!confirm(`¿Eliminar la tarjeta "${target ? target.name : ''}"?`)) return;
+      openConfirmModal({ title: '💳 Eliminar Tarjeta', message: `¿Querés eliminar la tarjeta "${target ? target.name : ''}"?`, confirmText: 'Eliminar Tarjeta', danger: true, onConfirm: () => { state.creditCards = list.filter(c => c.id !== cardId); if (target && ui.debtFilterCard && ui.debtFilterCard.toLowerCase() === String(target.name || '').toLowerCase()) { ui.debtFilterCard = 'all'; } if (ui.editingCardId === cardId) { ui.showEditCardModal = false; ui.editingCardId = null; } saveState(true, true); spawnFloatingBurst('🗑️ Tarjeta eliminada', false); } }); return;
       state.creditCards = list.filter(c => c.id !== cardId);
       if (target && ui.debtFilterCard && ui.debtFilterCard.toLowerCase() === String(target.name || '').toLowerCase()) {
         ui.debtFilterCard = 'all';
@@ -1214,9 +1233,9 @@ input[type=number]::-webkit-outer-spin-button:hover {
         }
       });
     }
-    function deleteBudgetCategory(id) { if (confirm('¿Eliminar categoría?')) { state.budgets = state.budgets.filter(x => x.id !== id); saveState(true, true); } }
-    function wipeAllAndStartFresh() { if (confirm('¿Empezar de cero?')) { state.accounts.forEach(a => a.balance = 0); state.transactions = []; saveState(true, true); } }
-    function restoreDemoData() { if (confirm('¿Restaurar demo?')) { const keep = { githubRepo: state.githubRepo, githubToken: state.githubToken, cloudWebhookUrl: state.cloudWebhookUrl }; state = { ...JSON.parse(JSON.stringify(DEMO_STATE)), ...keep, updatedAt: Date.now() }; saveState(true, true); } }
+    function deleteBudgetCategory(id) { openConfirmModal({ title: '🎯 Eliminar Categoría', message: '¿Querés eliminar esta categoría de presupuesto? Tus movimientos anteriores no se borran.', confirmText: 'Eliminar Categoría', danger: true, onConfirm: () => { state.budgets = state.budgets.filter(x => x.id !== id); saveState(true, true); spawnFloatingBurst('🗑️ Categoría eliminada', false); } }); }
+    function wipeAllAndStartFresh() { openConfirmModal({ title: '🧹 Empezar de Cero', message: 'Esto pondrá todas las cuentas en $ 0 y vaciará los movimientos. ¿Continuar?', confirmText: 'Empezar de Cero', danger: true, onConfirm: () => { state.accounts.forEach(a => a.balance = 0); state.transactions = []; saveState(true, true); spawnFloatingBurst('🧹 Reiniciado de cero', true); } }); }
+    function restoreDemoData() { openConfirmModal({ title: '🔄 Restaurar Datos Demo', message: '¿Querés restaurar los datos de demostración iniciales?', confirmText: 'Restaurar Demo', danger: false, onConfirm: () => { const keep = { githubRepo: state.githubRepo, githubToken: state.githubToken, cloudWebhookUrl: state.cloudWebhookUrl }; state = { ...JSON.parse(JSON.stringify(DEMO_STATE)), ...keep, updatedAt: Date.now() }; saveState(true, true); spawnFloatingBurst('🔄 Demo restaurada', true); } }); }
     function exportBackupJSON() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' })); a.download = `Krono_Respaldo_${state.syncCode}.json`; a.click(); }
     function importBackupJSON() {
       const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json';
@@ -1463,7 +1482,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
     }
 
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && ui.inputModal) closeInputModal();
+      if (e.key === 'Escape') { if (ui.confirmModal) closeConfirmModal(); else if (ui.inputModal) closeInputModal(); }
     });
 
     window.addEventListener('focus', () => { pullFromCloudBridge(false); pullStateFromGitHubCloud(false); });
@@ -1821,7 +1840,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       const totals = getTotals(), displayTotal = ui.displayCurrency === 'USD' ? formatMoney(totals.totalUSD, 'USD') : formatMoney(totals.totalUYU, 'UYU'), ver = getCurrentInstalledVersion();
       const nav = [{ id:'dashboard', icon:'🏠', label:'Panel' }, { id:'movements', icon:'⚡', label:'Movimientos' }, { id:'accounts', icon:'🏦', label:'Cuentas' }, { id:'budgets', icon:'🎯', label:'Presupuestos' }, { id:'debts', icon:'📌', label:'Pendientes' }, { id:'settings', icon:'⚙️', label:'Ajustes' }];
       root.innerHTML = `
-        <div class="flex-1 flex flex-col md:flex-row w-full max-w-[100vw] min-h-[100dvh] overflow-x-hidden">
+        <div class="flex-1 h-full max-h-full flex flex-col md:flex-row w-full max-w-[100vw] overflow-hidden">
           <aside class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 left-0 z-30 p-4">
             <div class="krono-sidebar-shell glass-97 flex-1 rounded-3xl p-4 flex flex-col justify-between">
               <div>
@@ -1867,7 +1886,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
               </div>
             </div>
           </aside>
-          <main class="flex-1 md:pl-64 w-full max-w-[100vw] pb-24 md:pb-8 overflow-x-hidden">
+          <main id="krono-main-scroll" class="flex-1 h-full max-h-full md:pl-64 w-full max-w-[100vw] pb-24 md:pb-8 overflow-y-auto overflow-x-hidden overscroll-y-contain">
             <div class="max-w-5xl mx-auto p-3.5 sm:p-4 md:p-6 w-full overflow-x-hidden">
               <div class="flex md:hidden justify-between items-center gap-2 mb-4">
                 <div class="min-w-0"><div class="flex items-center gap-2"><h1 class="text-lg font-extrabold text-white truncate">Krono Finanzas</h1><span class="krono-sync-dot w-2 h-2 rounded-full bg-emerald-400"></span></div><span class="text-[10px] font-bold mono text-cyan-300 block truncate">v${ver} • ${ui.syncStatusText}</span></div>
@@ -1879,6 +1898,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
           <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 p-2"><div class="glass-97 rounded-2xl px-1.5 py-1.5 flex justify-around">${nav.map(i => `<button onclick="switchTab('${i.id}');" class="flex flex-col items-center py-1.5 px-2 rounded-xl text-[10px] font-bold ${ui.activeTab===i.id?'bg-cyan-400 text-slate-950':'text-slate-300'}"><span class="text-base">${i.icon}</span><span class="mt-0.5">${i.label}</span></button>`).join('')}</div></nav>
         </div>
         ${ui.inputModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="submitInputModal(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-cyan-400/50 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">${ui.inputModal.title}</h3><label class="text-xs text-slate-300 block">${ui.inputModal.label}</label><input id="krono-input-modal-field" type="${ui.inputModal.inputType}" ${ui.inputModal.inputType==='number'?'step="any"':''} required value="${escapeAttr(ui.inputModal.value)}" placeholder="${escapeAttr(ui.inputModal.placeholder)}" class="w-full bg-slate-950/80 border border-cyan-400/40 rounded-xl px-3.5 py-2.5 text-sm text-white ${ui.inputModal.inputType==='number'?'mono':''} focus:outline-none focus:border-cyan-400" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="closeInputModal()" class="px-4 py-2 text-xs text-slate-300 hover:text-white">Cancelar</button><button type="submit" class="spring-btn px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Guardar</button></div></form></div>` : ''}
+        ${ui.confirmModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><div class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 ${ui.confirmModal.danger ? 'border-rose-400/50' : 'border-cyan-400/50'} space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">${ui.confirmModal.title}</h3><p class="text-xs text-slate-300 leading-relaxed">${ui.confirmModal.message}</p><div class="flex justify-end gap-2 pt-3"><button type="button" onclick="closeConfirmModal()" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-slate-200">${ui.confirmModal.cancelText || 'Cancelar'}</button><button type="button" onclick="executeConfirmModal()" class="spring-btn px-5 py-2 rounded-xl ${ui.confirmModal.danger ? 'bg-rose-500 text-white' : 'bg-cyan-400 text-slate-950'} font-extrabold text-xs">${ui.confirmModal.confirmText || 'Confirmar'}</button></div></div></div>` : ''}
         ${ui.showOtaModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><div class="glass-97 w-full max-w-xl rounded-3xl p-5 border-2 border-cyan-400/50 animate-pop-elastic"><div class="flex justify-between mb-2"><h3 class="text-base font-extrabold text-white">🚀 Actualizador OTA</h3><span class="text-xs mono text-cyan-300">v${ver}</span></div><input id="ota-release-notes" type="text" placeholder="Notas opcionales..." value="${escapeAttr(ui.releaseNotesInput)}" oninput="ui.releaseNotesInput=this.value;" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mb-2" /><textarea id="ota-paste-box" rows="5" placeholder='Pegá aquí el JSON {"version","html"}...' class="w-full p-3 rounded-2xl bg-slate-950/80 border border-white/15 text-xs text-white mono mb-3"></textarea>${ui.otaStatusMsg ? `<div class="p-2.5 rounded-xl bg-slate-950/80 text-xs text-cyan-200 mb-3">${ui.otaStatusMsg}</div>` : ''}<div class="flex justify-between gap-2"><button onclick="publishGitHubRelease()" class="px-3 py-2 rounded-xl bg-violet-500/30 text-violet-200 font-bold text-xs">🏷️ Publicar Release</button><div class="flex gap-2"><button onclick="ui.showOtaModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cerrar</button><button onclick="handleOtaPasteApply()" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Instalar</button></div></div></div></div>` : ''}
         ${ui.showNewTxModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleNewTxSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">➕ Nuevo Movimiento</h3><input id="tx-title" type="text" required placeholder="Descripción" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="tx-amount" type="number" step="0.01" required placeholder="Monto" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><select id="tx-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select></div><div class="grid grid-cols-2 gap-2"><select id="tx-type" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="expense">Gasto (-)</option><option value="income">Ingreso (+)</option></select><select id="tx-account" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('')}</select></div><select id="tx-category" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.budgets.map(b => `<option value="${b.name}">${b.icon} ${b.name}</option>`).join('')}<option value="General">📌 General</option><option value="Ingreso">💰 Ingreso</option></select><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewTxModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Guardar</button></div></form></div>` : ''}
         ${ui.showNewAccountModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="createAccount(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">🏦 Nueva Cuenta</h3><input id="acc-name" type="text" required placeholder="Nombre" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-3 gap-2"><select id="acc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">UYU</option><option value="USD">USD</option></select><input id="acc-balance" type="number" step="0.01" placeholder="Saldo" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="acc-icon" type="text" value="🏦" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewAccountModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Crear</button></div></form></div>` : ''}
