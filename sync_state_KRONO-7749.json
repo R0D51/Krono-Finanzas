@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795488818778,
+  "updatedAt": 1795488863402,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -175,6 +175,22 @@
   ],
   "debts": [
     {
+      "id": "debt_1795488863401_812",
+      "title": "Compra financiada",
+      "counterparty": "Itaú Pesos",
+      "paymentMethod": "credit_card",
+      "cardName": "Itaú Pesos",
+      "installmentsCount": 5,
+      "paidInstallments": 0,
+      "amount": 5000,
+      "currency": "UYU",
+      "kind": "debt",
+      "dueDate": "",
+      "status": "pending",
+      "notes": "",
+      "createdAt": 1795488863401
+    },
+    {
       "id": "debt_1795488694893_468",
       "title": "Gasto en cuotas",
       "counterparty": "Itaú Pesos",
@@ -268,6 +284,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_ai_1795488863401_389",
+      "title": "💳 Compra financiada (Itaú Pesos • 5 cuotas)",
+      "amount": 5000,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Tarjeta / Crédito",
+      "accountId": "card_ita_pesos",
+      "accountName": "Itaú Pesos",
+      "date": "23/11 23:54",
+      "timestamp": 1795488863401
+    },
     {
       "id": "tx_1795488812378_980",
       "title": "Pago: Gasto en cuotas (Cuota 1/5) [Itaú Pesos]",
