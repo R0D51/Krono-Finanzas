@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.56
+    // KRONO OTA BOOTLOADER v6.5.57
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.56';
+    const APP_BASE_VERSION = '6.5.57';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,7 +230,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.56',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.57',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -1645,8 +1645,11 @@ input[type=number]::-webkit-outer-spin-button:hover {
 
     async function resolveBestGeminiModel(cleanKey) {
       const cached = localStorage.getItem('KRONO_GEMINI_MODEL');
-      if (cached && cached.trim()) return cached.trim();
-      const fallbackModel = 'gemini-2.5-flash';
+      if (cached && cached.trim() && !/gemini-2\.0-flash|gemini-1\.5-flash/i.test(cached)) {
+        return cached.trim();
+      }
+      localStorage.removeItem('KRONO_GEMINI_MODEL');
+      const fallbackModel = 'gemini-3.8-flash';
       try {
         const ctrl = new AbortController();
         const tid = setTimeout(() => ctrl.abort(), 2200);
@@ -1658,9 +1661,9 @@ input[type=number]::-webkit-outer-spin-button:hover {
             .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
             .map(m => String(m.name || '').replace(/^models\//, ''))
             .filter(Boolean);
-          const pick = available.find(n => /gemini-2\.5-flash/i.test(n))
-            || available.find(n => /gemini-2\.0-flash/i.test(n))
-            || available.find(n => /flash/i.test(n))
+          const pick = available.find(n => /gemini-3\.8-flash/i.test(n))
+            || available.find(n => /gemini-2\.5-flash/i.test(n))
+            || available.find(n => /flash/i.test(n) && !/2\.0-flash|1\.5-flash/i.test(n))
             || available[0]
             || fallbackModel;
           localStorage.setItem('KRONO_GEMINI_MODEL', pick);
@@ -1672,7 +1675,9 @@ input[type=number]::-webkit-outer-spin-button:hover {
 
     async function interpretWithGeminiAI(commandText, apiKey) {
       const cleanKey = String(apiKey || '').trim();
-      if (!cleanKey) return null;
+      if (!cleanKey) {
+        throw new Error('Falta configurar la Gemini API Key en Ajustes.');
+      }
       const ctx = buildCompactContextForAI();
       const systemPrompt = [
         'Sos el motor rápido y preciso de Krono Finanzas. Traducí lenguaje natural a acciones JSON.',
@@ -1687,12 +1692,12 @@ input[type=number]::-webkit-outer-spin-button:hover {
 
       const promptBodyText = `${systemPrompt}\n\nContexto:\n${JSON.stringify(ctx)}\n\nFrase: "${commandText}"`;
       const chosenModel = await resolveBestGeminiModel(cleanKey);
-      const modelsToTry = [chosenModel, 'gemini-2.5-flash', 'gemini-2.0-flash'].filter((v, i, a) => v && a.indexOf(v) === i);
+      const modelsToTry = [chosenModel, 'gemini-3.8-flash', 'gemini-2.5-flash'].filter((v, i, a) => v && a.indexOf(v) === i);
 
       let lastErrMsg = 'sin respuesta de Gemini';
       for (const modelName of modelsToTry) {
         const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 4500);
+        const tid = setTimeout(() => ctrl.abort(), 5500);
         try {
           const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(cleanKey)}`;
           const res = await fetch(endpoint, {
@@ -1709,10 +1714,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
           if (!res.ok) {
             const apiErr = (data && data.error && data.error.message) ? data.error.message : `HTTP ${res.status}`;
             lastErrMsg = `${modelName}: ${apiErr}`;
-            if (res.status === 404) {
-              if (localStorage.getItem('KRONO_GEMINI_MODEL') === modelName) localStorage.removeItem('KRONO_GEMINI_MODEL');
-              continue;
-            }
+            if (localStorage.getItem('KRONO_GEMINI_MODEL') === modelName) localStorage.removeItem('KRONO_GEMINI_MODEL');
             continue;
           }
           const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -1729,7 +1731,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
           lastErrMsg = `${modelName}: JSON sin actions`;
         } catch (err) {
           clearTimeout(tid);
-          lastErrMsg = (err && err.name === 'AbortError') ? `${modelName}: demoró más de 4.5s` : `${modelName}: ${(err && err.message) ? err.message : 'error de red'}`;
+          lastErrMsg = (err && err.name === 'AbortError') ? `${modelName}: demoró más de 5.5s` : `${modelName}: ${(err && err.message) ? err.message : 'error de red'}`;
         }
       }
       throw new Error(lastErrMsg);
@@ -1999,45 +2001,50 @@ input[type=number]::-webkit-outer-spin-button:hover {
     async function processGeminiCommand(rawInput, fromExternal = false) {
       if (!rawInput || !rawInput.trim()) return;
       const text = rawInput.replace(/_/g, ' ').replace(/\+/g, ' ').trim().replace(/^(?:hey\s+gemini|hola\s+gemini|gemini|tarea\s+|en\s+krono\s+|krono[:\s,-]*)+/i, '').trim();
-      const lower = normalizeStr(text);
       const activeKey = (state.geminiApiKey && String(state.geminiApiKey).trim()) || (localStorage.getItem('KRONO_GEMINI_API_KEY') || '').trim();
       if (activeKey && !state.geminiApiKey) state.geminiApiKey = activeKey;
 
-      if (activeKey) {
-        ui.lastInterpreterMode = '🧠 IA Gemini (consultando...)';
+      if (!activeKey) {
+        ui.lastInterpreterMode = '⚠️ Falta Gemini API Key en Ajustes';
+        ui.geminiResponse = {
+          mode: 'error',
+          prompt: text,
+          reply: 'Solo IA activa: configurá tu Gemini API Key en Ajustes para interpretar comandos.',
+          items: []
+        };
         render();
-        try {
-          const actions = await interpretWithGeminiAI(text, activeKey);
-          if (actions && actions.length && executeStructuredActions(actions, text, fromExternal)) {
-            ui.lastInterpreterMode = '🧠 IA Gemini';
-            if (ui.geminiResponse) {
-              ui.geminiResponse.reply = '[🧠 IA Gemini] ' + ui.geminiResponse.reply;
-              render();
-            }
-            return;
-          }
-          ui.lastInterpreterMode = '⚙️ Local (IA devolvió 0 acciones)';
-          runLocalRuleInterpreter(text, lower, fromExternal);
-          if (ui.geminiResponse && !ui.geminiResponse.reply.startsWith('[⚙️')) {
-            ui.geminiResponse.reply = '[⚙️ Local — sin acciones IA] ' + ui.geminiResponse.reply;
-            render();
-          }
-        } catch (err) {
-          const reason = (err && err.message) ? err.message : 'error de red/API';
-          ui.lastInterpreterMode = `⚙️ Local (IA falló: ${reason})`;
-          runLocalRuleInterpreter(text, lower, fromExternal);
-          if (ui.geminiResponse && !ui.geminiResponse.reply.startsWith('[⚙️')) {
-            ui.geminiResponse.reply = `[⚙️ Local — IA falló: ${reason}] ` + ui.geminiResponse.reply;
-            render();
-          }
-        }
         return;
       }
 
-      ui.lastInterpreterMode = '⚙️ Parámetros locales (sin API Key)';
-      runLocalRuleInterpreter(text, lower, fromExternal);
-      if (ui.geminiResponse && !ui.geminiResponse.reply.startsWith('[⚙️')) {
-        ui.geminiResponse.reply = '[⚙️ Local — sin API Key] ' + ui.geminiResponse.reply;
+      ui.lastInterpreterMode = '🧠 IA Gemini (consultando...)';
+      render();
+      try {
+        const actions = await interpretWithGeminiAI(text, activeKey);
+        if (actions && actions.length && executeStructuredActions(actions, text, fromExternal)) {
+          ui.lastInterpreterMode = '🧠 IA Gemini';
+          if (ui.geminiResponse) {
+            ui.geminiResponse.reply = '[🧠 IA Gemini] ' + ui.geminiResponse.reply;
+            render();
+          }
+          return;
+        }
+        ui.lastInterpreterMode = '⚠️ IA Gemini sin acciones ejecutables';
+        ui.geminiResponse = {
+          mode: 'error',
+          prompt: text,
+          reply: 'La IA no devolvió acciones ejecutables para esa instrucción. Probá expresarla con monto o acción clara.',
+          items: []
+        };
+        render();
+      } catch (err) {
+        const reason = (err && err.message) ? err.message : 'error de red/API';
+        ui.lastInterpreterMode = `❌ IA falló: ${reason}`;
+        ui.geminiResponse = {
+          mode: 'error',
+          prompt: text,
+          reply: `❌ Error de IA Gemini: ${reason}`,
+          items: []
+        };
         render();
       }
     }
@@ -2682,7 +2689,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
             <label class="text-[11px] font-bold text-cyan-300 block">🧠 Intérprete IA Gemini (opcional — sin reglas fijas)</label>
             <input type="password" placeholder="Pegá tu Gemini API Key para interpretar frases con IA..." value="${escapeAttr(state.geminiApiKey || '')}" onchange="const k=this.value.trim(); state.geminiApiKey=k; if(k) localStorage.setItem('KRONO_GEMINI_API_KEY',k); else localStorage.removeItem('KRONO_GEMINI_API_KEY'); saveState(false,false);" class="w-full bg-slate-950/70 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" />
             <div class="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400">
-              <span>Si ponés tu API Key, consulta a Gemini; si no responde o no hay key, usa los parámetros locales.</span>
+              <span>Modo 100% IA Gemini: interpreta y ejecuta tus comandos exclusivamente mediante la API de Gemini.</span>
               <span class="mono px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/30 text-cyan-200">${escapeAttr(ui.lastInterpreterMode || (state.geminiApiKey ? '🧠 IA Gemini lista' : '⚙️ Parámetros locales'))}</span>
             </div>
           </div>
