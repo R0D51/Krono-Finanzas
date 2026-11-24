@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.46
+    // KRONO OTA BOOTLOADER v6.5.47
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.46';
+    const APP_BASE_VERSION = '6.5.47';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -226,11 +226,11 @@ input[type=number]::-webkit-outer-spin-button:hover {
     const DEFAULT_CLOUD_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec';
 
     const DEMO_STATE = {
-      userName: 'Rodrigo', syncCode: 'KRONO-7749', updatedAt: 0,
+      userName: 'Rodrigo', syncCode: 'KRONO-7749', updatedAt: 0, geminiApiKey: '',
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.46',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.47',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -1390,11 +1390,317 @@ input[type=number]::-webkit-outer-spin-button:hover {
       if (!state.ttsEnabled || !('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = state.voiceLang || 'es-UY'; u.rate = 1.06; window.speechSynthesis.speak(u);
     }
+        function buildCompactContextForAI() {
+      return {
+        defaultCurrency: state.defaultCurrency || 'UYU',
+        exchangeRate: Number(state.exchangeRate) || 41.5,
+        accounts: (state.accounts || []).map(a => ({ id: a.id, name: a.name, currency: a.currency, balance: a.balance })),
+        budgets: (state.budgets || []).map(b => ({ name: b.name, limit: b.limit })),
+        creditCards: (state.creditCards || []).map(c => ({ id: c.id, name: c.name, bank: c.bank, brand: c.brand, currency: c.currency, closingDay: c.closingDay, dueDay: c.dueDay })),
+        openDebts: (state.debts || []).filter(d => d.status !== 'settled').map(d => {
+          const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+          const paidInst = Math.max(0, Math.min(instCount, parseInt(d.paidInstallments, 10) || 0));
+          return {
+            id: d.id,
+            title: d.title,
+            counterparty: d.counterparty,
+            cardName: d.cardName || '',
+            paymentMethod: d.paymentMethod || 'general',
+            kind: d.kind || 'debt',
+            currency: d.currency || 'UYU',
+            totalAmount: Number(d.amount || 0),
+            remainingAmount: getDebtRemainingAmount(d),
+            installmentAmount: getDebtInstallmentValue(d),
+            installmentsCount: instCount,
+            paidInstallments: paidInst,
+            remainingInstallments: Math.max(0, instCount - paidInst),
+            dueDate: d.dueDate || ''
+          };
+        })
+      };
+    }
+
+    async function interpretWithGeminiAI(commandText, apiKey) {
+      const cleanKey = String(apiKey || '').trim();
+      if (!cleanKey) return null;
+      const ctx = buildCompactContextForAI();
+      const systemPrompt = [
+        'Sos el motor de interpretación financiera de Krono Finanzas.',
+        'Tu tarea es convertir una instrucción en lenguaje natural a una lista estructurada de acciones JSON.',
+        'NO adivines ni inventes montos que no existan en el contexto o en la frase.',
+        'Reglas clave:',
+        '1. Si el usuario dice que paga "las cuotas de este mes" / "cuotas del mes" / "cuota de este mes" de una tarjeta o deuda en cuotas: el modo es "current_installments" (NO salda el saldo total futuro de todas las cuotas, solo paga la cuota corriente de este mes de cada ítem en cuotas o tarjeta coincidente).',
+        '2. Si el usuario dice explícitamente que paga/liquida/cancela "todo" o "el saldo total" o "todo lo que debo": el modo es "full_balance".',
+        '3. Si menciona efectivo / billetera / cash / plata en efectivo: accountQuery = "efectivo".',
+        '4. Devolvé EXCLUSIVAMENTE un objeto JSON válido con esta forma:',
+        '{"actions":[{"op":"pay_obligations","scope":"current_installments|full_balance|exact_amount","amount":0,"currency":"UYU|USD","cardQuery":"","accountQuery":"efectivo","note":""},{"op":"add_transaction","title":"","amount":0,"currency":"UYU|USD","type":"expense|income","category":"","accountQuery":""},{"op":"add_debt","title":"","amount":0,"currency":"UYU|USD","kind":"debt|credit","cardName":"","counterparty":"","installmentsCount":1,"perInstallment":false,"dueDate":""},{"op":"query_balance","accountQuery":""}]}'
+      ].join('\n');
+
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(cleanKey)}`;
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            role: 'user',
+            parts: [{
+              text: `${systemPrompt}\n\nContexto actual:\n${JSON.stringify(ctx)}\n\nInstrucción del usuario:\n"${commandText}"`
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.1,
+            responseMimeType: 'application/json'
+          }
+        })
+      });
+
+      if (!res.ok) throw new Error('Gemini HTTP ' + res.status);
+      const data = await res.json();
+      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      if (!rawText.trim()) return null;
+      const parsed = JSON.parse(rawText);
+      return Array.isArray(parsed.actions) ? parsed.actions : null;
+    }
+
+    function executeStructuredActions(actions, originalText, fromExternal) {
+      if (!Array.isArray(actions) || !actions.length) return false;
+      if (!Array.isArray(state.debts)) state.debts = [];
+      const rate = Number(state.exchangeRate) || 41.5;
+      const summaryParts = [];
+      let executedAny = false;
+
+      function matchAccount(q) {
+        const nq = normalizeStr(q || '');
+        if (!nq) return state.accounts[0];
+        if (/\b(efectivo|billetera|cash|contado|en mano|monedero)\b/.test(nq)) {
+          return state.accounts.find(a => a.id === 'acc_cash' || /efectivo|billetera|cash|mano/i.test(normalizeStr(a.name))) || state.accounts[0];
+        }
+        return findAccountMentionInText(nq) || state.accounts[0];
+      }
+
+      function matchOpenDebts(cardQuery) {
+        const cNorm = normalizeStr(cardQuery || '');
+        return state.debts.filter(d => {
+          if (d.status === 'settled' || d.kind === 'credit') return false;
+          if (!cNorm) return true;
+          const label = normalizeStr(`${getDebtInstrumentLabel(d)} ${d.title || ''} ${d.counterparty || ''}`);
+          return label.includes(cNorm) || cNorm.includes(label);
+        });
+      }
+
+      for (const act of actions) {
+        if (!act || !act.op) continue;
+
+        if (act.op === 'pay_obligations') {
+          const scope = act.scope || 'current_installments';
+          const sourceAcc = matchAccount(act.accountQuery);
+          const targets = matchOpenDebts(act.cardQuery);
+          if (!targets.length) continue;
+
+          let totalPaidUYU = 0;
+          let itemsTouched = 0;
+
+          if (scope === 'current_installments') {
+            // Pay ONLY the current month's installment for each matching debt/card
+            for (const d of targets) {
+              const remItem = getDebtRemainingAmount(d);
+              if (remItem <= 0.01) continue;
+              const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+              const paidInst = Math.max(0, Math.min(instCount, parseInt(d.paidInstallments, 10) || 0));
+              const instVal = getDebtInstallmentValue(d);
+              const payNow = instCount > 1 ? Math.min(remItem, instVal) : remItem;
+              const nextPaid = Math.min(instCount, paidInst + 1);
+              d.paidInstallments = nextPaid;
+              if (nextPaid >= instCount || getDebtRemainingAmount(d) <= 0.01) {
+                d.status = 'settled';
+                d.settledAt = Date.now();
+              }
+              totalPaidUYU += (d.currency === 'USD' ? payNow * rate : payNow);
+              itemsTouched++;
+            }
+          } else if (scope === 'full_balance') {
+            for (const d of targets) {
+              const remItem = getDebtRemainingAmount(d);
+              if (remItem <= 0.01) continue;
+              const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+              d.paidInstallments = instCount;
+              d.status = 'settled';
+              d.settledAt = Date.now();
+              totalPaidUYU += (d.currency === 'USD' ? remItem * rate : remItem);
+              itemsTouched++;
+            }
+          } else if (scope === 'exact_amount') {
+            const amt = Math.abs(Number(act.amount) || 0);
+            const cur = act.currency || (sourceAcc ? sourceAcc.currency : 'UYU');
+            let remPoolUYU = (cur === 'USD' ? amt * rate : amt);
+            for (const d of targets) {
+              if (remPoolUYU <= 0.01) break;
+              const remItem = getDebtRemainingAmount(d);
+              const remItemUYU = (d.currency === 'USD' ? remItem * rate : remItem);
+              const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+              const paidInst = Math.max(0, Math.min(instCount, parseInt(d.paidInstallments, 10) || 0));
+              const instVal = getDebtInstallmentValue(d);
+              const instValUYU = (d.currency === 'USD' ? instVal * rate : instVal);
+              if (remPoolUYU >= remItemUYU - 0.01) {
+                d.paidInstallments = instCount;
+                d.status = 'settled';
+                d.settledAt = Date.now();
+                remPoolUYU -= remItemUYU;
+                totalPaidUYU += remItemUYU;
+                itemsTouched++;
+              } else if (instCount > 1 && remPoolUYU >= instValUYU * 0.5) {
+                const covered = Math.max(1, Math.min(instCount - paidInst, Math.floor((remPoolUYU + 0.01) / Math.max(0.01, instValUYU))));
+                const nextPaid = Math.min(instCount, paidInst + covered);
+                const appliedVal = Number((instVal * covered).toFixed(2));
+                d.paidInstallments = nextPaid;
+                if (nextPaid >= instCount) {
+                  d.status = 'settled';
+                  d.settledAt = Date.now();
+                }
+                const appliedUYU = (d.currency === 'USD' ? appliedVal * rate : appliedVal);
+                remPoolUYU = Math.max(0, remPoolUYU - appliedUYU);
+                totalPaidUYU += appliedUYU;
+                itemsTouched++;
+              } else {
+                const paidUYU = Math.min(remItemUYU, remPoolUYU);
+                const paidCur = (d.currency === 'USD' ? paidUYU / rate : paidUYU);
+                const newRemCur = Math.max(0, remItem - paidCur);
+                if (newRemCur <= 0.01) {
+                  d.amount = 0;
+                  d.paidInstallments = instCount;
+                  d.status = 'settled';
+                  d.settledAt = Date.now();
+                } else if (instCount > 1) {
+                  const left = Math.max(1, instCount - paidInst);
+                  const newInst = Number((newRemCur / left).toFixed(2));
+                  d.amount = Number((newInst * instCount).toFixed(2));
+                } else {
+                  d.amount = Number(newRemCur.toFixed(2));
+                }
+                remPoolUYU = 0;
+                totalPaidUYU += paidUYU;
+                itemsTouched++;
+              }
+            }
+          }
+
+          if (itemsTouched > 0 && totalPaidUYU > 0) {
+            const txCur = act.currency || (sourceAcc ? sourceAcc.currency : 'UYU');
+            const txAmt = txCur === 'USD' ? Number((totalPaidUYU / rate).toFixed(2)) : Math.round(totalPaidUYU);
+            const deductInAcc = (sourceAcc && sourceAcc.currency === 'USD')
+              ? Number((totalPaidUYU / rate).toFixed(2))
+              : Math.round(totalPaidUYU);
+            if (sourceAcc) {
+              sourceAcc.balance = Number((sourceAcc.balance - deductInAcc).toFixed(2));
+            }
+            const now = new Date();
+            const labelScope = scope === 'current_installments' ? 'Cuotas del mes' : (scope === 'full_balance' ? 'Saldo total' : 'Pago');
+            const tx = {
+              id: 'tx_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+              title: (fromExternal ? '🤖 ' : '') + `${labelScope}${act.cardQuery ? ' (' + act.cardQuery + ')' : ''} con ${sourceAcc ? sourceAcc.name : 'Efectivo'}`,
+              amount: txAmt,
+              currency: txCur,
+              type: 'expense',
+              category: 'Tarjeta / Crédito',
+              accountId: sourceAcc ? sourceAcc.id : 'acc_cash',
+              accountName: sourceAcc ? sourceAcc.name : 'Efectivo',
+              date: `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
+              timestamp: Date.now()
+            };
+            state.transactions.unshift(tx);
+            spawnFloatingBurst(`-${formatMoney(txAmt, txCur)} (${sourceAcc ? sourceAcc.name.split(' ')[0] : ''})`, false);
+            summaryParts.push(`${labelScope}: -${formatMoney(txAmt, txCur)} en ${itemsTouched} ítem(s) desde ${sourceAcc ? sourceAcc.name : 'Efectivo'}`);
+            executedAny = true;
+          }
+        } else if (act.op === 'add_transaction') {
+          const amt = Math.abs(Number(act.amount) || 0);
+          if (amt > 0) {
+            const acc = matchAccount(act.accountQuery);
+            const tx = addTransaction({
+              title: act.title || 'Movimiento',
+              amount: amt,
+              currency: act.currency || (acc ? acc.currency : 'UYU'),
+              type: act.type === 'income' ? 'income' : 'expense',
+              category: act.category || (act.type === 'income' ? 'Ingreso' : 'Comida y Súper'),
+              accountId: acc ? acc.id : null,
+              fromExternal
+            });
+            if (tx) {
+              summaryParts.push(`${tx.title} (${formatMoney(tx.amount, tx.currency)} en ${tx.accountName})`);
+              executedAny = true;
+            }
+          }
+        } else if (act.op === 'add_debt') {
+          const rawAmt = Math.abs(Number(act.amount) || 0);
+          const instC = Math.max(1, parseInt(act.installmentsCount, 10) || 1);
+          if (rawAmt > 0) {
+            const totalAmt = (instC > 1 && act.perInstallment) ? Number((rawAmt * instC).toFixed(2)) : rawAmt;
+            const kind = act.kind === 'credit' ? 'credit' : 'debt';
+            const cardName = (act.cardName || '').trim();
+            const cur = act.currency || state.defaultCurrency || 'UYU';
+            state.debts.unshift({
+              id: 'debt_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+              title: act.title || (kind === 'credit' ? 'Crédito pendiente' : 'Deuda pendiente'),
+              counterparty: act.counterparty || cardName || (kind === 'credit' ? 'Por cobrar' : 'Por pagar'),
+              paymentMethod: cardName ? 'credit_card' : (instC > 1 ? 'installment_plan' : 'general'),
+              cardName,
+              installmentsCount: instC,
+              paidInstallments: 0,
+              amount: totalAmt,
+              currency: cur,
+              kind,
+              dueDate: act.dueDate || '',
+              status: 'pending',
+              notes: '',
+              createdAt: Date.now()
+            });
+            summaryParts.push(`${kind === 'credit' ? 'Crédito' : 'Deuda'}: ${act.title || ''} (${formatMoney(totalAmt, cur)})`);
+            executedAny = true;
+          }
+        } else if (act.op === 'query_balance') {
+          const acc = act.accountQuery ? matchAccount(act.accountQuery) : null;
+          const reply = acc ? `El saldo de ${acc.name} es de ${formatMoney(acc.balance, acc.currency)}.` : `Tu patrimonio total es de ${formatMoney(getTotals().totalUYU, 'UYU')}.`;
+          ui.geminiResponse = { mode: 'query', prompt: originalText, reply, items: [] };
+          speakText(reply);
+          render();
+          return true;
+        }
+      }
+
+      if (executedAny) {
+        const reply = (fromExternal ? '[Google Tasks] ' : '') + summaryParts.join(' • ');
+        ui.geminiResponse = { mode: 'action', prompt: originalText, reply, items: [] };
+        speakText(reply);
+        saveState(true, true);
+        return true;
+      }
+      return false;
+    }
+
     function processGeminiCommand(rawInput, fromExternal = false) {
       if (!rawInput || !rawInput.trim()) return;
       const text = rawInput.replace(/_/g, ' ').replace(/\+/g, ' ').trim().replace(/^(?:hey\s+gemini|hola\s+gemini|gemini|tarea\s+|en\s+krono\s+|krono[:\s,-]*)+/i, '').trim();
       const lower = normalizeStr(text);
 
+      // Optional AI interpreter path when user configures a Gemini API key in Settings
+      if (state.geminiApiKey && String(state.geminiApiKey).trim()) {
+        interpretWithGeminiAI(text, state.geminiApiKey)
+          .then(actions => {
+            if (actions && actions.length && executeStructuredActions(actions, text, fromExternal)) {
+              return;
+            }
+            runLocalRuleInterpreter(text, lower, fromExternal);
+          })
+          .catch(() => {
+            runLocalRuleInterpreter(text, lower, fromExternal);
+          });
+        return;
+      }
+
+      runLocalRuleInterpreter(text, lower, fromExternal);
+    }
+
+    function runLocalRuleInterpreter(text, lower, fromExternal = false) {
       if ((lower.includes('actualiza') || lower.includes('release')) && lower.includes('app')) {
         ui.showOtaModal = true;
         checkGitHubReleaseOtaUpdate(true);
@@ -1411,7 +1717,6 @@ input[type=number]::-webkit-outer-spin-button:hover {
         return;
       }
 
-      // Helper to detect card/debt/credit mentions and match a specific saved card or debt
       function isCardOrDebtItem(item) {
         if (!item || item.status === 'settled') return false;
         const label = `${getDebtInstrumentLabel(item)} ${item.title || ''} ${item.counterparty || ''}`;
@@ -1439,8 +1744,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
         return state.accounts.find(a => a.id === 'acc_cash' || /efectivo|billetera|cash/i.test(normalizeStr(a.name))) || state.accounts[0];
       }
 
-      // 1. Handle paying/settling a credit card, installment, or debt (with or without explicit amount)
-      const isPayingCardOrDebt = /\b(?:pague|pague|pagar|abone|abone|abonar|cancele|cancele|cancelar|liquide|liquide|liquidar|salde|salde|saldar)\b/i.test(lower)
+      const isPayingCardOrDebt = /\b(?:pague|pagar|abone|abonar|cancele|cancelar|liquide|liquidar|salde|saldar)\b/i.test(lower)
         && /\b(?:tarjeta|visa|mastercard|master|oca|amex|cabal|zodimac|cierre|resumen|deuda|cuota|cuotas|prestamo|préstamo|credito|crédito|pendiente)\b/i.test(lower);
 
       if (isPayingCardOrDebt) {
@@ -1451,7 +1755,10 @@ input[type=number]::-webkit-outer-spin-button:hover {
         const sourceAcc = resolvePaymentSourceAccount(lower);
         const targetCurrency = detectCurrencyInText(lower) || (sourceAcc ? sourceAcc.currency : (state.defaultCurrency || 'UYU'));
 
-        // Select open debts/cards matching the mentioned card/text, or all open card/debt items if none specific
+        // Distinguish whether user asked for THIS MONTH'S installments ("cuotas de este mes" / "cuotas del mes" / "cuota de este mes" / "cuotas") vs FULL BALANCE ("todo" / "saldo total")
+        const wantsCurrentInstallmentsOnly = /\b(?:cuotas?\s+(?:de\s+este\s+mes|del\s+mes|mensuales?|corrientes?)|la\s+cuota|las\s+cuotas)\b/i.test(lower)
+          && !/\b(?:todo|toda|todas|saldo\s+total|totalidad|completo|completa)\b/i.test(lower);
+
         let candidateDebts = state.debts.filter(d => {
           if (d.status === 'settled' || d.kind === 'credit') return false;
           if (targetCardName) {
@@ -1465,19 +1772,30 @@ input[type=number]::-webkit-outer-spin-button:hover {
           candidateDebts = state.debts.filter(d => d.status !== 'settled' && d.kind !== 'credit');
         }
 
-        // Compute total owed in UYU across matched items
-        let totalOwedUYU = 0;
-        candidateDebts.forEach(d => {
-          const rem = getDebtRemainingAmount(d);
-          totalOwedUYU += (d.currency === 'USD' ? rem * rate : rem);
-        });
+        let calcUYU = 0;
+        if (explicitAmount > 0) {
+          calcUYU = (targetCurrency === 'USD' ? explicitAmount * rate : explicitAmount);
+        } else if (wantsCurrentInstallmentsOnly) {
+          candidateDebts.forEach(d => {
+            const rem = getDebtRemainingAmount(d);
+            if (rem <= 0.01) return;
+            const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+            const instVal = getDebtInstallmentValue(d);
+            const payNow = instCount > 1 ? Math.min(rem, instVal) : rem;
+            calcUYU += (d.currency === 'USD' ? payNow * rate : payNow);
+          });
+        } else {
+          candidateDebts.forEach(d => {
+            const rem = getDebtRemainingAmount(d);
+            calcUYU += (d.currency === 'USD' ? rem * rate : rem);
+          });
+        }
 
         const payAmountTargetCur = explicitAmount > 0
           ? explicitAmount
-          : (targetCurrency === 'USD' ? Number((totalOwedUYU / rate).toFixed(2)) : Math.round(totalOwedUYU));
+          : (targetCurrency === 'USD' ? Number((calcUYU / rate).toFixed(2)) : Math.round(calcUYU));
 
         if (payAmountTargetCur > 0) {
-          // Convert payment into source account currency to deduct from source account
           let deductInAccCur = payAmountTargetCur;
           if (sourceAcc && sourceAcc.currency !== targetCurrency) {
             deductInAccCur = (targetCurrency === 'USD' && sourceAcc.currency === 'UYU')
@@ -1492,21 +1810,33 @@ input[type=number]::-webkit-outer-spin-button:hover {
           for (const d of candidateDebts) {
             if (remainingCreditToApplyUYU <= 0.01) break;
             const remItem = getDebtRemainingAmount(d);
+            if (remItem <= 0.01) continue;
             const remItemUYU = (d.currency === 'USD' ? remItem * rate : remItem);
             const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
             const paidInst = Math.max(0, Math.min(instCount, parseInt(d.paidInstallments, 10) || 0));
             const instVal = getDebtInstallmentValue(d);
             const instValUYU = (d.currency === 'USD' ? instVal * rate : instVal);
 
-            if (remainingCreditToApplyUYU >= remItemUYU - 0.01 || (!explicitAmount && instCount === 1)) {
-              // Full item paid off
+            if (wantsCurrentInstallmentsOnly && !explicitAmount) {
+              // Advance ONLY 1 installment (current month) per debt/card plan, keeping future installments pending
+              const payNow = instCount > 1 ? Math.min(remItem, instVal) : remItem;
+              const nextPaid = Math.min(instCount, paidInst + 1);
+              d.paidInstallments = nextPaid;
+              if (nextPaid >= instCount || getDebtRemainingAmount(d) <= 0.01) {
+                d.status = 'settled';
+                d.settledAt = Date.now();
+                settledCount++;
+              } else {
+                updatedInstallmentsCount++;
+              }
+              remainingCreditToApplyUYU = Math.max(0, remainingCreditToApplyUYU - (d.currency === 'USD' ? payNow * rate : payNow));
+            } else if (remainingCreditToApplyUYU >= remItemUYU - 0.01 || (!explicitAmount && instCount === 1)) {
               d.paidInstallments = instCount;
               d.status = 'settled';
               d.settledAt = Date.now();
               remainingCreditToApplyUYU = Math.max(0, remainingCreditToApplyUYU - remItemUYU);
               settledCount++;
             } else if (instCount > 1 && remainingCreditToApplyUYU >= instValUYU * 0.5) {
-              // Advance installments covered by payment
               const coveredInst = Math.max(1, Math.min(instCount - paidInst, Math.floor((remainingCreditToApplyUYU + 0.01) / Math.max(0.01, instValUYU))));
               const newPaid = Math.min(instCount, paidInst + coveredInst);
               const appliedVal = Number((instVal * coveredInst).toFixed(2));
@@ -1520,7 +1850,6 @@ input[type=number]::-webkit-outer-spin-button:hover {
               }
               remainingCreditToApplyUYU = Math.max(0, remainingCreditToApplyUYU - (d.currency === 'USD' ? appliedVal * rate : appliedVal));
             } else if (explicitAmount > 0) {
-              // Partial payment on single/remaining balance
               const paidUYU = Math.min(remItemUYU, remainingCreditToApplyUYU);
               const paidInDebtCur = (d.currency === 'USD' ? paidUYU / rate : paidUYU);
               const newRemInDebtCur = Math.max(0, remItem - paidInDebtCur);
@@ -1532,7 +1861,6 @@ input[type=number]::-webkit-outer-spin-button:hover {
                 settledCount++;
               } else {
                 if (instCount > 1) {
-                  // Reduce remaining amount proportionally by setting total amount to cover remaining installments
                   const remInstLeft = Math.max(1, instCount - paidInst);
                   const newInstVal = Number((newRemInDebtCur / remInstLeft).toFixed(2));
                   d.amount = Number((newInstVal * instCount).toFixed(2));
@@ -1545,16 +1873,16 @@ input[type=number]::-webkit-outer-spin-button:hover {
             }
           }
 
-          // Deduct from source account and record transaction without double-subtracting
           if (sourceAcc) {
             sourceAcc.balance = Number((sourceAcc.balance - deductInAccCur).toFixed(2));
           }
           const now = new Date();
           const cardLabelDesc = targetCardName ? ` (${targetCardName})` : ' (Tarjeta de crédito)';
+          const modeLabelDesc = (wantsCurrentInstallmentsOnly && !explicitAmount) ? 'Cuotas del mes ' : 'Pago ';
           const accLabelDesc = sourceAcc ? sourceAcc.name : 'Efectivo';
           const tx = {
             id: 'tx_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-            title: (fromExternal ? '🤖 ' : '') + `Pago tarjeta de crédito${cardLabelDesc} con ${accLabelDesc}`,
+            title: (fromExternal ? '🤖 ' : '') + `${modeLabelDesc}tarjeta${cardLabelDesc} con ${accLabelDesc}`,
             amount: payAmountTargetCur,
             currency: targetCurrency,
             type: 'expense',
@@ -1568,8 +1896,8 @@ input[type=number]::-webkit-outer-spin-button:hover {
 
           const dsAfter = getDebtsSummary();
           const reply = (fromExternal ? '[Google Tasks] ' : '')
-            + `Pagué ${formatMoney(payAmountTargetCur, targetCurrency)}${cardLabelDesc} desde ${accLabelDesc}. `
-            + `Saldados: ${settledCount}, cuotas/saldos actualizados: ${updatedInstallmentsCount}. `
+            + `${modeLabelDesc}registrado: ${formatMoney(payAmountTargetCur, targetCurrency)}${cardLabelDesc} desde ${accLabelDesc}. `
+            + `Saldados: ${settledCount}, cuotas actualizadas: ${updatedInstallmentsCount}. `
             + `Próximo pago de cuotas: ${formatMoney(dsAfter.nextInstallmentsUYU, 'UYU')} y saldo en ${accLabelDesc}: ${sourceAcc ? formatMoney(sourceAcc.balance, sourceAcc.currency) : '$ 0'}.`;
 
           ui.geminiResponse = { mode: 'action', prompt: text, reply, items: [tx] };
@@ -1992,6 +2320,11 @@ input[type=number]::-webkit-outer-spin-button:hover {
           <div class="flex flex-col sm:flex-row gap-2">
             <input type="text" value="${escapeAttr(state.cloudWebhookUrl || DEFAULT_CLOUD_WEBHOOK_URL)}" onchange="state.cloudWebhookUrl=this.value.trim();saveState(true,true);pullFromCloudBridge(true);" class="flex-1 bg-slate-950/70 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" />
             <button onclick="pullFromCloudBridge(true)" class="spring-btn px-4 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs shrink-0">🔄 Cosechar Tareas</button>
+          </div>
+          <div class="pt-2 border-t border-white/10 space-y-1.5">
+            <label class="text-[11px] font-bold text-cyan-300 block">🧠 Intérprete IA Gemini (opcional — sin reglas fijas)</label>
+            <input type="password" placeholder="Pegá tu Gemini API Key para interpretar frases con IA..." value="${escapeAttr(state.geminiApiKey || '')}" onchange="state.geminiApiKey=this.value.trim();saveState(false,false);" class="w-full bg-slate-950/70 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" />
+            <div class="text-[10px] text-slate-400">Si dejás este campo vacío, usa el intérprete local por reglas. Si ponés tu API Key, envía tus cuentas/deudas y tu frase a Gemini para decidir las acciones.</div>
           </div>
         </div>
         <div class="glass-97 rounded-3xl p-6 border-2 border-emerald-400/40 space-y-3">
