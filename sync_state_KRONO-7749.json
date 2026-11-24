@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795492071734,
+  "updatedAt": 1795492548079,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -64,9 +64,15 @@
     "gtask_MVZYMVBsb3pSVVpqbC1kXw",
     "gtask_TWVXT2pvd1RGbWNSOWN5WQ",
     "gtask_TmRWZ29YS20zeE9vX0lKdA",
-    "gtask_Z3JaN1Z5WmdERm1BWWp6SQ"
+    "gtask_Z3JaN1Z5WmdERm1BWWp6SQ",
+    "gtask_XzVpajFvdlhtdl9OMU5kMg"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_XzVpajFvdlhtdl9OMU5kMg",
+      "command": "Gasté 3500 pesos en tres cuotas",
+      "date": "12:55 a. m."
+    },
     {
       "id": "gtask_Z3JaN1Z5WmdERm1BWWp6SQ",
       "command": "Gasté 1500 pesos en tres cuotas",
@@ -111,11 +117,6 @@
       "id": "gtask_NFJPU1g3Yk9tU2laYjBUZw",
       "command": "Gasté 3,500 pesos en cinco cuotas",
       "date": "11:51 p. m."
-    },
-    {
-      "id": "gtask_NTEyc3E5QlNGdEdlOWtRaw",
-      "command": "Ingreso de 10,000 pesos en efectivo y 10,000 pesos en débito",
-      "date": "11:42 p. m."
     }
   ],
   "accounts": [
@@ -182,6 +183,86 @@
     }
   ],
   "debts": [
+    {
+      "id": "debt_sync_tx_1795483635646_280_871",
+      "title": "Pago tarjeta (Itaú Visa) con Cuenta Itaú / Débito",
+      "counterparty": "Cuenta Itaú / Débito",
+      "paymentMethod": "credit_card",
+      "cardName": "Cuenta Itaú / Débito",
+      "installmentsCount": 1,
+      "paidInstallments": 0,
+      "amount": 2500,
+      "currency": "UYU",
+      "kind": "debt",
+      "dueDate": "",
+      "status": "pending",
+      "notes": "",
+      "createdAt": 1795483635646
+    },
+    {
+      "id": "debt_sync_tx_1795484005785_849_794",
+      "title": "Pago tarjeta (Tarjeta de crédito) con Cuenta Itaú / Débito",
+      "counterparty": "Cuenta Itaú / Débito",
+      "paymentMethod": "credit_card",
+      "cardName": "Cuenta Itaú / Débito",
+      "installmentsCount": 1,
+      "paidInstallments": 0,
+      "amount": 3500,
+      "currency": "UYU",
+      "kind": "debt",
+      "dueDate": "",
+      "status": "pending",
+      "notes": "",
+      "createdAt": 1795484005785
+    },
+    {
+      "id": "debt_sync_tx_debt_1795484236579_375_729",
+      "title": "📉 Deuda: Compra (Itaú Visa) • 12 cuotas",
+      "counterparty": "Itaú Dolares",
+      "paymentMethod": "credit_card",
+      "cardName": "Itaú Dolares",
+      "installmentsCount": 12,
+      "paidInstallments": 0,
+      "amount": 100000,
+      "currency": "UYU",
+      "kind": "debt",
+      "dueDate": "",
+      "status": "pending",
+      "notes": "",
+      "createdAt": 1795484236579
+    },
+    {
+      "id": "debt_sync_tx_1795487649340_266_541",
+      "title": "Pago tarjeta (Itaú Visa) con Cuenta Itaú / Débito",
+      "counterparty": "Cuenta Itaú / Débito",
+      "paymentMethod": "credit_card",
+      "cardName": "Cuenta Itaú / Débito",
+      "installmentsCount": 1,
+      "paidInstallments": 0,
+      "amount": 1500,
+      "currency": "UYU",
+      "kind": "debt",
+      "dueDate": "",
+      "status": "pending",
+      "notes": "",
+      "createdAt": 1795487649340
+    },
+    {
+      "id": "debt_sync_tx_1795488812378_980_748",
+      "title": "Pago: Gasto en cuotas (Cuota 1/5) [Itaú Pesos]",
+      "counterparty": "Cuenta Itaú / Débito",
+      "paymentMethod": "credit_card",
+      "cardName": "Cuenta Itaú / Débito",
+      "installmentsCount": 1,
+      "paidInstallments": 0,
+      "amount": 700,
+      "currency": "UYU",
+      "kind": "debt",
+      "dueDate": "",
+      "status": "pending",
+      "notes": "",
+      "createdAt": 1795488812378
+    },
     {
       "id": "debt_1795489618983_998",
       "title": "Compra financiada",
