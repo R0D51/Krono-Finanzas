@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795483635652,
+  "updatedAt": 1795484005785,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -48,9 +48,21 @@
     "gtask_dDQ2SjNNWGthZ25vMkM2RA",
     "gtask_U3oxaV9OSV9mNGZwa3ktYg",
     "gtask_MGdjMWtiSWx3b0pVNURkVg",
-    "gtask_ZHVrTUdtVG5IaVczZWJXNw"
+    "gtask_ZHVrTUdtVG5IaVczZWJXNw",
+    "gtask_eXFmVUs0Qy1IZnZCV1Bhbw",
+    "gtask_cklOMUlRSW44S2p5X3ozMQ"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_cklOMUlRSW44S2p5X3ozMQ",
+      "command": "Me ingresaron 1500 pesos de débito",
+      "date": "10:33 p. m."
+    },
+    {
+      "id": "gtask_eXFmVUs0Qy1IZnZCV1Bhbw",
+      "command": "Pagué 3500 pesos en 10 cuotas con la tarjeta de crédito de Tabú",
+      "date": "10:33 p. m."
+    },
     {
       "id": "gtask_ZHVrTUdtVG5IaVczZWJXNw",
       "command": "Pagué 1500 pesos en 3 cuotas con Itaú",
@@ -90,16 +102,6 @@
       "id": "gtask_eENCVjU4eUVJZjhMWU0xNw",
       "command": "Gasté $200 y ahorré 300 pesos",
       "date": "10:36 p. m."
-    },
-    {
-      "id": "gtask_cGZVOGlHa1lKS0NMU0YwRw",
-      "command": "Ahorré $1200 y gasté 300 pesos",
-      "date": "10:35 p. m."
-    },
-    {
-      "id": "gtask_eHNlOV9iU1RJZWhrYjduUw",
-      "command": "Gasté 162.837 pesos",
-      "date": "10:34 p. m."
     }
   ],
   "accounts": [
@@ -107,7 +109,7 @@
       "id": "acc_uyu",
       "name": "Cuenta Itaú / Débito",
       "currency": "UYU",
-      "balance": -16259,
+      "balance": -18259,
       "color": "from-cyan-400 to-blue-500",
       "icon": "🏦"
     },
@@ -243,6 +245,30 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795484005785_849",
+      "title": "🤖 Pago tarjeta (Tarjeta de crédito) con Cuenta Itaú / Débito",
+      "amount": 3500,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Tarjeta / Crédito",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Itaú / Débito",
+      "date": "23/11 22:33",
+      "timestamp": 1795484005785
+    },
+    {
+      "id": "tx_1795484005182_693",
+      "title": "🤖 Ingreso",
+      "amount": 1500,
+      "currency": "UYU",
+      "type": "income",
+      "category": "Ingreso",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Itaú / Débito",
+      "date": "23/11 22:33",
+      "timestamp": 1795484005182
+    },
     {
       "id": "tx_1795483635650_156",
       "title": "🤖 Pago tarjeta (Itaú Visa) con Cuenta Itaú / Débito",
