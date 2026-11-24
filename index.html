@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.58
+    // KRONO OTA BOOTLOADER v6.5.59
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.58';
+    const APP_BASE_VERSION = '6.5.59';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,7 +230,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.58',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.59',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -874,37 +874,65 @@ input[type=number]::-webkit-outer-spin-button:hover {
         return;
       }
     }
+    function resolveMatchingAccountForTx(tx) {
+      if (!tx || !Array.isArray(state.accounts) || !state.accounts.length) return null;
+      if (tx.accountId) {
+        const byId = state.accounts.find(a => String(a.id) === String(tx.accountId));
+        if (byId) return byId;
+      }
+      const rawAccName = String(tx.accountName || '').trim();
+      const normAccName = normalizeStr(rawAccName);
+      if (normAccName) {
+        const byExact = state.accounts.find(a => normalizeStr(a.name) === normAccName);
+        if (byExact) return byExact;
+        const byIncludes = state.accounts.find(a => {
+          const aN = normalizeStr(a.name);
+          return (aN && normAccName.includes(aN)) || (aN && aN.includes(normAccName));
+        });
+        if (byIncludes) return byIncludes;
+        const byMention = findAccountMentionInText(rawAccName);
+        if (byMention) return byMention;
+      }
+      const cleanTitle = String(tx.title || '').trim();
+      if (cleanTitle) {
+        const byTitle = findAccountMentionInText(cleanTitle);
+        if (byTitle) return byTitle;
+      }
+      return state.accounts.find(a => a.currency === (tx.currency || 'UYU')) || state.accounts[0];
+    }
+
     function applyTxEffectToAccounts(tx, multiplier = 1) {
-      if (!tx) return;
+      if (!tx) return null;
       const rate = Number(state.exchangeRate) || 41.5;
       const amt = Math.abs(Number(tx.amount) || 0) * multiplier;
-      if (amt <= 0) return;
+      if (amt <= 0) return null;
       const cur = tx.currency || 'UYU';
 
       // Check if it was a savings move between two accounts ("Origen → Destino")
       if (tx.category === 'Ahorro' && typeof tx.accountName === 'string' && tx.accountName.includes(' → ')) {
         const parts = tx.accountName.split(' → ');
-        const originName = (parts[0] || '').trim().toLowerCase();
-        const destName = (parts[1] || '').trim().toLowerCase();
-        const originAcc = state.accounts.find(a => String(a.name || '').trim().toLowerCase() === originName);
-        const destAcc = state.accounts.find(a => String(a.name || '').trim().toLowerCase() === destName) || state.accounts.find(a => a.id === tx.accountId);
+        const originName = normalizeStr(parts[0] || '');
+        const destName = normalizeStr(parts[1] || '');
+        const originAcc = state.accounts.find(a => normalizeStr(a.name) === originName) || findAccountMentionInText(parts[0] || '');
+        const destAcc = state.accounts.find(a => normalizeStr(a.name) === destName) || findAccountMentionInText(parts[1] || '') || state.accounts.find(a => a.id === tx.accountId);
         if (originAcc && destAcc && originAcc.id !== destAcc.id) {
           const outInOrigin = (originAcc.currency === cur) ? amt : (cur === 'USD' && originAcc.currency === 'UYU' ? amt * rate : amt / rate);
           const inDest = (destAcc.currency === cur) ? amt : (cur === 'USD' && destAcc.currency === 'UYU' ? amt * rate : amt / rate);
           originAcc.balance = Number((originAcc.balance - outInOrigin).toFixed(2));
           destAcc.balance = Number((destAcc.balance + inDest).toFixed(2));
-          return;
+          return destAcc;
         }
       }
 
-      const acc = state.accounts.find(a => a.id === tx.accountId)
-        || (typeof tx.accountName === 'string' ? state.accounts.find(a => String(a.name || '').trim().toLowerCase() === tx.accountName.trim().toLowerCase()) : null);
+      const acc = resolveMatchingAccountForTx(tx);
       if (acc) {
         const signed = (tx.type === 'income' ? 1 : -1) * amt;
         if (acc.currency === cur) acc.balance = Number((acc.balance + signed).toFixed(2));
         else if (cur === 'USD' && acc.currency === 'UYU') acc.balance = Number((acc.balance + signed * rate).toFixed(2));
         else if (cur === 'UYU' && acc.currency === 'USD') acc.balance = Number((acc.balance + signed / rate).toFixed(2));
+        return acc;
       }
+      return null;
     }
 
     function openEditTransactionModal(txId) {
@@ -953,26 +981,31 @@ input[type=number]::-webkit-outer-spin-button:hover {
     function deleteTransaction(txId) {
       const idx = state.transactions.findIndex(t => t.id === txId); if (idx === -1) return;
       const tx = state.transactions[idx];
+      const previewAcc = resolveMatchingAccountForTx(tx);
+      const accDesc = previewAcc ? `"${escapeAttr(previewAcc.name)}"` : 'la cuenta asociada';
       openConfirmModal({
-        title: '🗑️ Eliminar Movimiento y Ajustar Cuenta',
-        message: `¿Querés eliminar "${escapeAttr(tx.title)}" (${formatMoney(tx.amount, tx.currency)}) y revertir su impacto directamente en la cuenta asociada?`,
-        confirmText: 'Eliminar y Ajustar',
+        title: '🗑️ Eliminar Movimiento y Devolver Saldo',
+        message: `¿Querés eliminar "${escapeAttr(tx.title)}" (${formatMoney(tx.amount, tx.currency)}) y devolver el impacto directamente en ${accDesc}?`,
+        confirmText: 'Eliminar y Devolver',
         danger: true,
         onConfirm: () => {
           const curIdx = state.transactions.findIndex(t => t.id === txId);
           if (curIdx === -1) return;
           const removedTx = state.transactions[curIdx];
-          applyTxEffectToAccounts(removedTx, -1);
+          const touchedAcc = applyTxEffectToAccounts(removedTx, -1);
           if (Array.isArray(state.debts)) {
-            const cleanTitle = String(removedTx.title || '').replace(/^🤖\s*/, '');
+            const cleanTitle = normalizeStr(String(removedTx.title || '').replace(/^🤖\s*/, ''));
             state.debts = state.debts.filter(d => {
-              const matchesDebtTitle = cleanTitle.includes(d.title) && Math.abs(Number(d.amount || 0) - Number(removedTx.amount || 0)) < 0.01;
+              const dTitleNorm = normalizeStr(d.title || '');
+              const matchesDebtTitle = dTitleNorm && cleanTitle.includes(dTitleNorm) && Math.abs(Number(d.amount || 0) - Number(removedTx.amount || 0)) < 0.01;
               return !matchesDebtTitle;
             });
           }
           state.transactions.splice(curIdx, 1);
           if (ui.editingTxId === txId) ui.editingTxId = null;
-          spawnFloatingBurst('🗑️ Movimiento eliminado de la cuenta', false);
+          state.updatedAt = Date.now();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          spawnFloatingBurst(`🗑️ Saldo devuelto${touchedAcc ? ' en ' + touchedAcc.name.split(' ')[0] : ''}`, true);
           saveState(true, true);
         }
       });
