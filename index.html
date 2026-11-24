@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.54
+    // KRONO OTA BOOTLOADER v6.5.55
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.54';
+    const APP_BASE_VERSION = '6.5.55';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,7 +230,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.54',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.55',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -703,24 +703,58 @@ input[type=number]::-webkit-outer-spin-button:hover {
     function formatMoney(amount, currency = 'UYU') { return (currency === 'USD' ? 'US$ ' : '$ ') + Number(amount || 0).toLocaleString('es-UY', { maximumFractionDigits: currency === 'USD' ? 2 : 0 }); }
     function addTransaction({ title, amount, currency = 'UYU', type = 'expense', category = 'Comida y Súper', accountId = null, fromExternal = false }) {
       const numAmount = Math.abs(Number(amount) || 0); if (numAmount <= 0) return null;
-      const targetAcc = state.accounts.find(a => a.id === accountId) || state.accounts[0];
-      if (targetAcc) {
+      const rate = Number(state.exchangeRate) || 41.5;
+      const normTitle = normalizeStr(title || '');
+      const isSavingsIntent = /\b(ahorr[eo]|ahorrar|ahorro|pase a ahorro|reserve|reservar)\b/i.test(normTitle);
+
+      let targetAcc = state.accounts.find(a => a.id === accountId) || state.accounts[0];
+      if (isSavingsIntent) {
+        const savAcc = pickBestAccountForCurrency(currency, true);
+        if (savAcc) targetAcc = savAcc;
+        const originAcc = pickOriginAccountForSavings(targetAcc);
+        if (originAcc && targetAcc && originAcc.id !== targetAcc.id) {
+          const outInOriginCur = (originAcc.currency === currency)
+            ? numAmount
+            : (currency === 'USD' && originAcc.currency === 'UYU' ? numAmount * rate : numAmount / rate);
+          const inTargetCur = (targetAcc.currency === currency)
+            ? numAmount
+            : (currency === 'USD' && targetAcc.currency === 'UYU' ? numAmount * rate : numAmount / rate);
+          originAcc.balance = Number((originAcc.balance - outInOriginCur).toFixed(2));
+          targetAcc.balance = Number((targetAcc.balance + inTargetCur).toFixed(2));
+        } else if (targetAcc) {
+          const delta = numAmount;
+          if (targetAcc.currency === currency) targetAcc.balance += delta;
+          else if (currency === 'USD' && targetAcc.currency === 'UYU') targetAcc.balance += delta * rate;
+          else if (currency === 'UYU' && targetAcc.currency === 'USD') targetAcc.balance += delta / rate;
+        }
+      } else if (targetAcc) {
         const delta = type === 'income' ? numAmount : -numAmount;
         if (targetAcc.currency === currency) targetAcc.balance += delta;
-        else if (currency === 'USD' && targetAcc.currency === 'UYU') targetAcc.balance += delta * state.exchangeRate;
-        else if (currency === 'UYU' && targetAcc.currency === 'USD') targetAcc.balance += delta / state.exchangeRate;
+        else if (currency === 'USD' && targetAcc.currency === 'UYU') targetAcc.balance += delta * rate;
+        else if (currency === 'UYU' && targetAcc.currency === 'USD') targetAcc.balance += delta / rate;
       }
+
       const now = new Date();
+      const originRef = isSavingsIntent ? pickOriginAccountForSavings(targetAcc) : null;
+      const accDisplay = (isSavingsIntent && originRef && targetAcc && originRef.id !== targetAcc.id)
+        ? `${originRef.name} → ${targetAcc.name}`
+        : (targetAcc ? targetAcc.name : 'Cuenta Principal');
       const tx = {
         id: 'tx_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-        title: (fromExternal ? '🤖 ' : '') + (title || 'Movimiento'), amount: numAmount, currency, type, category,
-        accountId: targetAcc ? targetAcc.id : 'acc_uyu', accountName: targetAcc ? targetAcc.name : 'Cuenta Principal',
+        title: (fromExternal ? '🤖 ' : '') + (title || 'Movimiento'),
+        amount: numAmount,
+        currency,
+        type: isSavingsIntent ? 'expense' : type,
+        category: isSavingsIntent ? 'Ahorro' : category,
+        accountId: targetAcc ? targetAcc.id : 'acc_uyu',
+        accountName: accDisplay,
         date: `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
         timestamp: Date.now()
       };
       state.transactions.unshift(tx);
-      spawnFloatingBurst(`${type === 'income' ? '+' : '-'}${formatMoney(numAmount, currency)} (${targetAcc ? targetAcc.name.split(' ')[0] : ''})`, type === 'income');
-      saveState(true, true); return tx;
+      spawnFloatingBurst(`${tx.type === 'income' ? '+' : '-'}${formatMoney(numAmount, currency)} (${targetAcc ? targetAcc.name.split(' ')[0] : ''})`, tx.type === 'income');
+      saveState(true, true);
+      return tx;
     }
     function handleNewTxSubmit(e) {
       if (e) e.preventDefault();
@@ -1092,6 +1126,33 @@ input[type=number]::-webkit-outer-spin-button:hover {
       spawnFloatingBurst(`${kind === 'credit' ? '📈 Crédito' : '📉 Deuda'} ${formatMoney(totalAmount, currency)}${installmentsCount > 1 ? ' (' + installmentsCount + ' cuotas)' : ''}`, kind === 'credit');
       saveState(true, true);
     }
+    function pickBestAccountForCurrency(currency, preferSavings = false) {
+      const accs = Array.isArray(state.accounts) ? state.accounts : [];
+      if (!accs.length) return null;
+      if (preferSavings) {
+        const sav = accs.find(a => a.currency === currency && /ahorro|saving|usd|dolares|dólares/i.test(String(a.name || '')))
+          || accs.find(a => /ahorro|saving/i.test(String(a.name || '')))
+          || accs.find(a => a.currency === currency);
+        if (sav) return sav;
+      }
+      return accs.find(a => a.currency === currency) || accs[0];
+    }
+
+    function pickOriginAccountForSavings(targetSavingsAcc) {
+      const accs = Array.isArray(state.accounts) ? state.accounts : [];
+      if (!accs.length) return null;
+      const others = accs.filter(a => !targetSavingsAcc || a.id !== targetSavingsAcc.id);
+      if (targetSavingsAcc && targetSavingsAcc.currency === 'USD') {
+        return others.find(a => a.currency === 'UYU' && /brou|debito|débito|banco|cuenta/i.test(String(a.name || '')))
+          || others.find(a => a.currency === 'UYU')
+          || others[0]
+          || targetSavingsAcc;
+      }
+      return others.find(a => /brou|debito|débito|banco|efectivo|billetera/i.test(String(a.name || '')))
+        || others[0]
+        || targetSavingsAcc;
+    }
+
     function payNextDebtInstallment(id, recordTx = true) {
       const list = Array.isArray(state.debts) ? state.debts : [];
       const d = list.find(x => x.id === id); if (!d || d.status === 'settled') return;
@@ -1101,12 +1162,19 @@ input[type=number]::-webkit-outer-spin-button:hover {
       const remBefore = getDebtRemainingAmount(d);
       const payVal = Math.min(remBefore, instVal || remBefore);
       const nextPaid = Math.min(instCount, paidInst + 1);
-      const actionVerb = d.kind === 'credit' ? 'cobrar' : 'pagar';
-      const firstAccName = (state.accounts && state.accounts[0]) ? state.accounts[0].name : 'cuenta principal';
+      const isCredit = d.kind === 'credit';
+      const actionVerb = isCredit ? 'cobrar' : 'pagar';
+      const linkedAcc = pickBestAccountForCurrency(d.currency, false);
+      const accName = linkedAcc ? linkedAcc.name : 'cuenta principal';
+      const flowNote = recordTx
+        ? (isCredit
+            ? ` se sumará a "${escapeAttr(accName)}"`
+            : ` saldrá de "${escapeAttr(accName)}"`)
+        : ' sin asentar en cuenta';
 
       openConfirmModal({
-        title: `💳 Confirmar ${d.kind === 'credit' ? 'Cobro' : 'Pago'} de Cuota #${nextPaid}/${instCount}`,
-        message: `¿Querés ${actionVerb} la cuota #${nextPaid} de "${escapeAttr(d.title)}" por ${formatMoney(payVal, d.currency)}${recordTx ? ` asentando el movimiento en "${escapeAttr(firstAccName)}"` : ' sin asentar en cuenta'}?`,
+        title: `💳 Confirmar ${isCredit ? 'Cobro' : 'Pago'} de Cuota #${nextPaid}/${instCount}`,
+        message: `¿Querés ${actionVerb} la cuota #${nextPaid} de "${escapeAttr(d.title)}" por ${formatMoney(payVal, d.currency)} y que${flowNote}?`,
         confirmText: recordTx ? `Confirmar y Asentar` : `Marcar Cuota Pagada`,
         danger: false,
         onConfirm: () => {
@@ -1119,14 +1187,14 @@ input[type=number]::-webkit-outer-spin-button:hover {
             const cardTag = d.cardName ? ` [${d.cardName}]` : '';
             const cuotaTag = instCount > 1 ? ` (Cuota ${nextPaid}/${instCount})` : '';
             addTransaction({
-              title: `${d.kind === 'credit' ? 'Cobro' : 'Pago'}: ${d.title}${cuotaTag}${cardTag}`,
+              title: `${isCredit ? 'Cobro' : 'Pago'}: ${d.title}${cuotaTag}${cardTag}`,
               amount: payVal,
               currency: d.currency,
-              type: d.kind === 'credit' ? 'income' : 'expense',
-              category: d.kind === 'credit' ? 'Ingreso' : (d.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 'General'),
-              accountId: state.accounts[0] ? state.accounts[0].id : null
+              type: isCredit ? 'income' : 'expense',
+              category: isCredit ? 'Ingreso' : (d.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 'General'),
+              accountId: linkedAcc ? linkedAcc.id : null
             });
-            spawnFloatingBurst(`✅ ${instCount > 1 ? 'Cuota ' + nextPaid + '/' + instCount + ' asentada' : 'Liquidado y asentado'}`, true);
+            spawnFloatingBurst(`✅ ${instCount > 1 ? 'Cuota ' + nextPaid + '/' + instCount + ' asentada' : 'Liquidado y asentado'}`, isCredit);
             return;
           }
           spawnFloatingBurst(nextPaid >= instCount ? '✅ Todas las cuotas saldadas' : `✅ Cuota ${nextPaid}/${instCount} marcada`, true);
@@ -1814,8 +1882,10 @@ input[type=number]::-webkit-outer-spin-button:hover {
           const amt = Math.abs(Number(act.amount) || 0);
           if (amt > 0) {
             const acc = matchAccount(act.accountQuery);
+            const isSavAct = /\b(ahorr[eo]|ahorrar|ahorro|reservar|reserve)\b/i.test(normalizeStr(`${act.title || ''} ${act.category || ''} ${originalText || ''}`));
+            const finalTitle = isSavAct ? (`Ahorro: ${(act.title || 'Reserva').replace(/^ahorro:?\s*/i, '')}`) : (act.title || 'Movimiento al contado');
             const tx = addTransaction({
-              title: act.title || 'Movimiento al contado',
+              title: finalTitle,
               amount: amt,
               currency: act.currency || (acc ? acc.currency : 'UYU'),
               type: act.type === 'income' ? 'income' : 'expense',
