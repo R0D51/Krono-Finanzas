@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795490950347,
+  "updatedAt": 1795491125206,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -60,9 +60,15 @@
     "gtask_LWUxN0UtTmEzT0V1NnhHaQ",
     "gtask_NjN2U3paMHFpUUVCc2FYNA",
     "gtask_aGVUTXJwYmJybkotX1FyMw",
-    "gtask_NS1rOWF1N2NsUFhJR25NUA"
+    "gtask_NS1rOWF1N2NsUFhJR25NUA",
+    "gtask_MVZYMVBsb3pSVVpqbC1kXw"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_MVZYMVBsb3pSVVpqbC1kXw",
+      "command": "Gasté 3500 pesos en tres cuotas con Itaú",
+      "date": "12:32 a. m."
+    },
     {
       "id": "gtask_NS1rOWF1N2NsUFhJR25NUA",
       "command": "Gasté 12.538 pesos en 3 cuotas",
@@ -107,11 +113,6 @@
       "id": "gtask_M3R4UTRVMkRtZTRhZXNzLQ",
       "command": "Ingreso de 50.000 pesos y pago de tarjeta de crédito de tres",
       "date": "11:05 p. m."
-    },
-    {
-      "id": "gtask_dHVQYkp1ZnhMeDlHV3BsXw",
-      "command": "Me ingresaron 10.000 pesos en débito y gasté 3.500 pesos en crédito con Itaú Visa",
-      "date": "10:39 p. m."
     }
   ],
   "accounts": [
