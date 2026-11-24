@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795484280928,
+  "updatedAt": 1795484282950,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -117,7 +117,7 @@
       "id": "acc_usd",
       "name": "Ahorro Dólares",
       "currency": "USD",
-      "balance": -1940.9638554216867,
+      "balance": 0,
       "color": "from-emerald-400 to-teal-500",
       "icon": "💵"
     },
