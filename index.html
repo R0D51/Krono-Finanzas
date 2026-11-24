@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.47
+    // KRONO OTA BOOTLOADER v6.5.48
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.47';
+    const APP_BASE_VERSION = '6.5.48';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,7 +230,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.47',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.48',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -266,7 +266,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       showVoiceWidgetOverlay: false, showOtaModal: false, inputModal: null, confirmModal: null, otaStatusMsg: '', otaChecking: false,
       githubPushing: false, releaseNotesInput: '', txSearch: '', txFilterType: 'all', txFilterAccount: 'all',
       txFilterCurrency: 'all', isListening: false, voiceTranscript: '', voiceHintMsg: '',
-      geminiResponse: null, syncStatusText: 'Listo', bridgeDiagnostic: '✅ Puente Activo'
+      geminiResponse: null, lastInterpreterMode: '', syncStatusText: 'Listo', bridgeDiagnostic: '✅ Puente Activo'
     };
 
     function escapeAttr(str) {
@@ -1684,20 +1684,41 @@ input[type=number]::-webkit-outer-spin-button:hover {
 
       // Optional AI interpreter path when user configures a Gemini API key in Settings
       if (state.geminiApiKey && String(state.geminiApiKey).trim()) {
+        ui.lastInterpreterMode = '🧠 IA Gemini (consultando...)';
         interpretWithGeminiAI(text, state.geminiApiKey)
           .then(actions => {
             if (actions && actions.length && executeStructuredActions(actions, text, fromExternal)) {
+              ui.lastInterpreterMode = '🧠 IA Gemini';
+              if (ui.geminiResponse) {
+                ui.geminiResponse.reply = '[🧠 IA Gemini] ' + ui.geminiResponse.reply;
+                render();
+              }
               return;
             }
+            ui.lastInterpreterMode = '⚙️ Parámetros locales (fallback IA)';
             runLocalRuleInterpreter(text, lower, fromExternal);
+            if (ui.geminiResponse && !ui.geminiResponse.reply.startsWith('[⚙️')) {
+              ui.geminiResponse.reply = '[⚙️ Local] ' + ui.geminiResponse.reply;
+              render();
+            }
           })
-          .catch(() => {
+          .catch((err) => {
+            ui.lastInterpreterMode = '⚙️ Parámetros locales (sin respuesta IA)';
             runLocalRuleInterpreter(text, lower, fromExternal);
+            if (ui.geminiResponse && !ui.geminiResponse.reply.startsWith('[⚙️')) {
+              ui.geminiResponse.reply = '[⚙️ Local] ' + ui.geminiResponse.reply;
+              render();
+            }
           });
         return;
       }
 
+      ui.lastInterpreterMode = '⚙️ Parámetros locales';
       runLocalRuleInterpreter(text, lower, fromExternal);
+      if (ui.geminiResponse && !ui.geminiResponse.reply.startsWith('[⚙️')) {
+        ui.geminiResponse.reply = '[⚙️ Local] ' + ui.geminiResponse.reply;
+        render();
+      }
     }
 
     function runLocalRuleInterpreter(text, lower, fromExternal = false) {
@@ -2324,7 +2345,10 @@ input[type=number]::-webkit-outer-spin-button:hover {
           <div class="pt-2 border-t border-white/10 space-y-1.5">
             <label class="text-[11px] font-bold text-cyan-300 block">🧠 Intérprete IA Gemini (opcional — sin reglas fijas)</label>
             <input type="password" placeholder="Pegá tu Gemini API Key para interpretar frases con IA..." value="${escapeAttr(state.geminiApiKey || '')}" onchange="state.geminiApiKey=this.value.trim();saveState(false,false);" class="w-full bg-slate-950/70 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" />
-            <div class="text-[10px] text-slate-400">Si dejás este campo vacío, usa el intérprete local por reglas. Si ponés tu API Key, envía tus cuentas/deudas y tu frase a Gemini para decidir las acciones.</div>
+            <div class="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400">
+              <span>Si ponés tu API Key, consulta a Gemini; si no responde o no hay key, usa los parámetros locales.</span>
+              <span class="mono px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/30 text-cyan-200">${escapeAttr(ui.lastInterpreterMode || (state.geminiApiKey ? '🧠 IA Gemini lista' : '⚙️ Parámetros locales'))}</span>
+            </div>
           </div>
         </div>
         <div class="glass-97 rounded-3xl p-6 border-2 border-emerald-400/40 space-y-3">
