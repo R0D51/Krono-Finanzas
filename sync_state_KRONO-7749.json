@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795482218512,
+  "updatedAt": 1795482996303,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -45,9 +45,15 @@
     "gtask_RFZBXzV6NjRlUG1GS2dnYw",
     "gtask_R0JEeE93WEloeGxwN085TQ",
     "gtask_NGNIQlVTOVZMQld5Z2hneA",
-    "gtask_dDQ2SjNNWGthZ25vMkM2RA"
+    "gtask_dDQ2SjNNWGthZ25vMkM2RA",
+    "gtask_U3oxaV9OSV9mNGZwa3ktYg"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_U3oxaV9OSV9mNGZwa3ktYg",
+      "command": "Pagué las cuotas de este mes con plata en efectivo",
+      "date": "10:16 p. m."
+    },
     {
       "id": "gtask_dDQ2SjNNWGthZ25vMkM2RA",
       "command": "Pagué la cuota de este mes de la tarjeta de crédito con plata en efectivo",
@@ -92,11 +98,6 @@
       "id": "gtask_YTlCM0J6NlNRdWM3VWNuZg",
       "command": "Gasté 200 pesos",
       "date": "10:26 p. m."
-    },
-    {
-      "id": "gtask_Zm5aVW9TYzVacTZnNGxrcw",
-      "command": "Gasté 1500 pesos.",
-      "date": "10:20 p. m."
     }
   ],
   "accounts": [
@@ -120,7 +121,7 @@
       "id": "acc_cash",
       "name": "Efectivo / Billetera",
       "currency": "UYU",
-      "balance": -500,
+      "balance": -49956,
       "color": "from-violet-400 to-purple-500",
       "icon": "👛"
     }
@@ -170,14 +171,15 @@
       "paymentMethod": "credit_card",
       "cardName": "Itaú",
       "installmentsCount": 3,
-      "paidInstallments": 0,
+      "paidInstallments": 3,
       "amount": 456,
       "currency": "UYU",
       "kind": "debt",
       "dueDate": "",
-      "status": "pending",
+      "status": "settled",
       "notes": "Cosso Pero Pum",
-      "createdAt": 1795461994607
+      "createdAt": 1795461994607,
+      "settledAt": 1795482996299
     },
     {
       "id": "debt_1795461568642_995",
@@ -186,14 +188,15 @@
       "paymentMethod": "credit_card",
       "cardName": "Itaú Visa",
       "installmentsCount": 12,
-      "paidInstallments": 0,
+      "paidInstallments": 12,
       "amount": 36000,
       "currency": "UYU",
       "kind": "debt",
       "dueDate": "",
-      "status": "pending",
+      "status": "settled",
       "notes": "",
-      "createdAt": 1795461568642
+      "createdAt": 1795461568642,
+      "settledAt": 1795482996299
     },
     {
       "id": "debt_1795461189346_365",
@@ -202,14 +205,15 @@
       "paymentMethod": "credit_card",
       "cardName": "Itaú Visa",
       "installmentsCount": 12,
-      "paidInstallments": 0,
+      "paidInstallments": 12,
       "amount": 13000,
       "currency": "UYU",
       "kind": "debt",
       "dueDate": "23/11",
-      "status": "pending",
+      "status": "settled",
       "notes": "",
-      "createdAt": 1795461189346
+      "createdAt": 1795461189346,
+      "settledAt": 1795482996299
     },
     {
       "id": "debt_demo_1",
@@ -237,6 +241,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795482996299_690",
+      "title": "🤖 Pago tarjeta de crédito (Tarjeta de crédito) con Efectivo / Billetera",
+      "amount": 49456,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Tarjeta / Crédito",
+      "accountId": "acc_cash",
+      "accountName": "Efectivo / Billetera",
+      "date": "23/11 22:16",
+      "timestamp": 1795482996299
+    },
     {
       "id": "tx_1795464231098_522",
       "title": "4234",
