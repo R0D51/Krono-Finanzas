@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795481012651,
+  "updatedAt": 1795482149211,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -43,9 +43,15 @@
     "gtask_cGZVOGlHa1lKS0NMU0YwRw",
     "gtask_eENCVjU4eUVJZjhMWU0xNw",
     "gtask_RFZBXzV6NjRlUG1GS2dnYw",
-    "gtask_R0JEeE93WEloeGxwN085TQ"
+    "gtask_R0JEeE93WEloeGxwN085TQ",
+    "gtask_NGNIQlVTOVZMQld5Z2hneA"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_NGNIQlVTOVZMQld5Z2hneA",
+      "command": "Pagué la cuota de este mes de la tarjeta de crédito con plata en efectivo",
+      "date": "10:02 p. m."
+    },
     {
       "id": "gtask_R0JEeE93WEloeGxwN085TQ",
       "command": "Me ingresaron 500 pesos y vendí 300 dólares",
@@ -90,11 +96,6 @@
       "id": "gtask_Yzh0UnZJTEEzbzFZMFhWQw",
       "command": "Gasté 1500 pesos",
       "date": "10:19 p. m."
-    },
-    {
-      "id": "gtask_NFAyWmFkV09EZ3BnQTVDQQ",
-      "command": "Gané 2500 $1000",
-      "date": "10:15 p. m."
     }
   ],
   "accounts": [
@@ -162,6 +163,54 @@
   ],
   "debts": [
     {
+      "id": "debt_1795461994607_298",
+      "title": "Prueba",
+      "counterparty": "Milonga",
+      "paymentMethod": "credit_card",
+      "cardName": "Itaú",
+      "installmentsCount": 3,
+      "paidInstallments": 0,
+      "amount": 456,
+      "currency": "UYU",
+      "kind": "debt",
+      "dueDate": "",
+      "status": "pending",
+      "notes": "Cosso Pero Pum",
+      "createdAt": 1795461994607
+    },
+    {
+      "id": "debt_1795461568642_995",
+      "title": "Compu",
+      "counterparty": "CDR",
+      "paymentMethod": "credit_card",
+      "cardName": "Itaú Visa",
+      "installmentsCount": 12,
+      "paidInstallments": 0,
+      "amount": 36000,
+      "currency": "UYU",
+      "kind": "debt",
+      "dueDate": "",
+      "status": "pending",
+      "notes": "",
+      "createdAt": 1795461568642
+    },
+    {
+      "id": "debt_1795461189346_365",
+      "title": "Porton",
+      "counterparty": "Zodimac",
+      "paymentMethod": "credit_card",
+      "cardName": "Itaú Visa",
+      "installmentsCount": 12,
+      "paidInstallments": 0,
+      "amount": 13000,
+      "currency": "UYU",
+      "kind": "debt",
+      "dueDate": "23/11",
+      "status": "pending",
+      "notes": "",
+      "createdAt": 1795461189346
+    },
+    {
       "id": "debt_demo_1",
       "title": "Préstamo a amigo / Crédito",
       "counterparty": "Lucas",
@@ -169,8 +218,9 @@
       "currency": "UYU",
       "kind": "credit",
       "dueDate": "",
-      "status": "pending",
-      "notes": ""
+      "status": "settled",
+      "notes": "",
+      "settledAt": 1795318631934
     },
     {
       "id": "debt_demo_2",
@@ -180,8 +230,9 @@
       "currency": "USD",
       "kind": "debt",
       "dueDate": "",
-      "status": "pending",
-      "notes": ""
+      "status": "settled",
+      "notes": "",
+      "settledAt": 1795318733832
     }
   ],
   "transactions": [
