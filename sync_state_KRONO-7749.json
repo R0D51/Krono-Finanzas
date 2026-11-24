@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795491125206,
+  "updatedAt": 1795491270568,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -61,9 +61,15 @@
     "gtask_NjN2U3paMHFpUUVCc2FYNA",
     "gtask_aGVUTXJwYmJybkotX1FyMw",
     "gtask_NS1rOWF1N2NsUFhJR25NUA",
-    "gtask_MVZYMVBsb3pSVVpqbC1kXw"
+    "gtask_MVZYMVBsb3pSVVpqbC1kXw",
+    "gtask_TWVXT2pvd1RGbWNSOWN5WQ"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_TWVXT2pvd1RGbWNSOWN5WQ",
+      "command": "Gasté 3578 pesos en siete cuotas",
+      "date": "12:34 a. m."
+    },
     {
       "id": "gtask_MVZYMVBsb3pSVVpqbC1kXw",
       "command": "Gasté 3500 pesos en tres cuotas con Itaú",
@@ -108,11 +114,6 @@
       "id": "gtask_OU8wT0ZjMFhmUlVKbW1weA",
       "command": "Pagué con tarjeta de crédito Itaú en tres cuotas 1500 pesos",
       "date": "11:34 p. m."
-    },
-    {
-      "id": "gtask_M3R4UTRVMkRtZTRhZXNzLQ",
-      "command": "Ingreso de 50.000 pesos y pago de tarjeta de crédito de tres",
-      "date": "11:05 p. m."
     }
   ],
   "accounts": [
