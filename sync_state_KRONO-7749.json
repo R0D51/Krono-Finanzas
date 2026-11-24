@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795528422080,
+  "updatedAt": 1795528544243,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -67,9 +67,15 @@
     "gtask_Z3JaN1Z5WmdERm1BWWp6SQ",
     "gtask_XzVpajFvdlhtdl9OMU5kMg",
     "gtask_ZDNqdmxTM2htNHFnN1JFeQ",
-    "gtask_LVBnWnc2UDczZXA0TjN4bQ"
+    "gtask_LVBnWnc2UDczZXA0TjN4bQ",
+    "gtask_dHlZV1lSSTRYWjgwc1JXVA"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_dHlZV1lSSTRYWjgwc1JXVA",
+      "command": "gaste 1500 en 3 cuotas",
+      "date": "10:55 a. m."
+    },
     {
       "id": "gtask_LVBnWnc2UDczZXA0TjN4bQ",
       "command": "Gasté 1500 pesos en 3 cuotas - Regalo",
@@ -114,11 +120,6 @@
       "id": "gtask_aGVUTXJwYmJybkotX1FyMw",
       "command": "Pagué la tarjeta de crédito",
       "date": "12:07 a. m."
-    },
-    {
-      "id": "gtask_NjN2U3paMHFpUUVCc2FYNA",
-      "command": "Gasté 3,500 pesos en cinco cuotas",
-      "date": "12:06 a. m."
     }
   ],
   "accounts": [
