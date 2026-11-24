@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795489596682,
+  "updatedAt": 1795489618989,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -57,9 +57,15 @@
     "gtask_aHpWemdRVlhaS281MjlmaA",
     "gtask_NTEyc3E5QlNGdEdlOWtRaw",
     "gtask_NFJPU1g3Yk9tU2laYjBUZw",
-    "gtask_LWUxN0UtTmEzT0V1NnhHaQ"
+    "gtask_LWUxN0UtTmEzT0V1NnhHaQ",
+    "gtask_NjN2U3paMHFpUUVCc2FYNA"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_NjN2U3paMHFpUUVCc2FYNA",
+      "command": "Gasté 3,500 pesos en cinco cuotas",
+      "date": "12:06 a. m."
+    },
     {
       "id": "gtask_LWUxN0UtTmEzT0V1NnhHaQ",
       "command": "Gasté 3,500 pesos en cinco cuotas",
@@ -104,11 +110,6 @@
       "id": "gtask_eXFmVUs0Qy1IZnZCV1Bhbw",
       "command": "Pagué 3500 pesos en 10 cuotas con la tarjeta de crédito de Tabú",
       "date": "10:33 p. m."
-    },
-    {
-      "id": "gtask_ZHVrTUdtVG5IaVczZWJXNw",
-      "command": "Pagué 1500 pesos en 3 cuotas con Itaú",
-      "date": "10:27 p. m."
     }
   ],
   "accounts": [
@@ -175,6 +176,22 @@
     }
   ],
   "debts": [
+    {
+      "id": "debt_1795489618983_998",
+      "title": "Compra financiada",
+      "counterparty": "Itaú Pesos",
+      "paymentMethod": "credit_card",
+      "cardName": "Itaú Pesos",
+      "installmentsCount": 5,
+      "paidInstallments": 0,
+      "amount": 3500,
+      "currency": "UYU",
+      "kind": "debt",
+      "dueDate": "",
+      "status": "pending",
+      "notes": "",
+      "createdAt": 1795489618983
+    },
     {
       "id": "debt_1795489596681_398",
       "title": "Compra financiada",
@@ -301,6 +318,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_ai_1795489618983_38",
+      "title": "🤖 💳 Compra financiada (Itaú Pesos • 5 cuotas)",
+      "amount": 3500,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Tarjeta / Crédito",
+      "accountId": "card_ita_pesos",
+      "accountName": "Itaú Pesos",
+      "date": "24/11 00:06",
+      "timestamp": 1795489618983
+    },
     {
       "id": "tx_ai_1795489596681_104",
       "title": "🤖 💳 Compra financiada (Itaú Pesos • 5 cuotas)",
