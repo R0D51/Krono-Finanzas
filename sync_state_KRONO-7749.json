@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795488034112,
+  "updatedAt": 1795488117802,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -53,9 +53,15 @@
     "gtask_cklOMUlRSW44S2p5X3ozMQ",
     "gtask_dHVQYkp1ZnhMeDlHV3BsXw",
     "gtask_M3R4UTRVMkRtZTRhZXNzLQ",
-    "gtask_OU8wT0ZjMFhmUlVKbW1weA"
+    "gtask_OU8wT0ZjMFhmUlVKbW1weA",
+    "gtask_aHpWemdRVlhaS281MjlmaA"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_aHpWemdRVlhaS281MjlmaA",
+      "command": "Ingreso de 8208 pesos en efectivo",
+      "date": "11:41 p. m."
+    },
     {
       "id": "gtask_OU8wT0ZjMFhmUlVKbW1weA",
       "command": "Pagué con tarjeta de crédito Itaú en tres cuotas 1500 pesos",
@@ -100,11 +106,6 @@
       "id": "gtask_dDQ2SjNNWGthZ25vMkM2RA",
       "command": "Pagué la cuota de este mes de la tarjeta de crédito con plata en efectivo",
       "date": "10:03 p. m."
-    },
-    {
-      "id": "gtask_NGNIQlVTOVZMQld5Z2hneA",
-      "command": "Pagué la cuota de este mes de la tarjeta de crédito con plata en efectivo",
-      "date": "10:02 p. m."
     }
   ],
   "accounts": [
@@ -128,7 +129,7 @@
       "id": "acc_cash",
       "name": "Efectivo / Billetera",
       "currency": "UYU",
-      "balance": -8208,
+      "balance": 0,
       "color": "from-violet-400 to-purple-500",
       "icon": "👛"
     }
@@ -280,6 +281,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795488117792_441",
+      "title": "🤖 Ingreso",
+      "amount": 8208,
+      "currency": "UYU",
+      "type": "income",
+      "category": "Ingresos",
+      "accountId": "acc_cash",
+      "accountName": "Efectivo / Billetera",
+      "date": "23/11 23:41",
+      "timestamp": 1795488117792
+    },
     {
       "id": "tx_1795488034112_334",
       "title": "Cuotas del mes con Efectivo / Billetera",
