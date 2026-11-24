@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.59
+    // KRONO OTA BOOTLOADER v6.5.60
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.59';
+    const APP_BASE_VERSION = '6.5.60';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,7 +230,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.59',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.60',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -1771,7 +1771,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
 
     async function resolveBestGeminiModel(cleanKey) {
       const cached = localStorage.getItem('KRONO_GEMINI_MODEL');
-      if (cached && cached.trim() && !/gemini-2\.0-flash|gemini-1\.5-flash/i.test(cached)) {
+      if (cached && cached.trim() && !/gemini-2\.0-flash|gemini-1\.5-flash|gemini-2\.5-flash/i.test(cached)) {
         return cached.trim();
       }
       localStorage.removeItem('KRONO_GEMINI_MODEL');
@@ -1788,7 +1788,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
             .map(m => String(m.name || '').replace(/^models\//, ''))
             .filter(Boolean);
           const pick = available.find(n => /gemini-3\.8-flash/i.test(n))
-            || available.find(n => /gemini-2\.5-flash/i.test(n))
+            || available.find(n => /gemini-3\.8-flash/i.test(n))
             || available.find(n => /flash/i.test(n) && !/2\.0-flash|1\.5-flash/i.test(n))
             || available[0]
             || fallbackModel;
@@ -1818,7 +1818,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
 
       const promptBodyText = `${systemPrompt}\n\nContexto:\n${JSON.stringify(ctx)}\n\nFrase: "${commandText}"`;
       const chosenModel = await resolveBestGeminiModel(cleanKey);
-      const modelsToTry = [chosenModel, 'gemini-3.8-flash', 'gemini-2.5-flash'].filter((v, i, a) => v && a.indexOf(v) === i);
+      const modelsToTry = [chosenModel, 'gemini-3.8-flash', 'gemini-3.8-flash'].filter((v, i, a) => v && a.indexOf(v) === i);
 
       let lastErrMsg = 'sin respuesta de Gemini';
       for (const modelName of modelsToTry) {
