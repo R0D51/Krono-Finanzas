@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795490928022,
+  "updatedAt": 1795490950347,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -323,18 +323,6 @@
     }
   ],
   "transactions": [
-    {
-      "id": "tx_1795489643073_795",
-      "title": "🤖 Saldo total con Cuenta Itaú / Débito",
-      "amount": 12000,
-      "currency": "UYU",
-      "type": "expense",
-      "category": "Tarjeta / Crédito",
-      "accountId": "acc_uyu",
-      "accountName": "Cuenta Itaú / Débito",
-      "date": "24/11 00:07",
-      "timestamp": 1795489643073
-    },
     {
       "id": "tx_ai_1795489618983_38",
       "title": "🤖 💳 Compra financiada (Itaú Pesos • 5 cuotas)",
