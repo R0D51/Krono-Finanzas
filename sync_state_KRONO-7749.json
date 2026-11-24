@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795492642528,
+  "updatedAt": 1795492644524,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -224,14 +224,15 @@
       "paymentMethod": "general",
       "cardName": "",
       "installmentsCount": 1,
-      "paidInstallments": 0,
+      "paidInstallments": 1,
       "amount": 3500,
       "currency": "UYU",
       "kind": "debt",
       "dueDate": "",
-      "status": "pending",
+      "status": "settled",
       "notes": "",
-      "createdAt": 1795484005785
+      "createdAt": 1795484005785,
+      "settledAt": 1795492643541
     },
     {
       "id": "debt_sync_tx_1795487649340_266_541",
@@ -240,14 +241,15 @@
       "paymentMethod": "general",
       "cardName": "",
       "installmentsCount": 1,
-      "paidInstallments": 0,
+      "paidInstallments": 1,
       "amount": 1500,
       "currency": "UYU",
       "kind": "debt",
       "dueDate": "",
-      "status": "pending",
+      "status": "settled",
       "notes": "",
-      "createdAt": 1795487649340
+      "createdAt": 1795487649340,
+      "settledAt": 1795492644524
     },
     {
       "id": "debt_sync_tx_1795488812378_980_748",
