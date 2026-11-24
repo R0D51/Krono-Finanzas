@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.62
+    // KRONO OTA BOOTLOADER v6.5.64
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.62';
+    const APP_BASE_VERSION = '6.5.64';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,7 +230,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.62',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.64',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -351,7 +351,73 @@ input[type=number]::-webkit-outer-spin-button:hover {
       return JSON.parse(JSON.stringify(DEMO_STATE));
     }
 
+    function reconcileFinancedTransactionsWithDebts() {
+      if (!Array.isArray(state.debts)) state.debts = [];
+      if (!Array.isArray(state.transactions)) return;
+      for (const tx of state.transactions) {
+        if (!tx || tx.type !== 'expense') continue;
+        const titleStr = String(tx.title || '');
+        const isCardOrFinanced = (tx.category === 'Tarjeta / Crédito') || /💳|cuotas?/i.test(titleStr);
+        if (!isCardOrFinanced) continue;
+        // Skip payment/installment settlement transactions
+        if (/^(?:🤖\s*)?(?:Cuotas del mes|Saldo total|Pago)/i.test(titleStr)) continue;
+
+        const amt = Math.abs(Number(tx.amount) || 0);
+        if (amt <= 0) continue;
+
+        // Extract card name if present in parentheses or from accountName
+        let cardName = '';
+        const parenMatch = titleStr.match(/\(([^()]+)\)\s*$/);
+        if (parenMatch && parenMatch[1]) {
+          cardName = parenMatch[1].replace(/\s*•\s*\d+\s*cuotas?$/i, '').trim();
+        }
+        if (!cardName && tx.accountName && !/^card_|^debt_ledger|^loan_ledger/i.test(String(tx.accountId || ''))) {
+          cardName = String(tx.accountName).trim();
+        }
+        if (!cardName && Array.isArray(state.creditCards) && state.creditCards.length) {
+          cardName = state.creditCards[0].name;
+        }
+
+        const instMatch = titleStr.match(/(\d+)\s*cuotas?/i);
+        const instCount = instMatch ? Math.max(1, parseInt(instMatch[1], 10) || 1) : 1;
+
+        const cleanTitle = titleStr
+          .replace(/^🤖\s*/, '')
+          .replace(/^💳\s*/, '')
+          .replace(/\s*\([^()]+\)\s*$/, '')
+          .trim() || 'Compra financiada';
+
+        const alreadyExists = state.debts.some(d => {
+          const sameAmt = Math.abs(Number(d.amount || 0) - amt) < 0.05;
+          const sameCur = (d.currency || 'UYU') === (tx.currency || 'UYU');
+          const sameCard = !cardName || normalizeStr(d.cardName || d.counterparty || '') === normalizeStr(cardName);
+          const sameTitle = normalizeStr(d.title || '') === normalizeStr(cleanTitle) || normalizeStr(titleStr).includes(normalizeStr(d.title || ''));
+          return sameAmt && sameCur && (sameCard || sameTitle);
+        });
+
+        if (!alreadyExists) {
+          state.debts.unshift({
+            id: 'debt_sync_' + (tx.id || Date.now()) + '_' + Math.floor(Math.random() * 1000),
+            title: cleanTitle,
+            counterparty: cardName || 'Tarjeta de Crédito',
+            paymentMethod: 'credit_card',
+            cardName: cardName || 'Tarjeta de Crédito',
+            installmentsCount: instCount,
+            paidInstallments: 0,
+            amount: amt,
+            currency: tx.currency || 'UYU',
+            kind: 'debt',
+            dueDate: '',
+            status: 'pending',
+            notes: '',
+            createdAt: Number(tx.timestamp) || Date.now()
+          });
+        }
+      }
+    }
+
     function saveState(broadcast = true, markDataUpdated = true) {
+      reconcileFinancedTransactionsWithDebts();
       if (markDataUpdated) state.updatedAt = Date.now();
       if (state.geminiApiKey && String(state.geminiApiKey).trim()) localStorage.setItem('KRONO_GEMINI_API_KEY', String(state.geminiApiKey).trim());
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -2619,6 +2685,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
 
 
     function renderDebtsTab(anim) {
+      reconcileFinancedTransactionsWithDebts();
       const ds = getDebtsSummary();
       const cardsBreakdown = getDebtsCardsBreakdown();
       const allDebts = Array.isArray(state.debts) ? state.debts : [];
