@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795484383994,
+  "updatedAt": 1795485910774,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -51,9 +51,15 @@
     "gtask_ZHVrTUdtVG5IaVczZWJXNw",
     "gtask_eXFmVUs0Qy1IZnZCV1Bhbw",
     "gtask_cklOMUlRSW44S2p5X3ozMQ",
-    "gtask_dHVQYkp1ZnhMeDlHV3BsXw"
+    "gtask_dHVQYkp1ZnhMeDlHV3BsXw",
+    "gtask_M3R4UTRVMkRtZTRhZXNzLQ"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_M3R4UTRVMkRtZTRhZXNzLQ",
+      "command": "Ingreso de 50.000 pesos y pago de tarjeta de crédito de tres",
+      "date": "11:05 p. m."
+    },
     {
       "id": "gtask_dHVQYkp1ZnhMeDlHV3BsXw",
       "command": "Me ingresaron 10.000 pesos en débito y gasté 3.500 pesos en crédito con Itaú Visa",
@@ -97,11 +103,6 @@
     {
       "id": "gtask_R0JEeE93WEloeGxwN085TQ",
       "command": "Me ingresaron 500 pesos y vendí 300 dólares",
-      "date": "10:40 p. m."
-    },
-    {
-      "id": "gtask_RFZBXzV6NjRlUG1GS2dnYw",
-      "command": "Tarea: costo $300, ingreso $500 Ayer la tarea costó $300 y me ingresaron $500.",
       "date": "10:40 p. m."
     }
   ],
