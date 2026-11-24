@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795488374615,
+  "updatedAt": 1795488383609,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -173,22 +173,6 @@
     }
   ],
   "debts": [
-    {
-      "id": "debt_1795485912218_290",
-      "title": "Ingreso y pago tres",
-      "counterparty": "Google Tasks",
-      "paymentMethod": "credit_card",
-      "cardName": "",
-      "installmentsCount": 1,
-      "paidInstallments": 0,
-      "amount": 50000,
-      "currency": "UYU",
-      "kind": "credit",
-      "dueDate": "",
-      "status": "pending",
-      "notes": "",
-      "createdAt": 1795485912218
-    },
     {
       "id": "debt_1795484236579_293",
       "title": "Compra",
