@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.40
+    // KRONO OTA BOOTLOADER v6.5.42
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -117,22 +117,47 @@
 }
 .krono-recent-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgba(34, 211, 238, 0.42) rgba(15, 23, 42, 0.45);
+  scrollbar-color: rgba(34, 211, 238, 0.45) transparent;
   overscroll-behavior: contain;
+  padding-right: 6px !important;
 }
 .krono-recent-scroll::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
+  height: 5px;
+}
+.krono-recent-scroll::-webkit-scrollbar-button,
+.krono-recent-scroll::-webkit-scrollbar-button:start:decrement,
+.krono-recent-scroll::-webkit-scrollbar-button:end:increment,
+.krono-recent-scroll::-webkit-scrollbar-button:vertical:start:decrement,
+.krono-recent-scroll::-webkit-scrollbar-button:vertical:end:increment {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }
 .krono-recent-scroll::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(255, 255, 255, 0.025);
   border-radius: 9999px;
+  margin: 4px 0;
 }
 .krono-recent-scroll::-webkit-scrollbar-thumb {
-  background: rgba(34, 211, 238, 0.42);
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.55), rgba(139, 92, 246, 0.48));
   border-radius: 9999px;
+  border: 1px solid rgba(165, 243, 252, 0.25);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.22);
 }
 .krono-recent-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(103, 232, 249, 0.72);
+  background: linear-gradient(180deg, rgba(103, 232, 249, 0.85), rgba(167, 139, 250, 0.78));
+  border-color: rgba(207, 250, 254, 0.55);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.42);
+}
+.krono-recent-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 .krono-sidebar-shell {
   background: linear-gradient(175deg, rgba(10, 18, 36, 0.72) 0%, rgba(7, 13, 28, 0.62) 55%, rgba(14, 18, 38, 0.68) 100%) !important;
@@ -225,22 +250,47 @@ input[type=number]::-webkit-outer-spin-button:hover {
 }</style>
 <style id="krono-recent-scroll-css">.krono-recent-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgba(34, 211, 238, 0.42) rgba(15, 23, 42, 0.45);
+  scrollbar-color: rgba(34, 211, 238, 0.45) transparent;
   overscroll-behavior: contain;
+  padding-right: 6px !important;
 }
 .krono-recent-scroll::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
+  height: 5px;
+}
+.krono-recent-scroll::-webkit-scrollbar-button,
+.krono-recent-scroll::-webkit-scrollbar-button:start:decrement,
+.krono-recent-scroll::-webkit-scrollbar-button:end:increment,
+.krono-recent-scroll::-webkit-scrollbar-button:vertical:start:decrement,
+.krono-recent-scroll::-webkit-scrollbar-button:vertical:end:increment {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }
 .krono-recent-scroll::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(255, 255, 255, 0.025);
   border-radius: 9999px;
+  margin: 4px 0;
 }
 .krono-recent-scroll::-webkit-scrollbar-thumb {
-  background: rgba(34, 211, 238, 0.42);
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.55), rgba(139, 92, 246, 0.48));
   border-radius: 9999px;
+  border: 1px solid rgba(165, 243, 252, 0.25);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.22);
 }
 .krono-recent-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(103, 232, 249, 0.72);
+  background: linear-gradient(180deg, rgba(103, 232, 249, 0.85), rgba(167, 139, 250, 0.78));
+  border-color: rgba(207, 250, 254, 0.55);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.42);
+}
+.krono-recent-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }</style>
 <style id="krono-sidebar-css">.krono-sidebar-shell {
   background: linear-gradient(175deg, rgba(10, 18, 36, 0.72) 0%, rgba(7, 13, 28, 0.62) 55%, rgba(14, 18, 38, 0.68) 100%) !important;
@@ -276,7 +326,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 min-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-x-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.40';
+    const APP_BASE_VERSION = '6.5.42';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -289,7 +339,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.40',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.42',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
