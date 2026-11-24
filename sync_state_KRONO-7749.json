@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795488396223,
+  "updatedAt": 1795488398239,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -177,8 +177,8 @@
       "id": "debt_1795461994607_298",
       "title": "Prueba",
       "counterparty": "Milonga",
-      "paymentMethod": "credit_card",
-      "cardName": "Itaú",
+      "paymentMethod": "general",
+      "cardName": "",
       "installmentsCount": 3,
       "paidInstallments": 3,
       "amount": 456,
