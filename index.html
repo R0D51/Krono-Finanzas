@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.45
+    // KRONO OTA BOOTLOADER v6.5.46
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.45';
+    const APP_BASE_VERSION = '6.5.46';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,7 +230,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.45',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.46',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -1394,12 +1394,192 @@ input[type=number]::-webkit-outer-spin-button:hover {
       if (!rawInput || !rawInput.trim()) return;
       const text = rawInput.replace(/_/g, ' ').replace(/\+/g, ' ').trim().replace(/^(?:hey\s+gemini|hola\s+gemini|gemini|tarea\s+|en\s+krono\s+|krono[:\s,-]*)+/i, '').trim();
       const lower = normalizeStr(text);
-      if ((lower.includes('actualiza') || lower.includes('release')) && lower.includes('app')) { ui.showOtaModal = true; checkGitHubReleaseOtaUpdate(true); render(); return; }
+
+      if ((lower.includes('actualiza') || lower.includes('release')) && lower.includes('app')) {
+        ui.showOtaModal = true;
+        checkGitHubReleaseOtaUpdate(true);
+        render();
+        return;
+      }
+
       if (lower.includes('cuanto') || lower.includes('saldo') || lower.includes('patrimonio')) {
         const sp = findAccountMentionInText(text);
         const reply = sp ? `El saldo de ${sp.name} es de ${formatMoney(sp.balance, sp.currency)}.` : `Tu patrimonio total es de ${formatMoney(getTotals().totalUYU, 'UYU')}.`;
-        ui.geminiResponse = { mode: 'query', prompt: text, reply, items: [] }; speakText(reply); render(); return;
+        ui.geminiResponse = { mode: 'query', prompt: text, reply, items: [] };
+        speakText(reply);
+        render();
+        return;
       }
+
+      // Helper to detect card/debt/credit mentions and match a specific saved card or debt
+      function isCardOrDebtItem(item) {
+        if (!item || item.status === 'settled') return false;
+        const label = `${getDebtInstrumentLabel(item)} ${item.title || ''} ${item.counterparty || ''}`;
+        return item.paymentMethod === 'credit_card' || Boolean((item.cardName || '').trim()) || /tarjeta|visa|master|oca|amex|cabal|zodimac|brou|itau|itaú|santander|bbva|scotia|prex|midinero|cuota|prestamo|préstamo|deuda/i.test(normalizeStr(label));
+      }
+
+      function findMatchingCardName(normText) {
+        const cards = Array.isArray(state.creditCards) ? state.creditCards : [];
+        for (const c of cards) {
+          const cNorm = normalizeStr(c.name || '');
+          if (cNorm && normText.includes(cNorm)) return c.name;
+          const bNorm = normalizeStr(c.bank || '');
+          if (bNorm && bNorm.length >= 3 && normText.includes(bNorm)) return c.name;
+        }
+        const m = normText.match(/\b(?:(?:itau|itaú|brou|santander|bbva|scotia|hsbc|prex|midinero|zodimac)\s+(?:visa|mastercard|master|oca|amex|cabal|recompensa)|visa|mastercard|master|oca|american\s+express|amex|cabal|brou\s+recompensa|santander|itau|itaú|bbva|scotia|hsbc|prex|midinero|zodimac)\b/i);
+        return m ? m[0].replace(/\b\w/g, ch => ch.toUpperCase()) : '';
+      }
+
+      function resolvePaymentSourceAccount(normText) {
+        if (/\b(efectivo|billetera|cash|contado|en mano|monedero|plata en efectivo)\b/i.test(normText)) {
+          return state.accounts.find(a => a.id === 'acc_cash' || /efectivo|billetera|cash|mano/i.test(normalizeStr(a.name))) || state.accounts[0];
+        }
+        const mentioned = findAccountMentionInText(normText);
+        if (mentioned) return mentioned;
+        return state.accounts.find(a => a.id === 'acc_cash' || /efectivo|billetera|cash/i.test(normalizeStr(a.name))) || state.accounts[0];
+      }
+
+      // 1. Handle paying/settling a credit card, installment, or debt (with or without explicit amount)
+      const isPayingCardOrDebt = /\b(?:pague|pague|pagar|abone|abone|abonar|cancele|cancele|cancelar|liquide|liquide|liquidar|salde|salde|saldar)\b/i.test(lower)
+        && /\b(?:tarjeta|visa|mastercard|master|oca|amex|cabal|zodimac|cierre|resumen|deuda|cuota|cuotas|prestamo|préstamo|credito|crédito|pendiente)\b/i.test(lower);
+
+      if (isPayingCardOrDebt) {
+        if (!Array.isArray(state.debts)) state.debts = [];
+        const rate = Number(state.exchangeRate) || 41.5;
+        const explicitAmount = extractSmartAmount(lower);
+        const targetCardName = findMatchingCardName(lower);
+        const sourceAcc = resolvePaymentSourceAccount(lower);
+        const targetCurrency = detectCurrencyInText(lower) || (sourceAcc ? sourceAcc.currency : (state.defaultCurrency || 'UYU'));
+
+        // Select open debts/cards matching the mentioned card/text, or all open card/debt items if none specific
+        let candidateDebts = state.debts.filter(d => {
+          if (d.status === 'settled' || d.kind === 'credit') return false;
+          if (targetCardName) {
+            const dLabel = normalizeStr(getDebtInstrumentLabel(d) || `${d.title || ''} ${d.counterparty || ''}`);
+            return dLabel.includes(normalizeStr(targetCardName)) || normalizeStr(targetCardName).includes(dLabel);
+          }
+          return isCardOrDebtItem(d);
+        });
+
+        if (!candidateDebts.length && !explicitAmount) {
+          candidateDebts = state.debts.filter(d => d.status !== 'settled' && d.kind !== 'credit');
+        }
+
+        // Compute total owed in UYU across matched items
+        let totalOwedUYU = 0;
+        candidateDebts.forEach(d => {
+          const rem = getDebtRemainingAmount(d);
+          totalOwedUYU += (d.currency === 'USD' ? rem * rate : rem);
+        });
+
+        const payAmountTargetCur = explicitAmount > 0
+          ? explicitAmount
+          : (targetCurrency === 'USD' ? Number((totalOwedUYU / rate).toFixed(2)) : Math.round(totalOwedUYU));
+
+        if (payAmountTargetCur > 0) {
+          // Convert payment into source account currency to deduct from source account
+          let deductInAccCur = payAmountTargetCur;
+          if (sourceAcc && sourceAcc.currency !== targetCurrency) {
+            deductInAccCur = (targetCurrency === 'USD' && sourceAcc.currency === 'UYU')
+              ? payAmountTargetCur * rate
+              : payAmountTargetCur / rate;
+          }
+
+          let remainingCreditToApplyUYU = (targetCurrency === 'USD' ? payAmountTargetCur * rate : payAmountTargetCur);
+          let settledCount = 0;
+          let updatedInstallmentsCount = 0;
+
+          for (const d of candidateDebts) {
+            if (remainingCreditToApplyUYU <= 0.01) break;
+            const remItem = getDebtRemainingAmount(d);
+            const remItemUYU = (d.currency === 'USD' ? remItem * rate : remItem);
+            const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+            const paidInst = Math.max(0, Math.min(instCount, parseInt(d.paidInstallments, 10) || 0));
+            const instVal = getDebtInstallmentValue(d);
+            const instValUYU = (d.currency === 'USD' ? instVal * rate : instVal);
+
+            if (remainingCreditToApplyUYU >= remItemUYU - 0.01 || (!explicitAmount && instCount === 1)) {
+              // Full item paid off
+              d.paidInstallments = instCount;
+              d.status = 'settled';
+              d.settledAt = Date.now();
+              remainingCreditToApplyUYU = Math.max(0, remainingCreditToApplyUYU - remItemUYU);
+              settledCount++;
+            } else if (instCount > 1 && remainingCreditToApplyUYU >= instValUYU * 0.5) {
+              // Advance installments covered by payment
+              const coveredInst = Math.max(1, Math.min(instCount - paidInst, Math.floor((remainingCreditToApplyUYU + 0.01) / Math.max(0.01, instValUYU))));
+              const newPaid = Math.min(instCount, paidInst + coveredInst);
+              const appliedVal = Number((instVal * coveredInst).toFixed(2));
+              d.paidInstallments = newPaid;
+              if (newPaid >= instCount) {
+                d.status = 'settled';
+                d.settledAt = Date.now();
+                settledCount++;
+              } else {
+                updatedInstallmentsCount++;
+              }
+              remainingCreditToApplyUYU = Math.max(0, remainingCreditToApplyUYU - (d.currency === 'USD' ? appliedVal * rate : appliedVal));
+            } else if (explicitAmount > 0) {
+              // Partial payment on single/remaining balance
+              const paidUYU = Math.min(remItemUYU, remainingCreditToApplyUYU);
+              const paidInDebtCur = (d.currency === 'USD' ? paidUYU / rate : paidUYU);
+              const newRemInDebtCur = Math.max(0, remItem - paidInDebtCur);
+              if (newRemInDebtCur <= 0.01) {
+                d.amount = 0;
+                d.paidInstallments = instCount;
+                d.status = 'settled';
+                d.settledAt = Date.now();
+                settledCount++;
+              } else {
+                if (instCount > 1) {
+                  // Reduce remaining amount proportionally by setting total amount to cover remaining installments
+                  const remInstLeft = Math.max(1, instCount - paidInst);
+                  const newInstVal = Number((newRemInDebtCur / remInstLeft).toFixed(2));
+                  d.amount = Number((newInstVal * instCount).toFixed(2));
+                } else {
+                  d.amount = Number(newRemInDebtCur.toFixed(2));
+                }
+                updatedInstallmentsCount++;
+              }
+              remainingCreditToApplyUYU = 0;
+            }
+          }
+
+          // Deduct from source account and record transaction without double-subtracting
+          if (sourceAcc) {
+            sourceAcc.balance = Number((sourceAcc.balance - deductInAccCur).toFixed(2));
+          }
+          const now = new Date();
+          const cardLabelDesc = targetCardName ? ` (${targetCardName})` : ' (Tarjeta de crédito)';
+          const accLabelDesc = sourceAcc ? sourceAcc.name : 'Efectivo';
+          const tx = {
+            id: 'tx_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+            title: (fromExternal ? '🤖 ' : '') + `Pago tarjeta de crédito${cardLabelDesc} con ${accLabelDesc}`,
+            amount: payAmountTargetCur,
+            currency: targetCurrency,
+            type: 'expense',
+            category: 'Tarjeta / Crédito',
+            accountId: sourceAcc ? sourceAcc.id : 'acc_cash',
+            accountName: accLabelDesc,
+            date: `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
+            timestamp: Date.now()
+          };
+          state.transactions.unshift(tx);
+
+          const dsAfter = getDebtsSummary();
+          const reply = (fromExternal ? '[Google Tasks] ' : '')
+            + `Pagué ${formatMoney(payAmountTargetCur, targetCurrency)}${cardLabelDesc} desde ${accLabelDesc}. `
+            + `Saldados: ${settledCount}, cuotas/saldos actualizados: ${updatedInstallmentsCount}. `
+            + `Próximo pago de cuotas: ${formatMoney(dsAfter.nextInstallmentsUYU, 'UYU')} y saldo en ${accLabelDesc}: ${sourceAcc ? formatMoney(sourceAcc.balance, sourceAcc.currency) : '$ 0'}.`;
+
+          ui.geminiResponse = { mode: 'action', prompt: text, reply, items: [tx] };
+          spawnFloatingBurst(`-${formatMoney(payAmountTargetCur, targetCurrency)} (${accLabelDesc})`, false);
+          speakText(reply);
+          saveState(true, true);
+          return;
+        }
+      }
+
       const debtIntentMatch = /(?:^|\b)(?:debo|me\s+deben|me\s+debe|prestamo|préstamo|credito|crédito|deuda|cuota\s+pendiente|pendiente\s+de\s+(?:cobro|pago)|tarjeta\s+de\s+credito|en\s+\d+\s+cuotas?|\d+\s+cuotas?)(?:\b|$)/i.test(lower) && !/\b(?:pague|pagué|cobre|cobré|gaste|gasté)\b/i.test(lower);
       if (debtIntentMatch) {
         if (!Array.isArray(state.debts)) state.debts = [];
@@ -1451,6 +1631,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
           return;
         }
       }
+
       const rawSegs = text.split(/(?:;|\s+y\s+(?=[^,.;]*?(?:\d|mil|quinientos|cien))|,(?=[^,.;]*?(?:\d|mil|quinientos|cien)))/i).map(s => s.trim()).filter(Boolean);
       const created = [];
       (rawSegs.length ? rawSegs : [text]).forEach(seg => {
@@ -1482,7 +1663,6 @@ input[type=number]::-webkit-outer-spin-button:hover {
       }
       render();
     }
-
     let recognition = null;
     function openInAppVoiceFallback(hint) {
       const isWinDesktop = Boolean(window.kronoDesktop && window.kronoDesktop.isElectron);
