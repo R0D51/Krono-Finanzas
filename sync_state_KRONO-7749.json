@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795492589107,
+  "updatedAt": 1795492591658,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -184,7 +184,7 @@
   ],
   "debts": [
     {
-      "id": "debt_sync_tx_debt_1795484236579_375_680",
+      "id": "debt_sync_tx_debt_1795484236579_375_700",
       "title": "📉 Deuda: Compra (Itaú Visa) • 12 cuotas",
       "counterparty": "Itaú Dolares",
       "paymentMethod": "credit_card",
