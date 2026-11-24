@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795484005785,
+  "updatedAt": 1795484236579,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -169,6 +169,22 @@
   ],
   "debts": [
     {
+      "id": "debt_1795484236579_293",
+      "title": "Compra",
+      "counterparty": "Sonwq",
+      "paymentMethod": "credit_card",
+      "cardName": "Itaú Visa",
+      "installmentsCount": 12,
+      "paidInstallments": 0,
+      "amount": 100000,
+      "currency": "UYU",
+      "kind": "debt",
+      "dueDate": "",
+      "status": "pending",
+      "notes": "",
+      "createdAt": 1795484236579
+    },
+    {
       "id": "debt_1795461994607_298",
       "title": "Prueba",
       "counterparty": "Milonga",
@@ -245,6 +261,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_debt_1795484236579_375",
+      "title": "📉 Deuda: Compra (Itaú Visa) • 12 cuotas",
+      "amount": 100000,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Tarjeta / Crédito",
+      "accountId": "debt_ledger",
+      "accountName": "Itaú Visa",
+      "date": "23/11 22:37",
+      "timestamp": 1795484236579
+    },
     {
       "id": "tx_1795484005785_849",
       "title": "🤖 Pago tarjeta (Tarjeta de crédito) con Cuenta Itaú / Débito",
