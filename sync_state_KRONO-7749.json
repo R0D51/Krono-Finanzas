@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795492638434,
+  "updatedAt": 1795492639780,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -184,7 +184,7 @@
   ],
   "debts": [
     {
-      "id": "debt_sync_tx_1795483635646_280_805",
+      "id": "debt_sync_tx_1795483635646_280_672",
       "title": "Pago tarjeta (Itaú Visa) con Cuenta Itaú / Débito",
       "counterparty": "Cuenta Itaú / Débito",
       "paymentMethod": "credit_card",
