@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795488694897,
+  "updatedAt": 1795488812378,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -115,7 +115,7 @@
       "id": "acc_uyu",
       "name": "Cuenta Itaú / Débito",
       "currency": "UYU",
-      "balance": 15000,
+      "balance": 14300,
       "color": "from-cyan-400 to-blue-500",
       "icon": "🏦"
     },
@@ -181,7 +181,7 @@
       "paymentMethod": "credit_card",
       "cardName": "Itaú Pesos",
       "installmentsCount": 5,
-      "paidInstallments": 0,
+      "paidInstallments": 1,
       "amount": 3500,
       "currency": "UYU",
       "kind": "debt",
@@ -267,6 +267,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795488812378_980",
+      "title": "Pago: Gasto en cuotas (Cuota 1/5) [Itaú Pesos]",
+      "amount": 700,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Tarjeta de Crédito",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Itaú / Débito",
+      "date": "23/11 23:53",
+      "timestamp": 1795488812378
+    },
     {
       "id": "tx_ai_1795488694893_25",
       "title": "🤖 💳 Gasto en cuotas (Itaú Pesos • 5 cuotas)",
