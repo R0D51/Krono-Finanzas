@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.49
+    // KRONO OTA BOOTLOADER v6.5.50
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.49';
+    const APP_BASE_VERSION = '6.5.50';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,7 +230,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.49',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.50',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -1537,41 +1537,55 @@ input[type=number]::-webkit-outer-spin-button:hover {
       if (!cleanKey) return null;
       const ctx = buildCompactContextForAI();
       const systemPrompt = [
-        'Sos el motor de interpretación financiera de Krono Finanzas.',
-        'Tu tarea es convertir una instrucción en lenguaje natural a una lista estructurada de acciones JSON.',
-        'NO adivines ni inventes montos que no existan en el contexto o en la frase.',
-        'Reglas clave:',
-        '1. Si el usuario dice que paga "las cuotas de este mes" / "cuotas del mes" / "cuota de este mes" de una tarjeta o deuda en cuotas: el modo es "current_installments" (NO salda el saldo total futuro de todas las cuotas, solo paga la cuota corriente de este mes de cada ítem en cuotas o tarjeta coincidente).',
-        '2. Si el usuario dice explícitamente que paga/liquida/cancela "todo" o "el saldo total" o "todo lo que debo": el modo es "full_balance".',
-        '3. Si menciona efectivo / billetera / cash / plata en efectivo: accountQuery = "efectivo".',
-        '4. Devolvé EXCLUSIVAMENTE un objeto JSON válido con esta forma:',
-        '{"actions":[{"op":"pay_obligations","scope":"current_installments|full_balance|exact_amount","amount":0,"currency":"UYU|USD","cardQuery":"","accountQuery":"efectivo","note":""},{"op":"add_transaction","title":"","amount":0,"currency":"UYU|USD","type":"expense|income","category":"","accountQuery":""},{"op":"add_debt","title":"","amount":0,"currency":"UYU|USD","kind":"debt|credit","cardName":"","counterparty":"","installmentsCount":1,"perInstallment":false,"dueDate":""},{"op":"query_balance","accountQuery":""}]}'
+        'Sos el motor inteligente de Krono Finanzas. Interpreta español natural (incluyendo modismos rioplatenses / uruguayos: "plata", "mango", "lucas", "al contado", "en cuotas", "tarjeta", "prestamo").',
+        'Tu trabajo es traducir lo que dijo el usuario a acciones exactas sin inventar números ni saldar deudas de más.',
+        'Reglas estrictas:',
+        '1. Gasto o ingreso AL CONTADO (con efectivo, débito, BROU, ahorro, etc.): usá "add_transaction" con "paymentMode":"cash" y "accountQuery" (ej: "efectivo", "brou", "ahorro").',
+        '2. Compra/gasto/ingreso FINANCIADO CON TARJETA DE CRÉDITO (ej: "compré zapatillas en 6 cuotas con la visa", "cargué 4000 en la tarjeta"): usá "add_debt" con "paymentMethod":"credit_card", "cardName", "installmentsCount", "perInstallment" (true si el monto indicado es el valor de cada cuota, false si es el monto total), y "kind":"debt" (o "credit" si es crédito a favor).',
+        '3. PRÉSTAMO (ej: "saqué un préstamo de 20000 en 12 cuotas", "le presté 1500 a Juan"): usá "add_debt" con "paymentMethod":"personal", "counterparty" (persona/banco), "installmentsCount", "perInstallment", y "kind":"debt" (si debe devolverse/pagarse) o "credit" (si alguien lo debe/debe cobrar).',
+        '4. PAGO de tarjetas/deudas/cuotas: usá "pay_obligations" con "scope": "current_installments" si paga las cuotas de este mes / cuota mensual, "full_balance" si paga todo el saldo total, o "exact_amount" si indica un monto puntual; incluí "cardQuery" si menciona tarjeta/préstamo y "accountQuery" desde dónde paga (ej: "efectivo").',
+        '5. Consulta de saldo: usá "query_balance".',
+        'Devolvé EXCLUSIVAMENTE un objeto JSON válido con esta estructura:',
+        '{"actions":[{"op":"add_transaction","title":"","amount":0,"currency":"UYU|USD","type":"expense|income","category":"","accountQuery":""},{"op":"add_debt","title":"","amount":0,"currency":"UYU|USD","kind":"debt|credit","paymentMethod":"credit_card|personal","cardName":"","counterparty":"","installmentsCount":1,"perInstallment":false,"dueDate":""},{"op":"pay_obligations","scope":"current_installments|full_balance|exact_amount","amount":0,"currency":"UYU|USD","cardQuery":"","accountQuery":"","note":""},{"op":"query_balance","accountQuery":""}]}'
       ].join('\n');
 
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(cleanKey)}`;
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            role: 'user',
-            parts: [{
-              text: `${systemPrompt}\n\nContexto actual:\n${JSON.stringify(ctx)}\n\nInstrucción del usuario:\n"${commandText}"`
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.1,
-            responseMimeType: 'application/json'
+      const models = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+      let lastErr = null;
+      for (const modelName of models) {
+        try {
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(cleanKey)}`;
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                role: 'user',
+                parts: [{
+                  text: `${systemPrompt}\n\nContexto actual:\n${JSON.stringify(ctx)}\n\nInstrucción del usuario:\n"${commandText}"`
+                }]
+              }],
+              generationConfig: {
+                temperature: 0.1,
+                responseMimeType: 'application/json'
+              }
+            })
+          });
+          if (!res.ok) {
+            lastErr = new Error('Gemini HTTP ' + res.status);
+            continue;
           }
-        })
-      });
-
-      if (!res.ok) throw new Error('Gemini HTTP ' + res.status);
-      const data = await res.json();
-      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      if (!rawText.trim()) return null;
-      const parsed = JSON.parse(rawText);
-      return Array.isArray(parsed.actions) ? parsed.actions : null;
+          const data = await res.json();
+          const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          if (!rawText.trim()) continue;
+          const cleanedJson = rawText.replace(/^```json\s*|\s*```$/gi, '').trim();
+          const parsed = JSON.parse(cleanedJson);
+          if (Array.isArray(parsed.actions)) return parsed.actions;
+        } catch (err) {
+          lastErr = err;
+        }
+      }
+      if (lastErr) throw lastErr;
+      return null;
     }
 
     function executeStructuredActions(actions, originalText, fromExternal) {
@@ -1584,7 +1598,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       function matchAccount(q) {
         const nq = normalizeStr(q || '');
         if (!nq) return state.accounts[0];
-        if (/\b(efectivo|billetera|cash|contado|en mano|monedero)\b/.test(nq)) {
+        if (/\b(efectivo|billetera|cash|contado|en mano|monedero|plata)\b/.test(nq)) {
           return state.accounts.find(a => a.id === 'acc_cash' || /efectivo|billetera|cash|mano/i.test(normalizeStr(a.name))) || state.accounts[0];
         }
         return findAccountMentionInText(nq) || state.accounts[0];
@@ -1595,8 +1609,16 @@ input[type=number]::-webkit-outer-spin-button:hover {
         return state.debts.filter(d => {
           if (d.status === 'settled' || d.kind === 'credit') return false;
           if (!cNorm) return true;
-          const label = normalizeStr(`${getDebtInstrumentLabel(d)} ${d.title || ''} ${d.counterparty || ''}`);
-          return label.includes(cNorm) || cNorm.includes(label);
+          const label = normalizeStr(`${getDebtInstrumentLabel(d)} ${d.title || ''} ${d.counterparty || ''} ${d.paymentMethod || ''}`);
+          if (/\b(tarjeta|visa|master|oca|amex|cabal|credito|crédito)\b/.test(cNorm) && !/\b(prestamo|préstamo|persona)\b/.test(cNorm)) {
+            const isCardItem = d.paymentMethod === 'credit_card' || Boolean((d.cardName || '').trim()) || /tarjeta|visa|master|oca|amex|cabal|zodimac/i.test(label);
+            if (!isCardItem) return false;
+          }
+          if (/\b(prestamo|préstamo)\b/.test(cNorm)) {
+            const isLoanItem = d.paymentMethod === 'personal' || /prestamo|préstamo/i.test(label);
+            if (!isLoanItem) return false;
+          }
+          return label.includes(cNorm) || cNorm.includes(label) || /\b(tarjeta|prestamo|préstamo|cuota|cuotas|deuda)\b/.test(cNorm);
         });
       }
 
@@ -1613,7 +1635,6 @@ input[type=number]::-webkit-outer-spin-button:hover {
           let itemsTouched = 0;
 
           if (scope === 'current_installments') {
-            // Pay ONLY the current month's installment for each matching debt/card
             for (const d of targets) {
               const remItem = getDebtRemainingAmount(d);
               if (remItem <= 0.01) continue;
@@ -1729,7 +1750,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
           if (amt > 0) {
             const acc = matchAccount(act.accountQuery);
             const tx = addTransaction({
-              title: act.title || 'Movimiento',
+              title: act.title || 'Movimiento al contado',
               amount: amt,
               currency: act.currency || (acc ? acc.currency : 'UYU'),
               type: act.type === 'income' ? 'income' : 'expense',
@@ -1748,13 +1769,31 @@ input[type=number]::-webkit-outer-spin-button:hover {
           if (rawAmt > 0) {
             const totalAmt = (instC > 1 && act.perInstallment) ? Number((rawAmt * instC).toFixed(2)) : rawAmt;
             const kind = act.kind === 'credit' ? 'credit' : 'debt';
-            const cardName = (act.cardName || '').trim();
+            const payMethod = act.paymentMethod === 'personal' ? 'personal' : 'credit_card';
+            const cardName = payMethod === 'credit_card' ? ((act.cardName || act.counterparty || 'Tarjeta de Crédito').trim()) : '';
+            const partyName = payMethod === 'personal' ? ((act.counterparty || act.cardName || 'Préstamo').trim()) : (cardName || 'Tarjeta');
             const cur = act.currency || state.defaultCurrency || 'UYU';
+
+            if (cardName && Array.isArray(state.creditCards)) {
+              const exists = state.creditCards.some(c => String(c.name || '').trim().toLowerCase() === cardName.toLowerCase());
+              if (!exists) {
+                state.creditCards.unshift({
+                  id: 'card_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                  name: cardName,
+                  bank: '',
+                  brand: 'Visa',
+                  currency: cur,
+                  closingDay: '',
+                  dueDay: ''
+                });
+              }
+            }
+
             state.debts.unshift({
               id: 'debt_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-              title: act.title || (kind === 'credit' ? 'Crédito pendiente' : 'Deuda pendiente'),
-              counterparty: act.counterparty || cardName || (kind === 'credit' ? 'Por cobrar' : 'Por pagar'),
-              paymentMethod: cardName ? 'credit_card' : (instC > 1 ? 'installment_plan' : 'general'),
+              title: act.title || (payMethod === 'personal' ? 'Préstamo' : 'Compra tarjeta'),
+              counterparty: partyName,
+              paymentMethod: payMethod,
               cardName,
               installmentsCount: instC,
               paidInstallments: 0,
@@ -1766,7 +1805,24 @@ input[type=number]::-webkit-outer-spin-button:hover {
               notes: '',
               createdAt: Date.now()
             });
-            summaryParts.push(`${kind === 'credit' ? 'Crédito' : 'Deuda'}: ${act.title || ''} (${formatMoney(totalAmt, cur)})`);
+
+            const now = new Date();
+            const cuotaTag = instC > 1 ? ` • ${instC} cuotas` : '';
+            const tx = {
+              id: 'tx_ai_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+              title: (fromExternal ? '🤖 ' : '') + (payMethod === 'personal' ? `🤝 Préstamo: ${act.title || 'Préstamo'} (${partyName}${cuotaTag})` : `💳 ${act.title || 'Compra'} (${cardName}${cuotaTag})`),
+              amount: totalAmt,
+              currency: cur,
+              type: kind === 'credit' ? 'income' : 'expense',
+              category: payMethod === 'personal' ? 'Préstamo' : 'Tarjeta / Crédito',
+              accountId: payMethod === 'personal' ? 'loan_ledger' : ('card_' + cardName.toLowerCase().replace(/[^a-z0-9]+/g, '_')),
+              accountName: payMethod === 'personal' ? `Préstamo (${partyName})` : cardName,
+              date: `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
+              timestamp: Date.now()
+            };
+            state.transactions.unshift(tx);
+            spawnFloatingBurst(`${payMethod === 'personal' ? '🤝' : '💳'} ${formatMoney(totalAmt, cur)}`, kind === 'credit');
+            summaryParts.push(`${payMethod === 'personal' ? 'Préstamo' : 'Tarjeta'}: ${act.title || ''} (${formatMoney(totalAmt, cur)}${cuotaTag})`);
             executedAny = true;
           }
         } else if (act.op === 'query_balance') {
@@ -1794,7 +1850,6 @@ input[type=number]::-webkit-outer-spin-button:hover {
       const text = rawInput.replace(/_/g, ' ').replace(/\+/g, ' ').trim().replace(/^(?:hey\s+gemini|hola\s+gemini|gemini|tarea\s+|en\s+krono\s+|krono[:\s,-]*)+/i, '').trim();
       const lower = normalizeStr(text);
 
-      // Optional AI interpreter path when user configures a Gemini API key in Settings
       if (state.geminiApiKey && String(state.geminiApiKey).trim()) {
         ui.lastInterpreterMode = '🧠 IA Gemini (consultando...)';
         interpretWithGeminiAI(text, state.geminiApiKey)
@@ -1814,7 +1869,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
               render();
             }
           })
-          .catch((err) => {
+          .catch(() => {
             ui.lastInterpreterMode = '⚙️ Parámetros locales (sin respuesta IA)';
             runLocalRuleInterpreter(text, lower, fromExternal);
             if (ui.geminiResponse && !ui.geminiResponse.reply.startsWith('[⚙️')) {
@@ -2240,21 +2295,37 @@ input[type=number]::-webkit-outer-spin-button:hover {
           })()}
         </div>
         ${ui.geminiResponse ? `<div class="p-3 rounded-2xl bg-slate-950/60 border border-cyan-400/30 text-xs flex items-center justify-between gap-2"><div class="min-w-0 flex-1 break-words"><span class="text-cyan-300 font-bold">Gemini:</span> <span class="text-slate-200">${ui.geminiResponse.reply}</span></div><button onclick="ui.geminiResponse=null;render();" class="text-slate-400">✕</button></div>` : ''}
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          <button onclick="ui.showNewTxModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">➕</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Movimiento</div><div class="text-[10px] text-slate-400 truncate">Gasto o ingreso</div></div></button>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <button onclick="ui.showNewTxModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">➕</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Movimiento</div><div class="text-[10px] text-slate-400 truncate">Contado, tarjeta o préstamo</div></div></button>
           <button onclick="ui.showTransferModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">⇄</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Transferir</div><div class="text-[10px] text-slate-400 truncate">Entre cuentas</div></div></button>
-          <button onclick="ui.showNewDebtModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">📌</span><div class="min-w-0"><div class="text-xs font-bold text-amber-200 truncate">Deudas</div><div class="text-[10px] text-slate-400 truncate">Créditos o pendientes</div></div></button>
         </div>
+        ${(() => {
+          const openDebts = (Array.isArray(state.debts) ? state.debts : []).filter(d => d.status !== 'settled');
+          return `
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="glass-97 rounded-3xl p-5">
-            <div class="flex justify-between mb-3"><h3 class="text-sm font-extrabold text-white">🏦 Cuentas Activas</h3><button onclick="switchTab('accounts');" class="text-xs text-cyan-300">Ver todas →</button></div>
-            <div class="space-y-2.5">${state.accounts.map(a => `<div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="flex items-center gap-2.5 min-w-0"><span class="text-xl">${a.icon||'🏦'}</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">${a.name}</div><div class="text-[10px] text-slate-400">${a.currency}</div></div></div><div class="text-sm font-extrabold mono text-white shrink-0">${formatMoney(a.balance,a.currency)}</div></div>`).join('')}</div>
+          <div class="glass-97 rounded-3xl p-5 flex flex-col">
+            <div class="flex justify-between items-center mb-3 shrink-0"><h3 class="text-sm font-extrabold text-white">🏦 Cuentas Activas</h3><button onclick="switchTab('accounts');" class="text-xs text-cyan-300">Ver todas →</button></div>
+            <div class="krono-recent-scroll space-y-2.5 max-h-72 overflow-y-auto pr-1.5">${state.accounts.map(a => `<div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="flex items-center gap-2.5 min-w-0"><span class="text-xl">${a.icon||'🏦'}</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">${a.name}</div><div class="text-[10px] text-slate-400">${a.currency}</div></div></div><div class="text-sm font-extrabold mono text-white shrink-0">${formatMoney(a.balance,a.currency)}</div></div>`).join('')}</div>
           </div>
           <div class="glass-97 rounded-3xl p-5 flex flex-col">
-            <div class="flex justify-between items-center mb-3 shrink-0"><h3 class="text-sm font-extrabold text-white">⚡ Últimos Movimientos</h3><button onclick="switchTab('movements');" class="text-xs text-cyan-300">Historial →</button></div>
-            <div class="krono-recent-scroll space-y-2.5 max-h-72 overflow-y-auto pr-1.5">${state.transactions.length ? state.transactions.map(t => `<div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="min-w-0"><div class="text-xs font-bold text-white truncate">${t.title}</div><div class="text-[10px] text-slate-400 truncate">${t.category} • <span class="text-cyan-300">${t.accountName}</span> • ${t.date}</div></div><div class="text-xs font-extrabold mono shrink-0 ${t.type==='income'?'text-emerald-300':'text-rose-300'}">${t.type==='income'?'+':'-'}${formatMoney(t.amount,t.currency)}</div></div>`).join('') : '<div class="text-xs text-slate-400 py-4 text-center">Sin movimientos.</div>'}</div>
+            <div class="flex justify-between items-center mb-3 shrink-0"><h3 class="text-sm font-extrabold text-white">📌 Cuentas de Deudas</h3><button onclick="switchTab('debts');" class="text-xs text-cyan-300">Ver todas →</button></div>
+            <div class="krono-recent-scroll space-y-2.5 max-h-72 overflow-y-auto pr-1.5">${openDebts.length ? openDebts.map(d => {
+              const isCred = d.kind === 'credit';
+              const rem = getDebtRemainingAmount(d);
+              const instC = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+              const paidC = Math.max(0, Math.min(instC, parseInt(d.paidInstallments, 10) || 0));
+              const cardLbl = getDebtInstrumentLabel(d);
+              const subLbl = [cardLbl || d.counterparty || (isCred ? 'Crédito' : 'Deuda'), instC > 1 ? `Cuota ${Math.min(instC, paidC + 1)}/${instC}` : 'Pago único', d.currency].filter(Boolean).join(' • ');
+              return `<div onclick="switchTab('debts');" class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2 cursor-pointer"><div class="flex items-center gap-2.5 min-w-0"><span class="text-xl">${d.paymentMethod === 'credit_card' || cardLbl ? '💳' : (isCred ? '📈' : '📉')}</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">${escapeAttr(d.title)}</div><div class="text-[10px] text-slate-400 truncate">${escapeAttr(subLbl)}</div></div></div><div class="text-xs font-extrabold mono shrink-0 ${isCred ? 'text-emerald-300' : 'text-rose-300'}">${isCred ? '+' : '-'}${formatMoney(rem, d.currency)}</div></div>`;
+            }).join('') : '<div class="text-xs text-slate-400 py-4 text-center">Sin deudas pendientes.</div>'}</div>
           </div>
         </div>
+        <div class="glass-97 rounded-3xl p-5 flex flex-col">
+          <div class="flex justify-between items-center mb-3 shrink-0"><h3 class="text-sm font-extrabold text-white">⚡ Últimos Movimientos</h3><button onclick="switchTab('movements');" class="text-xs text-cyan-300">Historial →</button></div>
+          <div class="krono-recent-scroll space-y-2.5 max-h-72 overflow-y-auto pr-1.5">${state.transactions.length ? state.transactions.map(t => `<div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="min-w-0"><div class="text-xs font-bold text-white truncate">${t.title}</div><div class="text-[10px] text-slate-400 truncate">${t.category} • <span class="text-cyan-300">${t.accountName}</span> • ${t.date}</div></div><div class="text-xs font-extrabold mono shrink-0 ${t.type==='income'?'text-emerald-300':'text-rose-300'}">${t.type==='income'?'+':'-'}${formatMoney(t.amount,t.currency)}</div></div>`).join('') : '<div class="text-xs text-slate-400 py-4 text-center">Sin movimientos.</div>'}</div>
+        </div>
+          `;
+        })()}
         <div class="glass-97 rounded-3xl p-5">
           <div class="flex justify-between mb-3"><h3 class="text-sm font-extrabold text-white">🎯 Top Presupuestos</h3><button onclick="switchTab('budgets');" class="text-xs text-cyan-300">Administrar →</button></div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${state.budgets.slice(0,4).map(bg => { const sp = state.transactions.filter(t => t.type==='expense' && t.category===bg.name).reduce((s,t) => s + (t.currency==='USD'?t.amount*rate:t.amount), 0); const pct = bg.limit>0?Math.min(100,Math.round((sp/bg.limit)*100)):0; return `<div class="p-3.5 rounded-2xl bg-slate-950/40 border border-white/10"><div class="flex justify-between gap-2 text-xs mb-1.5"><span class="font-bold text-white truncate">${bg.icon||'🎯'} ${bg.name}</span><span class="mono text-slate-300 shrink-0">${formatMoney(sp,'UYU')} / ${formatMoney(bg.limit,'UYU')} (${pct}%)</span></div><div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full ${pct>=90?'bg-rose-500':'bg-cyan-400'}" style="width:${pct}%"></div></div></div>`; }).join('')}</div>
