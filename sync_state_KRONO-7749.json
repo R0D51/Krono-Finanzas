@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795488386031,
+  "updatedAt": 1795488393651,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -173,22 +173,6 @@
     }
   ],
   "debts": [
-    {
-      "id": "debt_1795484236579_293",
-      "title": "Compra",
-      "counterparty": "Sonwq",
-      "paymentMethod": "credit_card",
-      "cardName": "Itaú Visa",
-      "installmentsCount": 12,
-      "paidInstallments": 1,
-      "amount": 98499.96,
-      "currency": "UYU",
-      "kind": "debt",
-      "dueDate": "",
-      "status": "pending",
-      "notes": "",
-      "createdAt": 1795484236579
-    },
     {
       "id": "debt_1795461994607_298",
       "title": "Prueba",
