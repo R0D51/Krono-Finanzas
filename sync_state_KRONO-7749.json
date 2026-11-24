@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795492649777,
+  "updatedAt": 1795492688549,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -65,9 +65,15 @@
     "gtask_TWVXT2pvd1RGbWNSOWN5WQ",
     "gtask_TmRWZ29YS20zeE9vX0lKdA",
     "gtask_Z3JaN1Z5WmdERm1BWWp6SQ",
-    "gtask_XzVpajFvdlhtdl9OMU5kMg"
+    "gtask_XzVpajFvdlhtdl9OMU5kMg",
+    "gtask_ZDNqdmxTM2htNHFnN1JFeQ"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_ZDNqdmxTM2htNHFnN1JFeQ",
+      "command": "Gasto $2.500 en 10 cuotas Gasto de 2500 pesos en 10 cuotas (250 pesos por cuota), registrado ayer (23 de noviembre de 2026).",
+      "date": "12:58 a. m."
+    },
     {
       "id": "gtask_XzVpajFvdlhtdl9OMU5kMg",
       "command": "Gasté 3500 pesos en tres cuotas",
@@ -112,11 +118,6 @@
       "id": "gtask_LWUxN0UtTmEzT0V1NnhHaQ",
       "command": "Gasté 3,500 pesos en cinco cuotas",
       "date": "12:06 a. m."
-    },
-    {
-      "id": "gtask_NFJPU1g3Yk9tU2laYjBUZw",
-      "command": "Gasté 3,500 pesos en cinco cuotas",
-      "date": "11:51 p. m."
     }
   ],
   "accounts": [
