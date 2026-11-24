@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.60
+    // KRONO OTA BOOTLOADER v6.5.62
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.60';
+    const APP_BASE_VERSION = '6.5.62';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,7 +230,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.60',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.62',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -1769,34 +1769,13 @@ input[type=number]::-webkit-outer-spin-button:hover {
       };
     }
 
-    async function resolveBestGeminiModel(cleanKey) {
+    function resolveBestGeminiModelFast() {
       const cached = localStorage.getItem('KRONO_GEMINI_MODEL');
       if (cached && cached.trim() && !/gemini-2\.0-flash|gemini-1\.5-flash|gemini-2\.5-flash/i.test(cached)) {
         return cached.trim();
       }
       localStorage.removeItem('KRONO_GEMINI_MODEL');
-      const fallbackModel = 'gemini-3.8-flash';
-      try {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 2200);
-        const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(cleanKey)}`, { signal: ctrl.signal });
-        clearTimeout(tid);
-        if (listRes.ok) {
-          const listJson = await listRes.json();
-          const available = (listJson.models || [])
-            .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
-            .map(m => String(m.name || '').replace(/^models\//, ''))
-            .filter(Boolean);
-          const pick = available.find(n => /gemini-3\.8-flash/i.test(n))
-            || available.find(n => /gemini-3\.8-flash/i.test(n))
-            || available.find(n => /flash/i.test(n) && !/2\.0-flash|1\.5-flash/i.test(n))
-            || available[0]
-            || fallbackModel;
-          localStorage.setItem('KRONO_GEMINI_MODEL', pick);
-          return pick;
-        }
-      } catch (e) {}
-      return fallbackModel;
+      return 'gemini-3.8-flash';
     }
 
     async function interpretWithGeminiAI(commandText, apiKey) {
@@ -1805,62 +1784,50 @@ input[type=number]::-webkit-outer-spin-button:hover {
         throw new Error('Falta configurar la Gemini API Key en Ajustes.');
       }
       const ctx = buildCompactContextForAI();
-      const systemPrompt = [
-        'Sos el motor rápido y preciso de Krono Finanzas. Traducí lenguaje natural a acciones JSON.',
-        'REGLA CRÍTICA DE CUOTAS/TARJETA:',
-        '- Si el usuario dice "pagué la tarjeta de crédito" / "pagué la tarjeta" / "pagué las cuotas" SIN decir explícitamente "todo", "saldo total" o "cancelé todo": usá scope="current_installments" (paga SOLO la cuota corriente de este mes, NUNCA liquida todas las cuotas futuras ni el saldo total).',
-        '- Solo usá scope="full_balance" si dice explícitamente "todo", "saldo total", "toda la deuda" o "cancelé todo".',
-        '- Si indica un monto concreto (ej: "pagué 2500 de la tarjeta"): usá scope="exact_amount" con ese amount.',
-        '- Gasto/ingreso al contado: op="add_transaction" con accountQuery (ej: "efectivo", "brou").',
-        '- Compra financiada con tarjeta o préstamo: op="add_debt" con paymentMethod ("credit_card" o "personal"), installmentsCount, perInstallment.',
-        'Devolvé EXCLUSIVAMENTE JSON válido: {"actions":[...]}'
+      const compactPrompt = [
+        'Traducí la frase a JSON {"actions":[...]} para Krono Finanzas.',
+        'Reglas:',
+        '- Pago tarjeta/cuotas sin decir "todo" ni "saldo total": scope="current_installments" (solo cuota corriente).',
+        '- Solo usá scope="full_balance" si dice explícitamente "todo" o "saldo total".',
+        '- Monto puntual tarjeta/deuda: scope="exact_amount", amount, currency.',
+        '- Gasto/ingreso contado: op="add_transaction", title, amount, currency, type, category, accountQuery.',
+        '- Compra tarjeta o préstamo: op="add_debt", title, amount, currency, kind, paymentMethod, cardName/counterparty, installmentsCount, perInstallment.',
+        '- Saldo/patrimonio: op="query_balance", accountQuery.',
+        `Ctx:${JSON.stringify(ctx)}`,
+        `Frase:"${commandText}"`
       ].join('\n');
 
-      const promptBodyText = `${systemPrompt}\n\nContexto:\n${JSON.stringify(ctx)}\n\nFrase: "${commandText}"`;
-      const chosenModel = await resolveBestGeminiModel(cleanKey);
-      const modelsToTry = [chosenModel, 'gemini-3.8-flash', 'gemini-3.8-flash'].filter((v, i, a) => v && a.indexOf(v) === i);
-
-      let lastErrMsg = 'sin respuesta de Gemini';
-      for (const modelName of modelsToTry) {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 5500);
-        try {
-          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(cleanKey)}`;
-          const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            signal: ctrl.signal,
-            body: JSON.stringify({
-              contents: [{ role: 'user', parts: [{ text: promptBodyText }] }],
-              generationConfig: { temperature: 0.05, responseMimeType: 'application/json' }
-            })
-          });
-          clearTimeout(tid);
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            const apiErr = (data && data.error && data.error.message) ? data.error.message : `HTTP ${res.status}`;
-            lastErrMsg = `${modelName}: ${apiErr}`;
-            if (localStorage.getItem('KRONO_GEMINI_MODEL') === modelName) localStorage.removeItem('KRONO_GEMINI_MODEL');
-            continue;
+      const modelName = resolveBestGeminiModelFast();
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(cleanKey)}`;
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: compactPrompt }] }],
+          generationConfig: {
+            temperature: 0,
+            maxOutputTokens: 512,
+            responseMimeType: 'application/json'
           }
-          const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          if (!rawText.trim()) {
-            lastErrMsg = `${modelName}: respuesta vacía`;
-            continue;
-          }
-          const cleanedJson = rawText.replace(/^```json\s*|\s*```$/gi, '').trim();
-          const parsed = JSON.parse(cleanedJson);
-          if (Array.isArray(parsed.actions)) {
-            localStorage.setItem('KRONO_GEMINI_MODEL', modelName);
-            return parsed.actions;
-          }
-          lastErrMsg = `${modelName}: JSON sin actions`;
-        } catch (err) {
-          clearTimeout(tid);
-          lastErrMsg = (err && err.name === 'AbortError') ? `${modelName}: demoró más de 5.5s` : `${modelName}: ${(err && err.message) ? err.message : 'error de red'}`;
-        }
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const apiErr = (data && data.error && data.error.message) ? data.error.message : `HTTP ${res.status}`;
+        if (localStorage.getItem('KRONO_GEMINI_MODEL') === modelName) localStorage.removeItem('KRONO_GEMINI_MODEL');
+        throw new Error(`${modelName}: ${apiErr}`);
       }
-      throw new Error(lastErrMsg);
+      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      if (!rawText.trim()) {
+        throw new Error(`${modelName}: respuesta vacía`);
+      }
+      const cleanedJson = rawText.replace(/^```json\s*|\s*```$/gi, '').trim();
+      const parsed = JSON.parse(cleanedJson);
+      if (!Array.isArray(parsed.actions)) {
+        throw new Error(`${modelName}: JSON sin actions`);
+      }
+      localStorage.setItem('KRONO_GEMINI_MODEL', modelName);
+      return parsed.actions;
     }
 
     function executeStructuredActions(actions, originalText, fromExternal) {
