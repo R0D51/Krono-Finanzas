@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.53
+    // KRONO OTA BOOTLOADER v6.5.54
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.53';
+    const APP_BASE_VERSION = '6.5.54';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,7 +230,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.53',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.54',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -1101,27 +1101,38 @@ input[type=number]::-webkit-outer-spin-button:hover {
       const remBefore = getDebtRemainingAmount(d);
       const payVal = Math.min(remBefore, instVal || remBefore);
       const nextPaid = Math.min(instCount, paidInst + 1);
-      d.paidInstallments = nextPaid;
-      if (nextPaid >= instCount || getDebtRemainingAmount(d) <= 0.01) {
-        d.status = 'settled';
-        d.settledAt = Date.now();
-      }
-      if (recordTx && payVal > 0) {
-        const cardTag = d.cardName ? ` [${d.cardName}]` : '';
-        const cuotaTag = instCount > 1 ? ` (Cuota ${nextPaid}/${instCount})` : '';
-        addTransaction({
-          title: `${d.kind === 'credit' ? 'Cobro' : 'Pago'}: ${d.title}${cuotaTag}${cardTag}`,
-          amount: payVal,
-          currency: d.currency,
-          type: d.kind === 'credit' ? 'income' : 'expense',
-          category: d.kind === 'credit' ? 'Ingreso' : (d.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 'General'),
-          accountId: state.accounts[0] ? state.accounts[0].id : null
-        });
-        spawnFloatingBurst(`✅ ${instCount > 1 ? 'Cuota ' + nextPaid + '/' + instCount + ' asentada' : 'Liquidado y asentado'}`, true);
-        return;
-      }
-      spawnFloatingBurst(nextPaid >= instCount ? '✅ Todas las cuotas saldadas' : `✅ Cuota ${nextPaid}/${instCount} marcada`, true);
-      saveState(true, true);
+      const actionVerb = d.kind === 'credit' ? 'cobrar' : 'pagar';
+      const firstAccName = (state.accounts && state.accounts[0]) ? state.accounts[0].name : 'cuenta principal';
+
+      openConfirmModal({
+        title: `💳 Confirmar ${d.kind === 'credit' ? 'Cobro' : 'Pago'} de Cuota #${nextPaid}/${instCount}`,
+        message: `¿Querés ${actionVerb} la cuota #${nextPaid} de "${escapeAttr(d.title)}" por ${formatMoney(payVal, d.currency)}${recordTx ? ` asentando el movimiento en "${escapeAttr(firstAccName)}"` : ' sin asentar en cuenta'}?`,
+        confirmText: recordTx ? `Confirmar y Asentar` : `Marcar Cuota Pagada`,
+        danger: false,
+        onConfirm: () => {
+          d.paidInstallments = nextPaid;
+          if (nextPaid >= instCount || getDebtRemainingAmount(d) <= 0.01) {
+            d.status = 'settled';
+            d.settledAt = Date.now();
+          }
+          if (recordTx && payVal > 0) {
+            const cardTag = d.cardName ? ` [${d.cardName}]` : '';
+            const cuotaTag = instCount > 1 ? ` (Cuota ${nextPaid}/${instCount})` : '';
+            addTransaction({
+              title: `${d.kind === 'credit' ? 'Cobro' : 'Pago'}: ${d.title}${cuotaTag}${cardTag}`,
+              amount: payVal,
+              currency: d.currency,
+              type: d.kind === 'credit' ? 'income' : 'expense',
+              category: d.kind === 'credit' ? 'Ingreso' : (d.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 'General'),
+              accountId: state.accounts[0] ? state.accounts[0].id : null
+            });
+            spawnFloatingBurst(`✅ ${instCount > 1 ? 'Cuota ' + nextPaid + '/' + instCount + ' asentada' : 'Liquidado y asentado'}`, true);
+            return;
+          }
+          spawnFloatingBurst(nextPaid >= instCount ? '✅ Todas las cuotas saldadas' : `✅ Cuota ${nextPaid}/${instCount} marcada`, true);
+          saveState(true, true);
+        }
+      });
     }
     function editDebtAmount(id) {
       const list = Array.isArray(state.debts) ? state.debts : [];
@@ -1150,32 +1161,53 @@ input[type=number]::-webkit-outer-spin-button:hover {
       const list = Array.isArray(state.debts) ? state.debts : [];
       const d = list.find(x => x.id === id); if (!d) return;
       const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+      const firstAccName = (state.accounts && state.accounts[0]) ? state.accounts[0].name : 'cuenta principal';
+
       if (d.status !== 'settled') {
         const remVal = getDebtRemainingAmount(d);
-        d.status = 'settled';
-        d.paidInstallments = instCount;
-        d.settledAt = Date.now();
-        if (settleAndRecordTx && remVal > 0) {
-          const cardTag = d.cardName ? ` [${d.cardName}]` : '';
-          addTransaction({
-            title: `${d.kind === 'credit' ? 'Cobro' : 'Pago'}: ${d.title}${cardTag}`,
-            amount: remVal,
-            currency: d.currency,
-            type: d.kind === 'credit' ? 'income' : 'expense',
-            category: d.kind === 'credit' ? 'Ingreso' : (d.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 'General'),
-            accountId: state.accounts[0] ? state.accounts[0].id : null
-          });
-          spawnFloatingBurst('✅ Liquidado y asentado en cuenta', true);
-          return;
-        }
-        spawnFloatingBurst('✅ Marcado como saldado', true);
+        openConfirmModal({
+          title: settleAndRecordTx ? '✓ Saldar Todo y Asentar' : '✓ Marcar como Saldado',
+          message: settleAndRecordTx
+            ? `¿Querés saldar el saldo restante de "${escapeAttr(d.title)}" por ${formatMoney(remVal, d.currency)} y registrar el movimiento en "${escapeAttr(firstAccName)}"?`
+            : `¿Querés marcar "${escapeAttr(d.title)}" como saldado sin registrar movimiento en cuenta?`,
+          confirmText: settleAndRecordTx ? 'Saldar y Asentar' : 'Marcar Saldado',
+          danger: false,
+          onConfirm: () => {
+            d.status = 'settled';
+            d.paidInstallments = instCount;
+            d.settledAt = Date.now();
+            if (settleAndRecordTx && remVal > 0) {
+              const cardTag = d.cardName ? ` [${d.cardName}]` : '';
+              addTransaction({
+                title: `${d.kind === 'credit' ? 'Cobro' : 'Pago'}: ${d.title}${cardTag}`,
+                amount: remVal,
+                currency: d.currency,
+                type: d.kind === 'credit' ? 'income' : 'expense',
+                category: d.kind === 'credit' ? 'Ingreso' : (d.paymentMethod === 'credit_card' ? 'Tarjeta de Crédito' : 'General'),
+                accountId: state.accounts[0] ? state.accounts[0].id : null
+              });
+              spawnFloatingBurst('✅ Liquidado y asentado en cuenta', true);
+              return;
+            }
+            spawnFloatingBurst('✅ Marcado como saldado', true);
+            saveState(true, true);
+          }
+        });
       } else {
-        d.status = 'pending';
-        if (d.paidInstallments >= instCount) d.paidInstallments = Math.max(0, instCount - 1);
-        delete d.settledAt;
-        spawnFloatingBurst('⏳ Vuelto a pendiente', true);
+        openConfirmModal({
+          title: '⏳ Reabrir Registro',
+          message: `¿Querés volver a marcar "${escapeAttr(d.title)}" como pendiente?`,
+          confirmText: 'Reabrir',
+          danger: false,
+          onConfirm: () => {
+            d.status = 'pending';
+            if (d.paidInstallments >= instCount) d.paidInstallments = Math.max(0, instCount - 1);
+            delete d.settledAt;
+            spawnFloatingBurst('⏳ Vuelto a pendiente', true);
+            saveState(true, true);
+          }
+        });
       }
-      saveState(true, true);
     }
     function deleteDebtItem(id) {
       openConfirmModal({ title: '🗑️ Eliminar Registro', message: '¿Querés eliminar este registro pendiente? Esta acción no se puede deshacer.', confirmText: 'Eliminar', danger: true, onConfirm: () => { state.debts = (Array.isArray(state.debts) ? state.debts : []).filter(x => x.id !== id); if (ui.editingDebtId === id) { ui.showEditDebtModal = false; ui.editingDebtId = null; } saveState(true, true); spawnFloatingBurst('🗑️ Registro eliminado', false); } }); return;
