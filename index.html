@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.51
+    // KRONO OTA BOOTLOADER v6.5.52
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.51';
+    const APP_BASE_VERSION = '6.5.52';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,7 +230,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.51',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.52',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -1542,52 +1542,74 @@ input[type=number]::-webkit-outer-spin-button:hover {
         'Sos el motor inteligente de Krono Finanzas. Interpreta español natural (incluyendo modismos rioplatenses / uruguayos: "plata", "mango", "lucas", "al contado", "en cuotas", "tarjeta", "prestamo").',
         'Tu trabajo es traducir lo que dijo el usuario a acciones exactas sin inventar números ni saldar deudas de más.',
         'Reglas estrictas:',
-        '1. Gasto o ingreso AL CONTADO (con efectivo, débito, BROU, ahorro, etc.): usá "add_transaction" con "paymentMode":"cash" y "accountQuery" (ej: "efectivo", "brou", "ahorro").',
-        '2. Compra/gasto/ingreso FINANCIADO CON TARJETA DE CRÉDITO (ej: "compré zapatillas en 6 cuotas con la visa", "cargué 4000 en la tarjeta"): usá "add_debt" con "paymentMethod":"credit_card", "cardName", "installmentsCount", "perInstallment" (true si el monto indicado es el valor de cada cuota, false si es el monto total), y "kind":"debt" (o "credit" si es crédito a favor).',
-        '3. PRÉSTAMO (ej: "saqué un préstamo de 20000 en 12 cuotas", "le presté 1500 a Juan"): usá "add_debt" con "paymentMethod":"personal", "counterparty" (persona/banco), "installmentsCount", "perInstallment", y "kind":"debt" (si debe devolverse/pagarse) o "credit" (si alguien lo debe/debe cobrar).',
-        '4. PAGO de tarjetas/deudas/cuotas: usá "pay_obligations" con "scope": "current_installments" si paga las cuotas de este mes / cuota mensual, "full_balance" si paga todo el saldo total, o "exact_amount" si indica un monto puntual; incluí "cardQuery" si menciona tarjeta/préstamo y "accountQuery" desde dónde paga (ej: "efectivo").',
+        '1. Gasto o ingreso AL CONTADO (con efectivo, débito, BROU, ahorro, etc.): usá "add_transaction" con "accountQuery" (ej: "efectivo", "brou", "ahorro").',
+        '2. Compra/gasto/ingreso FINANCIADO CON TARJETA DE CRÉDITO: usá "add_debt" con "paymentMethod":"credit_card", "cardName", "installmentsCount", "perInstallment", y "kind":"debt" (o "credit").',
+        '3. PRÉSTAMO: usá "add_debt" con "paymentMethod":"personal", "counterparty", "installmentsCount", "perInstallment", y "kind":"debt" o "credit".',
+        '4. PAGO de tarjetas/deudas/cuotas: usá "pay_obligations" con "scope": "current_installments" si paga las cuotas de este mes / cuota mensual, "full_balance" si paga todo el saldo total, o "exact_amount" si indica un monto puntual.',
         '5. Consulta de saldo: usá "query_balance".',
-        'Devolvé EXCLUSIVAMENTE un objeto JSON válido con esta estructura:',
+        'Devolvé EXCLUSIVAMENTE un JSON válido con esta forma:',
         '{"actions":[{"op":"add_transaction","title":"","amount":0,"currency":"UYU|USD","type":"expense|income","category":"","accountQuery":""},{"op":"add_debt","title":"","amount":0,"currency":"UYU|USD","kind":"debt|credit","paymentMethod":"credit_card|personal","cardName":"","counterparty":"","installmentsCount":1,"perInstallment":false,"dueDate":""},{"op":"pay_obligations","scope":"current_installments|full_balance|exact_amount","amount":0,"currency":"UYU|USD","cardQuery":"","accountQuery":"","note":""},{"op":"query_balance","accountQuery":""}]}'
       ].join('\n');
 
-      const models = ['gemini-2.5-flash', 'gemini-2.0-flash'];
-      let lastErr = null;
-      for (const modelName of models) {
-        try {
-          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(cleanKey)}`;
-          const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{
-                role: 'user',
-                parts: [{
-                  text: `${systemPrompt}\n\nContexto actual:\n${JSON.stringify(ctx)}\n\nInstrucción del usuario:\n"${commandText}"`
-                }]
-              }],
-              generationConfig: {
-                temperature: 0.1,
-                responseMimeType: 'application/json'
-              }
-            })
-          });
-          if (!res.ok) {
-            lastErr = new Error('Gemini HTTP ' + res.status);
-            continue;
+      const promptBodyText = `${systemPrompt}\n\nContexto actual:\n${JSON.stringify(ctx)}\n\nInstrucción del usuario:\n"${commandText}"`;
+
+      let candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+      try {
+        const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(cleanKey)}`);
+        if (listRes.ok) {
+          const listJson = await listRes.json();
+          const available = (listJson.models || [])
+            .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+            .map(m => String(m.name || '').replace(/^models\//, ''))
+            .filter(Boolean);
+          if (available.length) {
+            const preferred = available.filter(n => /flash/i.test(n));
+            candidateModels = [...preferred, ...available.filter(n => !/flash/i.test(n))].slice(0, 4);
           }
-          const data = await res.json();
-          const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          if (!rawText.trim()) continue;
-          const cleanedJson = rawText.replace(/^```json\s*|\s*```$/gi, '').trim();
-          const parsed = JSON.parse(cleanedJson);
-          if (Array.isArray(parsed.actions)) return parsed.actions;
-        } catch (err) {
-          lastErr = err;
+        }
+      } catch (e) {}
+
+      let lastErrMsg = 'sin respuesta de Gemini';
+      for (const modelName of candidateModels) {
+        for (const useJsonMime of [true, false]) {
+          try {
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(cleanKey)}`;
+            const payload = {
+              contents: [{ role: 'user', parts: [{ text: promptBodyText }] }]
+            };
+            if (useJsonMime) {
+              payload.generationConfig = { temperature: 0.1, responseMimeType: 'application/json' };
+            } else {
+              payload.generationConfig = { temperature: 0.1 };
+            }
+            const res = await fetch(endpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+              const apiErr = (data && data.error && data.error.message) ? data.error.message : `HTTP ${res.status}`;
+              lastErrMsg = `${modelName}: ${apiErr}`;
+              if (res.status === 400 && useJsonMime) continue;
+              if (res.status === 404) break;
+              continue;
+            }
+            const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            if (!rawText.trim()) {
+              lastErrMsg = `${modelName}: respuesta vacía`;
+              continue;
+            }
+            const cleanedJson = rawText.replace(/^```json\s*|\s*```$/gi, '').trim();
+            const parsed = JSON.parse(cleanedJson);
+            if (Array.isArray(parsed.actions)) return parsed.actions;
+            lastErrMsg = `${modelName}: JSON sin campo actions`;
+          } catch (err) {
+            lastErrMsg = `${modelName}: ${(err && err.message) ? err.message : 'error de red'}`;
+          }
         }
       }
-      if (lastErr) throw lastErr;
-      return null;
+      throw new Error(lastErrMsg);
     }
 
     function executeStructuredActions(actions, originalText, fromExternal) {
