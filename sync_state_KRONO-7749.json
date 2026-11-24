@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795487649349,
+  "updatedAt": 1795488034112,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -128,7 +128,7 @@
       "id": "acc_cash",
       "name": "Efectivo / Billetera",
       "currency": "UYU",
-      "balance": 0,
+      "balance": -8208,
       "color": "from-violet-400 to-purple-500",
       "icon": "👛"
     }
@@ -194,7 +194,7 @@
       "paymentMethod": "credit_card",
       "cardName": "Itaú Visa",
       "installmentsCount": 12,
-      "paidInstallments": 0,
+      "paidInstallments": 1,
       "amount": 98499.96,
       "currency": "UYU",
       "kind": "debt",
@@ -280,6 +280,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795488034112_334",
+      "title": "Cuotas del mes con Efectivo / Billetera",
+      "amount": 8208,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Tarjeta / Crédito",
+      "accountId": "acc_cash",
+      "accountName": "Efectivo / Billetera",
+      "date": "23/11 23:40",
+      "timestamp": 1795488034112
+    },
     {
       "id": "tx_1795487649340_266",
       "title": "🤖 Pago tarjeta (Itaú Visa) con Cuenta Itaú / Débito",
