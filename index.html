@@ -1,12 +1,12 @@
 <!DOCTYPE html><html lang="es"><head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#040711">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#040711" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.42
+    // KRONO OTA BOOTLOADER v6.5.43
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -71,117 +71,7 @@
     ::-webkit-scrollbar-track { background: rgba(4,7,17,0.6); }
     ::-webkit-scrollbar-thumb { background: rgba(6,182,212,0.35); border-radius: 9999px; }
   </style>
-  <style id="krono-live-custom-css">html, body { -webkit-font-smoothing: auto !important; } @keyframes kronoTabIn { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: none; } } @keyframes kronoModalIn { 0% { opacity: 0; transform: translateY(24px); } 100% { opacity: 1; transform: none; } } @keyframes kronoDropIn { 0% { opacity: 0; transform: translateY(-8px); } 100% { opacity: 1; transform: none; } } @keyframes kronoDropInUp { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: none; } } @keyframes kronoBurstIn { 0% { opacity: 0; transform: translateY(16px); } 14% { opacity: 1; transform: translateY(0px); } 84% { opacity: 1; transform: translateY(-28px); } 100% { opacity: 0; transform: translateY(-48px); } } @keyframes kronoRipple { 0% { opacity: 0.52; transform: translate(-50%, -50%) scale(0); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(2.8); } } @keyframes kronoBarShine { 0% { transform: translateX(-100%); } 100% { transform: translateX(240%); } } @keyframes kronoDotPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6); } 60% { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); } } .krono-sync-dot { animation: kronoDotPulse 2.4s ease-out infinite; } .glass-97 { position: relative; backdrop-filter: blur(18px) saturate(185%) !important; -webkit-backdrop-filter: blur(18px) saturate(185%) !important; background: rgba(255, 255, 255, 0.036) !important; transition: transform 0.38s cubic-bezier(0.22, 1.45, 0.36, 1), box-shadow 0.3s ease, border-color 0.24s ease, background-color 0.24s ease !important; } .glass-97::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 0.25s ease; background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgba(34, 211, 238, 0.16), rgba(139, 92, 246, 0.07) 44%, transparent 72%); z-index: 0; } .glass-97:hover::before { opacity: 1; } .glass-97 > *:not(.krono-ripple) { position: relative; z-index: 1; } main .glass-97:hover { border-color: rgba(34, 211, 238, 0.42) !important; box-shadow: 0 20px 44px -12px rgba(6, 182, 212, 0.25), 0 1px 0 0 rgba(255, 255, 255, 0.34) inset !important; } .spring-card { position: relative !important; top: 0 !important; overflow: hidden; filter: none !important; cursor: pointer !important; transition: transform 0.4s cubic-bezier(0.22, 1.5, 0.36, 1), box-shadow 0.32s ease, border-color 0.24s ease, background-color 0.24s ease !important; } .spring-card:hover { top: 0 !important; transform: translateY(-8px) !important; background-color: rgba(255, 255, 255, 0.062) !important; border-color: rgba(34, 211, 238, 0.6) !important; box-shadow: 0 28px 52px -12px rgba(6, 182, 212, 0.38), 0 1px 0 0 rgba(255, 255, 255, 0.4) inset !important; } .spring-card:active { top: 0 !important; transform: translateY(0px) !important; border-color: rgba(34, 211, 238, 0.85) !important; } .spring-card .rounded-full.mono { transition: background-color 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease, transform 0.3s cubic-bezier(0.22, 1.45, 0.36, 1); } .spring-card:hover .rounded-full.mono { background-color: rgba(34, 211, 238, 0.32); border-color: rgba(34, 211, 238, 0.72); box-shadow: 0 0 18px rgba(34, 211, 238, 0.42); } .spring-btn { position: relative !important; top: 0 !important; overflow: hidden; filter: none !important; transition: transform 0.32s cubic-bezier(0.22, 1.55, 0.36, 1), box-shadow 0.24s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important; } .spring-btn:hover { top: 0 !important; transform: translateY(-4px) !important; box-shadow: 0 14px 28px -6px rgba(6, 182, 212, 0.44), 0 0 0 1px rgba(255, 255, 255, 0.26) inset !important; } .spring-btn:active { top: 0 !important; transform: translateY(0px) !important; box-shadow: 0 3px 10px -2px rgba(6, 182, 212, 0.34) !important; } .spring-btn > span.text-xl, .spring-card span.text-2xl, aside nav button > span:first-child, nav.md\:hidden button > span:first-child { display: inline-block; transition: transform 0.34s cubic-bezier(0.34, 1.7, 0.64, 1) !important; } .spring-btn:hover > span.text-xl, .spring-card:hover span.text-2xl { transform: scale(1.24) rotate(-7deg) !important; } aside nav button { position: relative; overflow: hidden; border: 1px solid transparent; transition: transform 0.3s cubic-bezier(0.22, 1.5, 0.36, 1), background-color 0.22s ease, border-color 0.22s ease, color 0.22s ease, box-shadow 0.24s ease !important; } aside nav button:hover { transform: translateX(8px) !important; background-color: rgba(255, 255, 255, 0.065) !important; border-color: rgba(255, 255, 255, 0.16) !important; box-shadow: 0 8px 22px -8px rgba(6, 182, 212, 0.36); } aside nav button:active { transform: translateX(4px) !important; } aside nav button:hover > span:first-child { transform: scale(1.24) rotate(-6deg) !important; } aside nav button.bg-cyan-400, nav.md\:hidden button.bg-cyan-400 { background: linear-gradient(135deg, rgba(34, 211, 238, 0.20), rgba(139, 92, 246, 0.12)) !important; color: #ecfeff !important; border: 1px solid rgba(34, 211, 238, 0.48) !important; backdrop-filter: blur(18px) saturate(200%) !important; -webkit-backdrop-filter: blur(18px) saturate(200%) !important; box-shadow: 0 10px 28px -8px rgba(6, 182, 212, 0.42), 0 1px 0 0 rgba(255, 255, 255, 0.32) inset, 0 -1px 0 0 rgba(34, 211, 238, 0.18) inset !important; } aside nav button.bg-cyan-400:hover { background: linear-gradient(135deg, rgba(34, 211, 238, 0.28), rgba(139, 92, 246, 0.18)) !important; border-color: rgba(103, 232, 249, 0.72) !important; box-shadow: 0 14px 32px -8px rgba(6, 182, 212, 0.56), 0 1px 0 0 rgba(255, 255, 255, 0.42) inset !important; } aside nav button.bg-cyan-400::after { content: ""; position: absolute; left: 6px; top: 22%; height: 56%; width: 3px; border-radius: 9999px; background: #67e8f9; box-shadow: 0 0 12px rgba(34, 211, 238, 0.95); } nav.md\:hidden button { position: relative; overflow: hidden; border: 1px solid transparent; transition: transform 0.28s cubic-bezier(0.22, 1.5, 0.36, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important; } nav.md\:hidden button:hover { transform: translateY(-4px) !important; } nav.md\:hidden button:active { transform: translateY(0px) !important; } .glass-97 .bg-slate-950\/40 { position: relative; overflow: hidden; transition: transform 0.32s cubic-bezier(0.22, 1.45, 0.36, 1), background-color 0.22s ease, border-color 0.22s ease, box-shadow 0.24s ease !important; } .glass-97 .bg-slate-950\/40:hover { transform: translateX(4px) !important; background-color: rgba(15, 23, 42, 0.78) !important; border-color: rgba(34, 211, 238, 0.48) !important; box-shadow: 0 12px 26px -10px rgba(6, 182, 212, 0.36) !important; } main .glass-97:has(button[onclick*="accounts"]) .bg-slate-950\/40, main .glass-97:has(button[onclick*="budgets"]) .bg-slate-950\/40, main .glass-97:has(button[onclick*="debts"]) .bg-slate-950\/40 { cursor: pointer !important; } main .glass-97:has(button[onclick*="accounts"]) .bg-slate-950\/40:active, main .glass-97:has(button[onclick*="budgets"]) .bg-slate-950\/40:active, main .glass-97:has(button[onclick*="debts"]) .bg-slate-950\/40:active { transform: translateX(2px) !important; border-color: rgba(103, 232, 249, 0.78) !important; } .glass-97 .bg-slate-950\/40 span.text-xl { display: inline-block; transition: transform 0.32s cubic-bezier(0.34, 1.7, 0.64, 1); } .glass-97 .bg-slate-950\/40:hover span.text-xl { transform: scale(1.22) rotate(-6deg); } main button.text-cyan-300 { display: inline-flex; align-items: center; transition: transform 0.26s cubic-bezier(0.22, 1.5, 0.36, 1), color 0.2s ease !important; } main button.text-cyan-300:hover { transform: translateX(4px) !important; color: #a5f3fc !important; } button.text-slate-400 { transition: transform 0.24s cubic-bezier(0.34, 1.7, 0.64, 1), color 0.18s ease !important; } button.text-slate-400:hover { transform: scale(1.24) !important; color: #fb7185 !important; } input, textarea { transition: border-color 0.22s ease, box-shadow 0.24s ease, background-color 0.22s ease !important; } input:hover, textarea:hover { border-color: rgba(34, 211, 238, 0.48) !important; } input:focus, textarea:focus { outline: none !important; border-color: rgba(34, 211, 238, 0.88) !important; box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.22) !important; } select { appearance: none !important; -webkit-appearance: none !important; cursor: pointer !important; background-color: rgba(255, 255, 255, 0.05) !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2367e8f9' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 0.7rem center !important; background-size: 12px 12px !important; padding-right: 2.1rem !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; backdrop-filter: blur(18px) saturate(185%) !important; -webkit-backdrop-filter: blur(18px) saturate(185%) !important; box-shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.32), 0 1px 0 0 rgba(255, 255, 255, 0.22) inset !important; transition: transform 0.26s cubic-bezier(0.22, 1.45, 0.36, 1), border-color 0.22s ease, box-shadow 0.24s ease, background-color 0.22s ease !important; } select:hover { background-color: rgba(34, 211, 238, 0.1) !important; border-color: rgba(34, 211, 238, 0.55) !important; box-shadow: 0 10px 24px -8px rgba(6, 182, 212, 0.34), 0 1px 0 0 rgba(255, 255, 255, 0.3) inset !important; } select:focus, select.krono-dd-open { outline: none !important; background-color: rgba(34, 211, 238, 0.14) !important; border-color: rgba(103, 232, 249, 0.8) !important; box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2), 0 12px 26px -8px rgba(6, 182, 212, 0.38) !important; } select option { background-color: #0b1326 !important; color: #f8fafc !important; } #krono-glass-dropdown { position: fixed; z-index: 99999; padding: 6px; border-radius: 18px; background: linear-gradient(155deg, rgba(12, 20, 40, 0.46), rgba(6, 12, 26, 0.56)); border: 1px solid rgba(255, 255, 255, 0.22); backdrop-filter: blur(28px) saturate(220%); -webkit-backdrop-filter: blur(28px) saturate(220%); box-shadow: 0 24px 56px -12px rgba(0, 0, 0, 0.65), 0 0 30px -8px rgba(6, 182, 212, 0.3), 0 1px 0 0 rgba(255, 255, 255, 0.3) inset; max-height: 270px; overflow-y: auto; animation: kronoDropIn 0.24s cubic-bezier(0.22, 1.4, 0.36, 1) both; } #krono-glass-dropdown.krono-dd-up { animation: kronoDropInUp 0.24s cubic-bezier(0.22, 1.4, 0.36, 1) both; } .krono-dd-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 9px 12px; border-radius: 12px; border: 1px solid transparent; background: transparent; color: #e2e8f0; font-size: 12px; font-weight: 600; text-align: left; cursor: pointer; transition: transform 0.22s cubic-bezier(0.22, 1.45, 0.36, 1), background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease; } .krono-dd-item:hover { transform: translateX(4px); background: rgba(34, 211, 238, 0.14); border-color: rgba(34, 211, 238, 0.34); color: #ffffff; } .krono-dd-item.is-selected { background: linear-gradient(135deg, rgba(34, 211, 238, 0.22), rgba(139, 92, 246, 0.14)); border-color: rgba(34, 211, 238, 0.52); color: #ecfeff; box-shadow: 0 6px 18px -6px rgba(6, 182, 212, 0.4), 0 1px 0 0 rgba(255, 255, 255, 0.25) inset; } .krono-dd-check { color: #67e8f9; font-weight: 800; font-size: 12px; flex-shrink: 0; } .bg-slate-800 > div { position: relative; overflow: hidden; transition: width 0.65s cubic-bezier(0.22, 1.25, 0.36, 1) !important; } .bg-slate-800 > div::after { content: ""; position: absolute; inset: 0; width: 45%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.48), transparent); animation: kronoBarShine 2.6s ease-in-out infinite; } main .animate-pop-elastic { animation: none !important; transform: none !important; } main .animate-pop-elastic > * { animation: kronoTabIn 0.42s cubic-bezier(0.22, 1.28, 0.36, 1) both !important; } main .animate-pop-elastic > *:nth-child(2) { animation-delay: 45ms !important; } main .animate-pop-elastic > *:nth-child(3) { animation-delay: 90ms !important; } main .animate-pop-elastic > *:nth-child(4) { animation-delay: 135ms !important; } main .animate-pop-elastic > *:nth-child(5) { animation-delay: 180ms !important; } main .animate-pop-elastic > *:nth-child(6) { animation-delay: 225ms !important; } .glass-97.animate-pop-elastic { animation: kronoModalIn 0.36s cubic-bezier(0.22, 1.38, 0.36, 1) both !important; } .animate-burst { position: relative !important; top: 0 !important; animation: kronoBurstIn 1.4s cubic-bezier(0.22, 1.25, 0.36, 1) forwards !important; } .krono-ripple { position: absolute !important; border-radius: 9999px; pointer-events: none; background: radial-gradient(circle, rgba(34, 211, 238, 0.58) 0%, rgba(139, 92, 246, 0.26) 55%, transparent 75%); animation: kronoRipple 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards; z-index: 2; } input[type=number] { -moz-appearance: textfield !important; padding-right: 1.85rem !important; } input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none !important; appearance: none !important; opacity: 1 !important; width: 20px !important; height: 26px !important; margin: 0 2px 0 6px !important; cursor: pointer !important; border-radius: 8px !important; background-color: rgba(34, 211, 238, 0.12) !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='16' viewBox='0 0 12 16' fill='none'%3E%3Cpath d='M3 6l3-3 3 3' stroke='%2367e8f9' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M3 10l3 3 3-3' stroke='%2367e8f9' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: center !important; border: 1px solid rgba(34, 211, 238, 0.28) !important; transition: background-color 0.18s ease, border-color 0.18s ease !important; } input[type=number]::-webkit-inner-spin-button:hover, input[type=number]::-webkit-outer-spin-button:hover { background-color: rgba(34, 211, 238, 0.24) !important; border-color: rgba(103, 232, 249, 0.65) !important; }
-#krono-voice-fab {
-  position: fixed !important;
-  right: 24px !important;
-  bottom: 84px !important;
-  left: auto !important;
-  top: auto !important;
-  z-index: 45 !important;
-  width: 50px !important;
-  height: 50px !important;
-  border-radius: 9999px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background: rgba(10, 22, 38, 0.56) !important;
-  border: 1px solid rgba(103, 232, 249, 0.45) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(103, 232, 249, 0.14) inset !important;
-  color: #a5f3fc !important;
-  font-size: 19px !important;
-  line-height: 1 !important;
-  cursor: pointer !important;
-  overflow: visible !important;
-  transform: none !important;
-  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease !important;
-}
-@media (min-width: 768px) {
-  #krono-voice-fab {
-    bottom: 24px !important;
-    right: 28px !important;
-  }
-}
-#krono-voice-fab:hover {
-  transform: none !important;
-  background: rgba(16, 36, 58, 0.72) !important;
-  border-color: rgba(103, 232, 249, 0.78) !important;
-  box-shadow: 0 14px 32px -6px rgba(6, 182, 212, 0.35), 0 0 0 1px rgba(103, 232, 249, 0.28) inset !important;
-  color: #ecfeff !important;
-}
-#krono-voice-fab:active {
-  transform: none !important;
-  background: rgba(34, 211, 238, 0.2) !important;
-}
-.krono-recent-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(34, 211, 238, 0.45) transparent;
-  overscroll-behavior: contain;
-  padding-right: 6px !important;
-}
-.krono-recent-scroll::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-.krono-recent-scroll::-webkit-scrollbar-button,
-.krono-recent-scroll::-webkit-scrollbar-button:start:decrement,
-.krono-recent-scroll::-webkit-scrollbar-button:end:increment,
-.krono-recent-scroll::-webkit-scrollbar-button:vertical:start:decrement,
-.krono-recent-scroll::-webkit-scrollbar-button:vertical:end:increment {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  background: transparent !important;
-}
-.krono-recent-scroll::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.025);
-  border-radius: 9999px;
-  margin: 4px 0;
-}
-.krono-recent-scroll::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(34, 211, 238, 0.55), rgba(139, 92, 246, 0.48));
-  border-radius: 9999px;
-  border: 1px solid rgba(165, 243, 252, 0.25);
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.22);
-}
-.krono-recent-scroll::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(103, 232, 249, 0.85), rgba(167, 139, 250, 0.78));
-  border-color: rgba(207, 250, 254, 0.55);
-  box-shadow: 0 0 14px rgba(34, 211, 238, 0.42);
-}
-.krono-recent-scroll::-webkit-scrollbar-corner {
-  background: transparent;
-}
-::-webkit-scrollbar-button {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-}
-.krono-sidebar-shell {
-  background: linear-gradient(175deg, rgba(10, 18, 36, 0.72) 0%, rgba(7, 13, 28, 0.62) 55%, rgba(14, 18, 38, 0.68) 100%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.16) !important;
-  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.6), 0 1px 0 0 rgba(255, 255, 255, 0.22) inset !important;
-}
-.krono-brand-card {
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.10), rgba(139, 92, 246, 0.08)) !important;
-  border: 1px solid rgba(103, 232, 249, 0.22) !important;
-  box-shadow: 0 8px 20px -8px rgba(6, 182, 212, 0.25), 0 1px 0 0 rgba(255, 255, 255, 0.16) inset;
-}
-.krono-brand-emblem {
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.24), rgba(139, 92, 246, 0.26));
-  border: 1px solid rgba(103, 232, 249, 0.45);
-  box-shadow: 0 0 18px -4px rgba(34, 211, 238, 0.5), 0 1px 0 0 rgba(255, 255, 255, 0.3) inset;
-}
-.krono-nav-item .krono-nav-icon {
-  transition: transform 0.28s cubic-bezier(0.34, 1.7, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease;
-}
-.krono-nav-item:hover .krono-nav-icon {
-  transform: scale(1.1) rotate(-4deg);
-  border-color: rgba(103, 232, 249, 0.4);
-  background-color: rgba(34, 211, 238, 0.12);
-}</style>
+  <style id="krono-live-custom-css"></style>
 <style id="krono-spin-buttons-css">input[type=number] { -moz-appearance: textfield !important; padding-right: 1.85rem !important; }
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
@@ -315,172 +205,18 @@ input[type=number]::-webkit-outer-spin-button:hover {
   border-color: rgba(103, 232, 249, 0.4);
   background-color: rgba(34, 211, 238, 0.12);
 }</style>
-<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0px}.inset-x-0{left:0px;right:0px}.-bottom-28{bottom:-7rem}.-left-24{left:-6rem}.-right-28{right:-7rem}.-top-24{top:-6rem}.left-1\/4{left:25%}.right-4{right:1rem}.top-1\/3{top:33.333333%}.top-16{top:4rem}.bottom-0{bottom:0px}.left-0{left:0px}.z-0{z-index:0}.z-10{z-index:10}.z-50{z-index:50}.z-30{z-index:30}.z-40{z-index:40}.mx-auto{margin-left:auto;margin-right:auto}.my-2{margin-top:0.5rem;margin-bottom:0.5rem}.mb-1\.5{margin-bottom:0.375rem}.mb-2{margin-bottom:0.5rem}.mb-3{margin-bottom:0.75rem}.mb-4{margin-bottom:1rem}.mb-5{margin-bottom:1.25rem}.mt-0\.5{margin-top:0.125rem}.mt-4{margin-top:1rem}.block{display:block}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-\[420px\]{height:420px}.h-\[440px\]{height:440px}.h-\[460px\]{height:460px}.h-1\.5{height:0.375rem}.h-10{height:2.5rem}.h-2{height:0.5rem}.h-2\.5{height:0.625rem}.h-7{height:1.75rem}.h-full{height:100%}.max-h-72{max-height:18rem}.min-h-\[100dvh\]{min-height:100dvh}.w-\[420px\]{width:420px}.w-\[440px\]{width:440px}.w-\[460px\]{width:460px}.w-full{width:100%}.w-1\.5{width:0.375rem}.w-10{width:2.5rem}.w-2{width:0.5rem}.w-2\.5{width:0.625rem}.w-7{width:1.75rem}.min-w-0{min-width:0px}.max-w-\[100vw\]{max-width:100vw}.max-w-5xl{max-width:64rem}.flex-1{flex:1 1 0%}.shrink-0{flex-shrink:0}.cursor-pointer{cursor:pointer}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.justify-around{justify-content:space-around}.gap-2{gap:0.5rem}.gap-1\.5{gap:0.375rem}.gap-2\.5{gap:0.625rem}.gap-3{gap:0.75rem}.gap-4{gap:1rem}.space-y-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.375rem * var(--tw-space-y-reverse))}.space-y-2\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.625rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.625rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.overflow-x-hidden{overflow-x:hidden}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.break-words{overflow-wrap:break-word}.break-all{word-break:break-all}.rounded-full{border-radius:9999px}.rounded-2xl{border-radius:1rem}.rounded-3xl{border-radius:1.5rem}.rounded-lg{border-radius:0.5rem}.rounded-md{border-radius:0.375rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-t{border-top-width:1px}.border-cyan-300\/40{border-color:rgb(103 232 249 / 0.4)}.border-cyan-400\/30{border-color:rgb(34 211 238 / 0.3)}.border-cyan-400\/35{border-color:rgb(34 211 238 / 0.35)}.border-violet-400\/35{border-color:rgb(167 139 250 / 0.35)}.border-white\/10{border-color:rgb(255 255 255 / 0.1)}.border-emerald-400\/50{border-color:rgb(52 211 153 / 0.5)}.border-cyan-400\/40{border-color:rgb(34 211 238 / 0.4)}.bg-cyan-500\/25{background-color:rgb(6 182 212 / 0.25)}.bg-emerald-500\/15{background-color:rgb(16 185 129 / 0.15)}.bg-violet-600\/20{background-color:rgb(124 58 237 / 0.2)}.bg-cyan-300{--tw-bg-opacity:1;background-color:rgb(103 232 249 / var(--tw-bg-opacity, 1))}.bg-cyan-400{--tw-bg-opacity:1;background-color:rgb(34 211 238 / var(--tw-bg-opacity, 1))}.bg-cyan-400\/20{background-color:rgb(34 211 238 / 0.2)}.bg-cyan-500\/15{background-color:rgb(6 182 212 / 0.15)}.bg-cyan-500\/20{background-color:rgb(6 182 212 / 0.2)}.bg-emerald-400{--tw-bg-opacity:1;background-color:rgb(52 211 153 / var(--tw-bg-opacity, 1))}.bg-slate-800{--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.bg-slate-950\/40{background-color:rgb(2 6 23 / 0.4)}.bg-slate-950\/45{background-color:rgb(2 6 23 / 0.45)}.bg-violet-500\/15{background-color:rgb(139 92 246 / 0.15)}.bg-white\/\[0\.04\]{background-color:rgb(255 255 255 / 0.04)}.bg-white\/\[0\.05\]{background-color:rgb(255 255 255 / 0.05)}.bg-emerald-500\/25{background-color:rgb(16 185 129 / 0.25)}.bg-rose-500{--tw-bg-opacity:1;background-color:rgb(244 63 94 / var(--tw-bg-opacity, 1))}.bg-\[radial-gradient\(rgba\(255\2c 255\2c 255\2c 0\.035\)_1px\2c transparent_1px\)\]{background-image:radial-gradient(rgba(255,255,255,0.035) 1px,transparent 1px)}.p-2{padding:0.5rem}.p-3{padding:0.75rem}.p-3\.5{padding:0.875rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.px-1\.5{padding-left:0.375rem;padding-right:0.375rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.px-4{padding-left:1rem;padding-right:1rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.pb-24{padding-bottom:6rem}.pr-1\.5{padding-right:0.375rem}.pt-3\.5{padding-top:0.875rem}.text-left{text-align:left}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-\[15px\]{font-size:15px}.text-\[9px\]{font-size:9px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.tracking-tight{letter-spacing:-0.025em}.tracking-wider{letter-spacing:0.05em}.tracking-widest{letter-spacing:0.1em}.text-amber-200{--tw-text-opacity:1;color:rgb(253 230 138 / var(--tw-text-opacity, 1))}.text-amber-300{--tw-text-opacity:1;color:rgb(252 211 77 / var(--tw-text-opacity, 1))}.text-cyan-200{--tw-text-opacity:1;color:rgb(165 243 252 / var(--tw-text-opacity, 1))}.text-cyan-300{--tw-text-opacity:1;color:rgb(103 232 249 / var(--tw-text-opacity, 1))}.text-emerald-200{--tw-text-opacity:1;color:rgb(167 243 208 / var(--tw-text-opacity, 1))}.text-emerald-300{--tw-text-opacity:1;color:rgb(110 231 183 / var(--tw-text-opacity, 1))}.text-emerald-300\/90{color:rgb(110 231 183 / 0.9)}.text-rose-300{--tw-text-opacity:1;color:rgb(253 164 175 / var(--tw-text-opacity, 1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-slate-400\/80{color:rgb(148 163 184 / 0.8)}.text-slate-950{--tw-text-opacity:1;color:rgb(2 6 23 / var(--tw-text-opacity, 1))}.text-violet-200{--tw-text-opacity:1;color:rgb(221 214 254 / var(--tw-text-opacity, 1))}.text-violet-300{--tw-text-opacity:1;color:rgb(196 181 253 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.shadow-\[0_0_8px_\#67e8f9\]{--tw-shadow:0 0 8px #67e8f9;--tw-shadow-colored:0 0 8px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.blur-\[110px\]{--tw-blur:blur(110px);filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.blur-\[120px\]{--tw-blur:blur(120px);filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.backdrop-blur-xl{--tw-backdrop-blur:blur(24px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.\[background-size\:24px_24px\]{background-size:24px 24px}.selection\:bg-cyan-500\/30 *::selection{background-color:rgb(6 182 212 / 0.3)}.selection\:text-cyan-200 *::selection{--tw-text-opacity:1;color:rgb(165 243 252 / var(--tw-text-opacity, 1))}.selection\:bg-cyan-500\/30::selection{background-color:rgb(6 182 212 / 0.3)}.selection\:text-cyan-200::selection{--tw-text-opacity:1;color:rgb(165 243 252 / var(--tw-text-opacity, 1))}.hover\:bg-cyan-500\/25:hover{background-color:rgb(6 182 212 / 0.25)}.hover\:bg-violet-500\/25:hover{background-color:rgb(139 92 246 / 0.25)}.hover\:bg-white\/10:hover{background-color:rgb(255 255 255 / 0.1)}.hover\:text-amber-200:hover{--tw-text-opacity:1;color:rgb(253 230 138 / var(--tw-text-opacity, 1))}.hover\:text-violet-200:hover{--tw-text-opacity:1;color:rgb(221 214 254 / var(--tw-text-opacity, 1))}@media (min-width: 640px){.sm\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.sm\:space-y-5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem * var(--tw-space-y-reverse))}.sm\:p-4{padding:1rem}.sm\:p-6{padding:1.5rem}.sm\:text-4xl{font-size:2.25rem;line-height:2.5rem}.sm\:text-xs{font-size:0.75rem;line-height:1rem}}@media (min-width: 768px){.md\:fixed{position:fixed}.md\:inset-y-0{top:0px;bottom:0px}.md\:flex{display:flex}.md\:hidden{display:none}.md\:w-64{width:16rem}.md\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.md\:flex-row{flex-direction:row}.md\:flex-col{flex-direction:column}.md\:p-6{padding:1.5rem}.md\:pb-8{padding-bottom:2rem}.md\:pl-64{padding-left:16rem}.md\:text-5xl{font-size:3rem;line-height:1}}</style></head><body class="min-h-[100dvh] w-full max-w-[100vw] relative selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
+</head><body class="min-h-[100dvh] w-full max-w-[100vw] relative selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
   <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
     <div class="aurora-orb-1 absolute -top-24 -left-24 w-[440px] h-[440px] rounded-full bg-cyan-500/25 blur-[110px]"></div>
     <div class="aurora-orb-2 absolute top-1/3 -right-28 w-[420px] h-[420px] rounded-full bg-violet-600/20 blur-[120px]"></div>
     <div class="aurora-orb-3 absolute -bottom-28 left-1/4 w-[460px] h-[460px] rounded-full bg-emerald-500/15 blur-[120px]"></div>
     <div class="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.035)_1px,transparent_1px)] [background-size:24px_24px]"></div>
   </div>
-  <div id="burst-container" class="fixed top-16 right-4 z-50 pointer-events-none flex flex-col gap-2"><div class="animate-burst px-4 py-2 rounded-2xl font-bold mono text-sm shadow-2xl border backdrop-blur-xl bg-emerald-500/25 border-emerald-400/50 text-emerald-200">🔄 Datos sincronizados</div></div>
-  <div id="app-root" class="relative z-10 min-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-x-hidden">
-        <div class="flex-1 flex flex-col md:flex-row w-full max-w-[100vw] min-h-[100dvh] overflow-x-hidden">
-          <aside class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 left-0 z-30 p-4">
-            <div class="krono-sidebar-shell glass-97 flex-1 rounded-3xl p-4 flex flex-col justify-between">
-              <div>
-                <div class="krono-brand-card rounded-2xl p-3.5 mb-5 flex items-center justify-between gap-2.5">
-                  <div class="flex items-center gap-3 min-w-0">
-                    <div class="krono-brand-emblem w-10 h-10 rounded-2xl flex items-center justify-center font-extrabold text-base text-cyan-200 shrink-0">K</div>
-                    <div class="min-w-0">
-                      <h1 class="text-[15px] font-extrabold tracking-tight text-white truncate">Krono Finanzas</h1>
-                      <div class="flex items-center gap-1.5 mt-0.5">
-                        <span class="text-[10px] font-bold mono px-1.5 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/30 text-cyan-300">v6.5.42</span>
-                        <span class="text-[10px] font-semibold text-emerald-300/90 truncate">En línea</span>
-                      </div>
-                    </div>
-                  </div>
-                  <span class="krono-sync-dot w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0"></span>
-                </div>
-                <div class="px-2.5 mb-2 flex items-center justify-between">
-                  <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400/80">Navegación</span>
-                </div>
-                <nav class="space-y-1.5"><button onclick="switchTab('dashboard');" class="krono-nav-item w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-bold bg-cyan-400 text-slate-950 is-active">
-                    <div class="flex items-center gap-3 min-w-0">
-                      <span class="krono-nav-icon w-7 h-7 rounded-xl flex items-center justify-center text-sm shrink-0 bg-cyan-400/20 text-cyan-200 border border-cyan-300/40">🏠</span>
-                      <span class="truncate">Panel</span>
-                    </div>
-                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-300 shadow-[0_0_8px_#67e8f9] shrink-0"></span>
-                  </button><button onclick="switchTab('movements');" class="krono-nav-item w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-bold text-slate-300 hover:bg-white/10">
-                    <div class="flex items-center gap-3 min-w-0">
-                      <span class="krono-nav-icon w-7 h-7 rounded-xl flex items-center justify-center text-sm shrink-0 bg-white/[0.04] border border-white/10">⚡</span>
-                      <span class="truncate">Movimientos</span>
-                    </div>
-                    
-                  </button><button onclick="switchTab('accounts');" class="krono-nav-item w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-bold text-slate-300 hover:bg-white/10">
-                    <div class="flex items-center gap-3 min-w-0">
-                      <span class="krono-nav-icon w-7 h-7 rounded-xl flex items-center justify-center text-sm shrink-0 bg-white/[0.04] border border-white/10">🏦</span>
-                      <span class="truncate">Cuentas</span>
-                    </div>
-                    
-                  </button><button onclick="switchTab('budgets');" class="krono-nav-item w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-bold text-slate-300 hover:bg-white/10">
-                    <div class="flex items-center gap-3 min-w-0">
-                      <span class="krono-nav-icon w-7 h-7 rounded-xl flex items-center justify-center text-sm shrink-0 bg-white/[0.04] border border-white/10">🎯</span>
-                      <span class="truncate">Presupuestos</span>
-                    </div>
-                    
-                  </button><button onclick="switchTab('debts');" class="krono-nav-item w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-bold text-slate-300 hover:bg-white/10">
-                    <div class="flex items-center gap-3 min-w-0">
-                      <span class="krono-nav-icon w-7 h-7 rounded-xl flex items-center justify-center text-sm shrink-0 bg-white/[0.04] border border-white/10">📌</span>
-                      <span class="truncate">Pendientes</span>
-                    </div>
-                    
-                  </button><button onclick="switchTab('settings');" class="krono-nav-item w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-bold text-slate-300 hover:bg-white/10">
-                    <div class="flex items-center gap-3 min-w-0">
-                      <span class="krono-nav-icon w-7 h-7 rounded-xl flex items-center justify-center text-sm shrink-0 bg-white/[0.04] border border-white/10">⚙️</span>
-                      <span class="truncate">Ajustes</span>
-                    </div>
-                    
-                  </button></nav>
-              </div>
-              <div class="space-y-2.5 pt-3.5 border-t border-white/10">
-                <div class="rounded-2xl bg-slate-950/45 border border-white/10 px-3 py-2.5 flex items-center justify-between gap-2">
-                  <div class="min-w-0">
-                    <div class="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Código Sync</div>
-                    <div class="text-[11px] font-extrabold mono text-cyan-200 truncate">KRONO-7749</div>
-                  </div>
-                  <span class="text-[10px] mono px-2 py-0.5 rounded-lg bg-white/[0.05] border border-white/10 text-slate-300 shrink-0">Sync 09:25 p.&nbsp;m.</span>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                  <button onclick="syncAllNow(true)" class="spring-btn py-2.5 px-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/35 text-cyan-200 font-bold text-[11px] flex items-center justify-center gap-1.5"><span>🔄</span><span>Sync</span></button>
-                  <button onclick="ui.showOtaModal=true;render();" class="spring-btn py-2.5 px-2.5 rounded-xl bg-violet-500/15 hover:bg-violet-500/25 border border-violet-400/35 text-violet-200 font-bold text-[11px] flex items-center justify-center gap-1.5"><span>🚀</span><span>OTA</span></button>
-                </div>
-              </div>
-            </div>
-          </aside>
-          <main class="flex-1 md:pl-64 w-full max-w-[100vw] pb-24 md:pb-8 overflow-x-hidden">
-            <div class="max-w-5xl mx-auto p-3.5 sm:p-4 md:p-6 w-full overflow-x-hidden">
-              <div class="flex md:hidden justify-between items-center gap-2 mb-4">
-                <div class="min-w-0"><div class="flex items-center gap-2"><h1 class="text-lg font-extrabold text-white truncate">Krono Finanzas</h1><span class="krono-sync-dot w-2 h-2 rounded-full bg-emerald-400"></span></div><span class="text-[10px] font-bold mono text-cyan-300 block truncate">v6.5.42 • Sync 09:25 p.&nbsp;m.</span></div>
-                <div class="flex gap-1.5 shrink-0"><button onclick="syncAllNow(true)" class="spring-btn px-2.5 py-1.5 rounded-xl glass-97 text-xs text-cyan-200 font-bold">🔄 Sync</button><button onclick="ui.showOtaModal=true;render();" class="spring-btn px-2.5 py-1.5 rounded-xl glass-97 text-xs text-emerald-200 font-bold">🚀 OTA</button></div>
-              </div>
-              <div class="space-y-4 sm:space-y-5 ">
-        <div class="glass-97 px-4 py-3 rounded-2xl border border-cyan-400/40 text-xs text-cyan-200 flex items-center justify-between gap-2"><span class="break-words flex-1">🏷️ Publicando en R0D51/Krono-Finanzas...</span><button onclick="ui.otaStatusMsg='';render();" class="text-slate-400">✕</button></div>
-        <div onclick="ui.displayCurrency=ui.displayCurrency==='UYU'?'USD':'UYU';render();" class="spring-card glass-97 rounded-3xl p-5 sm:p-6 cursor-pointer">
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-            <span class="text-xs font-bold uppercase tracking-wider text-cyan-300">✨ Patrimonio Consolidado (UYU)</span>
-            <span class="text-[10px] px-2.5 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-200 mono">Cambiar a US$ USD</span>
-          </div>
-          <div class="text-3xl sm:text-4xl md:text-5xl font-extrabold mono text-white my-2 break-all">$ -168.075</div>
-          <div class="grid grid-cols-3 gap-2 mt-4 pt-3.5 border-t border-white/10 text-[11px] sm:text-xs">
-            <div class="min-w-0"><div class="text-slate-400 truncate">Ingresos Mes</div><div class="text-emerald-300 font-bold mono mt-0.5 truncate">+$ 3.500</div></div>
-            <div class="min-w-0"><div class="text-slate-400 truncate">Gastos Mes</div><div class="text-rose-300 font-bold mono mt-0.5 truncate">-$ 106.131</div></div>
-            <div class="min-w-0"><div class="text-slate-400 truncate">Ahorro</div><div class="text-cyan-300 font-bold mono mt-0.5">0%</div></div>
-          </div>
-        </div>
-        <div class="glass-97 rounded-3xl p-5">
-          <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
-            <h3 class="text-sm font-extrabold text-white">📌 Cuentas Pendientes, Créditos y Deudas</h3>
-            <div class="flex items-center gap-3 shrink-0">
-              <button onclick="ui.showNewCardModal=true;render();" class="text-xs font-bold text-violet-300 hover:text-violet-200">+ Tarjeta</button>
-              <button onclick="ui.showNewDebtModal=true;render();" class="text-xs font-bold text-amber-300 hover:text-amber-200">+ Nueva deuda/crédito</button>
-              <button onclick="switchTab('debts');" class="text-xs text-cyan-300">Ver todas →</button>
-            </div>
-          </div>
-          
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-                <div onclick="ui.debtFilterKind='credit';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn p-3 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
-                  <div class="text-[10px] text-slate-400">Me deben / Créditos</div>
-                  <div class="text-sm font-extrabold mono text-emerald-300 mt-0.5">+$ 0</div>
-                </div>
-                <div onclick="ui.debtFilterKind='debt';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn p-3 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
-                  <div class="text-[10px] text-slate-400">Debo / Pendiente por pagar</div>
-                  <div class="text-sm font-extrabold mono text-rose-300 mt-0.5">-$ 49.456</div>
-                </div>
-                <div onclick="ui.debtFilterKind='debt';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn p-3 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
-                  <div class="text-[10px] text-slate-400">Próximo cierre tarjeta</div>
-                  <div class="text-sm font-extrabold mono text-amber-200 mt-0.5">-$ 4.235</div>
-                </div>
-              </div>
-            
-        </div>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          <button onclick="ui.showNewTxModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">➕</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Movimiento</div><div class="text-[10px] text-slate-400 truncate">Gasto o ingreso</div></div></button>
-          <button onclick="ui.showTransferModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">⇄</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Transferir</div><div class="text-[10px] text-slate-400 truncate">Entre cuentas</div></div></button>
-          <button onclick="ui.showNewDebtModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">📌</span><div class="min-w-0"><div class="text-xs font-bold text-amber-200 truncate">Deudas</div><div class="text-[10px] text-slate-400 truncate">Créditos o pendientes</div></div></button>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="glass-97 rounded-3xl p-5">
-            <div class="flex justify-between mb-3"><h3 class="text-sm font-extrabold text-white">🏦 Cuentas Activas</h3><button onclick="switchTab('accounts');" class="text-xs text-cyan-300">Ver todas →</button></div>
-            <div class="space-y-2.5"><div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="flex items-center gap-2.5 min-w-0"><span class="text-xl">🏦</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Cuenta Itaú / Débito</div><div class="text-[10px] text-slate-400">UYU</div></div></div><div class="text-sm font-extrabold mono text-white shrink-0">$ -87.025</div></div><div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="flex items-center gap-2.5 min-w-0"><span class="text-xl">💵</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Ahorro Dólares</div><div class="text-[10px] text-slate-400">USD</div></div></div><div class="text-sm font-extrabold mono text-white shrink-0">US$ -1.940,96</div></div><div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="flex items-center gap-2.5 min-w-0"><span class="text-xl">👛</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Efectivo / Billetera</div><div class="text-[10px] text-slate-400">UYU</div></div></div><div class="text-sm font-extrabold mono text-white shrink-0">$ -500</div></div></div>
-          </div>
-          <div class="glass-97 rounded-3xl p-5 flex flex-col">
-            <div class="flex justify-between items-center mb-3 shrink-0"><h3 class="text-sm font-extrabold text-white">⚡ Últimos Movimientos</h3><button onclick="switchTab('movements');" class="text-xs text-cyan-300">Historial →</button></div>
-            <div class="krono-recent-scroll space-y-2.5 max-h-72 overflow-y-auto pr-1.5"><div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="min-w-0"><div class="text-xs font-bold text-white truncate">4234</div><div class="text-[10px] text-slate-400 truncate">Comida y Súper • <span class="text-cyan-300">Cuenta Itaú / Débito</span> • 23/11 17:03</div></div><div class="text-xs font-extrabold mono shrink-0 text-rose-300">-$ 42.342</div></div><div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="min-w-0"><div class="text-xs font-bold text-white truncate">4324</div><div class="text-[10px] text-slate-400 truncate">Comida y Súper • <span class="text-cyan-300">Cuenta Itaú / Débito</span> • 23/11 17:03</div></div><div class="text-xs font-extrabold mono shrink-0 text-rose-300">-$ 32.424</div></div><div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="min-w-0"><div class="text-xs font-bold text-white truncate">324</div><div class="text-[10px] text-slate-400 truncate">Comida y Súper • <span class="text-cyan-300">Cuenta Itaú / Débito</span> • 23/11 17:03</div></div><div class="text-xs font-extrabold mono shrink-0 text-rose-300">-$ 4.242</div></div><div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="min-w-0"><div class="text-xs font-bold text-white truncate">432</div><div class="text-[10px] text-slate-400 truncate">Comida y Súper • <span class="text-cyan-300">Cuenta Itaú / Débito</span> • 23/11 17:03</div></div><div class="text-xs font-extrabold mono shrink-0 text-rose-300">-$ 23.424</div></div><div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="min-w-0"><div class="text-xs font-bold text-white truncate">fsef</div><div class="text-[10px] text-slate-400 truncate">Comida y Súper • <span class="text-cyan-300">Cuenta Itaú / Débito</span> • 23/11 17:03</div></div><div class="text-xs font-extrabold mono shrink-0 text-rose-300">-$ 3.243</div></div><div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="min-w-0"><div class="text-xs font-bold text-white truncate">📉 Deuda: Prueba (Itaú) • 3 cuotas</div><div class="text-[10px] text-slate-400 truncate">Tarjeta / Crédito • <span class="text-cyan-300">Itaú</span> • 23/11 16:26</div></div><div class="text-xs font-extrabold mono shrink-0 text-rose-300">-$ 456</div></div><div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Cobro: Préstamo a amigo / Crédito</div><div class="text-[10px] text-slate-400 truncate">Ingreso • <span class="text-cyan-300">Cuenta Itaú / Débito</span> • 22/11 00:37</div></div><div class="text-xs font-extrabold mono shrink-0 text-emerald-300">+$ 3.500</div></div></div>
-          </div>
-        </div>
-        <div class="glass-97 rounded-3xl p-5">
-          <div class="flex justify-between mb-3"><h3 class="text-sm font-extrabold text-white">🎯 Top Presupuestos</h3><button onclick="switchTab('budgets');" class="text-xs text-cyan-300">Administrar →</button></div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3"><div class="p-3.5 rounded-2xl bg-slate-950/40 border border-white/10"><div class="flex justify-between gap-2 text-xs mb-1.5"><span class="font-bold text-white truncate">🛒 Comida y Súper</span><span class="mono text-slate-300 shrink-0">$ 105.675 / $ 18.000 (100%)</span></div><div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-rose-500" style="width:100%"></div></div></div><div class="p-3.5 rounded-2xl bg-slate-950/40 border border-white/10"><div class="flex justify-between gap-2 text-xs mb-1.5"><span class="font-bold text-white truncate">⛽ Ruta y Combustible</span><span class="mono text-slate-300 shrink-0">$ 0 / $ 8.500 (0%)</span></div><div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-cyan-400" style="width:0%"></div></div></div><div class="p-3.5 rounded-2xl bg-slate-950/40 border border-white/10"><div class="flex justify-between gap-2 text-xs mb-1.5"><span class="font-bold text-white truncate">⚡ Electrónica y Proyectos</span><span class="mono text-slate-300 shrink-0">$ 0 / $ 12.000 (0%)</span></div><div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-cyan-400" style="width:0%"></div></div></div><div class="p-3.5 rounded-2xl bg-slate-950/40 border border-white/10"><div class="flex justify-between gap-2 text-xs mb-1.5"><span class="font-bold text-white truncate">🏠 Hogar y Servicios</span><span class="mono text-slate-300 shrink-0">$ 0 / $ 15.000 (0%)</span></div><div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-cyan-400" style="width:0%"></div></div></div></div>
-        </div>
-      </div>
-            </div>
-          </main>
-          <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 p-2"><div class="glass-97 rounded-2xl px-1.5 py-1.5 flex justify-around"><button onclick="switchTab('dashboard');" class="flex flex-col items-center py-1.5 px-2 rounded-xl text-[10px] font-bold bg-cyan-400 text-slate-950"><span class="text-base">🏠</span><span class="mt-0.5">Panel</span></button><button onclick="switchTab('movements');" class="flex flex-col items-center py-1.5 px-2 rounded-xl text-[10px] font-bold text-slate-300"><span class="text-base">⚡</span><span class="mt-0.5">Movimientos</span></button><button onclick="switchTab('accounts');" class="flex flex-col items-center py-1.5 px-2 rounded-xl text-[10px] font-bold text-slate-300"><span class="text-base">🏦</span><span class="mt-0.5">Cuentas</span></button><button onclick="switchTab('budgets');" class="flex flex-col items-center py-1.5 px-2 rounded-xl text-[10px] font-bold text-slate-300"><span class="text-base">🎯</span><span class="mt-0.5">Presupuestos</span></button><button onclick="switchTab('debts');" class="flex flex-col items-center py-1.5 px-2 rounded-xl text-[10px] font-bold text-slate-300"><span class="text-base">📌</span><span class="mt-0.5">Pendientes</span></button><button onclick="switchTab('settings');" class="flex flex-col items-center py-1.5 px-2 rounded-xl text-[10px] font-bold text-slate-300"><span class="text-base">⚙️</span><span class="mt-0.5">Ajustes</span></button></div></nav>
-        </div>
-        
-        
-        
-        
-        
-                        
-        
-        
-        
-      </div>
+  <div id="burst-container" class="fixed top-16 right-4 z-50 pointer-events-none flex flex-col gap-2"></div>
+  <div id="app-root" class="relative z-10 min-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-x-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.42';
+    const APP_BASE_VERSION = '6.5.43';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -493,7 +229,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.42',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.43',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -525,7 +261,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
     let pendingInputModalCallback = null;
     let ui = {
       activeTab: 'dashboard', displayCurrency: state.defaultCurrency || 'UYU', voiceTargetAccountId: 'auto',
-      showNewTxModal: false, showNewAccountModal: false, showTransferModal: false, showNewBudgetModal: false, showNewDebtModal: false, showNewCardModal: false, debtFilterKind: 'all', debtFilterStatus: 'pending', debtFilterCard: 'all',
+      showNewTxModal: false, showNewAccountModal: false, showTransferModal: false, showNewBudgetModal: false, showNewDebtModal: false, showNewCardModal: false, showEditDebtModal: false, editingDebtId: null, showEditCardModal: false, editingCardId: null, debtFilterKind: 'all', debtFilterStatus: 'pending', debtFilterCard: 'all',
       showVoiceWidgetOverlay: false, showOtaModal: false, inputModal: null, otaStatusMsg: '', otaChecking: false,
       githubPushing: false, releaseNotesInput: '', txSearch: '', txFilterType: 'all', txFilterAccount: 'all',
       txFilterCurrency: 'all', isListening: false, voiceTranscript: '', voiceHintMsg: '',
@@ -1309,6 +1045,108 @@ input[type=number]::-webkit-outer-spin-button:hover {
     function deleteDebtItem(id) {
       if (!confirm('¿Eliminar este registro pendiente?')) return;
       state.debts = (Array.isArray(state.debts) ? state.debts : []).filter(x => x.id !== id);
+      if (ui.editingDebtId === id) { ui.showEditDebtModal = false; ui.editingDebtId = null; }
+      saveState(true, true);
+    }
+
+    function openEditDebtModal(id) {
+      const list = Array.isArray(state.debts) ? state.debts : [];
+      const d = list.find(x => x.id === id); if (!d) return;
+      ui.editingDebtId = id;
+      ui.showEditDebtModal = true;
+      render();
+    }
+
+    function handleEditDebtSubmit(e) {
+      if (e) e.preventDefault();
+      const list = Array.isArray(state.debts) ? state.debts : [];
+      const d = list.find(x => x.id === ui.editingDebtId); if (!d) return;
+      const title = (document.getElementById('edb-title').value || '').trim();
+      const counterparty = (document.getElementById('edb-counterparty').value || '').trim();
+      const rawAmount = Math.abs(parseFloat(document.getElementById('edb-amount').value) || 0);
+      const currency = document.getElementById('edb-currency').value || 'UYU';
+      const kind = document.getElementById('edb-kind').value || 'debt';
+      const paymentMethod = document.getElementById('edb-method') ? document.getElementById('edb-method').value : 'general';
+      const cardName = document.getElementById('edb-card') ? (document.getElementById('edb-card').value || '').trim() : '';
+      const amountMode = document.getElementById('edb-amount-mode') ? document.getElementById('edb-amount-mode').value : 'total';
+      const installmentsCount = Math.max(1, parseInt(document.getElementById('edb-installments') ? document.getElementById('edb-installments').value : '1', 10) || 1);
+      const paidInstallments = Math.max(0, Math.min(installmentsCount, parseInt(document.getElementById('edb-paid-inst') ? document.getElementById('edb-paid-inst').value : '0', 10) || 0));
+      const dueDate = (document.getElementById('edb-due').value || '').trim();
+      const notes = (document.getElementById('edb-notes').value || '').trim();
+      if (!title || rawAmount <= 0) return;
+
+      const totalAmount = amountMode === 'installment' ? Number((rawAmount * installmentsCount).toFixed(2)) : rawAmount;
+      d.title = title;
+      d.counterparty = counterparty || (cardName ? cardName : (kind === 'credit' ? 'Por cobrar' : 'Por pagar'));
+      d.amount = totalAmount;
+      d.currency = currency;
+      d.kind = kind;
+      d.paymentMethod = paymentMethod;
+      d.cardName = cardName;
+      d.installmentsCount = installmentsCount;
+      d.paidInstallments = paidInstallments;
+      d.dueDate = dueDate;
+      d.notes = notes;
+
+      if (paidInstallments >= installmentsCount) {
+        d.status = 'settled';
+        if (!d.settledAt) d.settledAt = Date.now();
+      } else if (d.status === 'settled') {
+        d.status = 'pending';
+        delete d.settledAt;
+      }
+
+      ui.showEditDebtModal = false;
+      ui.editingDebtId = null;
+      spawnFloatingBurst('✅ Registro actualizado', true);
+      saveState(true, true);
+    }
+
+    function openEditCreditCardModal(cardId) {
+      const list = Array.isArray(state.creditCards) ? state.creditCards : [];
+      const c = list.find(x => x.id === cardId); if (!c) return;
+      ui.editingCardId = cardId;
+      ui.showEditCardModal = true;
+      render();
+    }
+
+    function handleEditCreditCardSubmit(e) {
+      if (e) e.preventDefault();
+      const list = Array.isArray(state.creditCards) ? state.creditCards : [];
+      const c = list.find(x => x.id === ui.editingCardId); if (!c) return;
+      const newName = (document.getElementById('ecc-name').value || '').trim();
+      if (!newName) return;
+      const oldName = (c.name || '').trim();
+      const bank = (document.getElementById('ecc-bank').value || '').trim();
+      const brand = (document.getElementById('ecc-brand').value || 'Visa').trim();
+      const currency = document.getElementById('ecc-currency').value || 'UYU';
+      const closingDay = (document.getElementById('ecc-closing').value || '').trim();
+      const dueDay = (document.getElementById('ecc-due').value || '').trim();
+
+      c.name = newName;
+      c.bank = bank;
+      c.brand = brand;
+      c.currency = currency;
+      c.closingDay = closingDay;
+      c.dueDay = dueDay;
+
+      if (oldName && oldName.toLowerCase() !== newName.toLowerCase() && Array.isArray(state.debts)) {
+        state.debts.forEach(d => {
+          if ((d.cardName || '').trim().toLowerCase() === oldName.toLowerCase()) {
+            d.cardName = newName;
+          }
+          if ((d.counterparty || '').trim().toLowerCase() === oldName.toLowerCase()) {
+            d.counterparty = newName;
+          }
+        });
+        if (ui.debtFilterCard && ui.debtFilterCard.toLowerCase() === oldName.toLowerCase()) {
+          ui.debtFilterCard = newName;
+        }
+      }
+
+      ui.showEditCardModal = false;
+      ui.editingCardId = null;
+      spawnFloatingBurst(`💳 Tarjeta ${newName} actualizada`, true);
       saveState(true, true);
     }
 
@@ -1341,8 +1179,17 @@ input[type=number]::-webkit-outer-spin-button:hover {
       }, 50);
     }
     function deleteCreditCard(cardId) {
-      if (!confirm('¿Eliminar esta tarjeta guardada?')) return;
-      state.creditCards = (Array.isArray(state.creditCards) ? state.creditCards : []).filter(c => c.id !== cardId);
+      const list = Array.isArray(state.creditCards) ? state.creditCards : [];
+      const target = list.find(c => c.id === cardId);
+      if (!confirm(`¿Eliminar la tarjeta "${target ? target.name : ''}"?`)) return;
+      state.creditCards = list.filter(c => c.id !== cardId);
+      if (target && ui.debtFilterCard && ui.debtFilterCard.toLowerCase() === String(target.name || '').toLowerCase()) {
+        ui.debtFilterCard = 'all';
+      }
+      if (ui.editingCardId === cardId) {
+        ui.showEditCardModal = false;
+        ui.editingCardId = null;
+      }
       saveState(true, true);
     }
 
@@ -1649,7 +1496,6 @@ input[type=number]::-webkit-outer-spin-button:hover {
       }
       setInterval(() => { pullFromCloudBridge(false); pullStateFromGitHubCloud(false); }, 10000);
       setInterval(() => { if (state.autoCheckOta && cleanRepoSlug()) checkGitHubReleaseOtaUpdate(false); }, 60000);
-      try { (new Function("if (!window.__KRONO_FX_V6516__) { window.__KRONO_FX_V6516__ = true; let rafId = 0, lastEv = null; document.addEventListener('pointermove', function(e) { lastEv = e; if (rafId) return; rafId = requestAnimationFrame(function() { rafId = 0; if (!lastEv) return; const card = lastEv.target && lastEv.target.closest ? lastEv.target.closest('.glass-97') : null; if (!card) return; const rect = card.getBoundingClientRect(); card.style.setProperty('--mx', Math.round(lastEv.clientX - rect.left) + 'px'); card.style.setProperty('--my', Math.round(lastEv.clientY - rect.top) + 'px'); }); }, { passive: true }); document.addEventListener('pointerdown', function(e) { const el = e.target && e.target.closest ? e.target.closest('.spring-btn, .spring-card, aside nav button, nav button') : null; if (!el) return; const rect = el.getBoundingClientRect(); const size = Math.max(rect.width, rect.height) * 0.85; const r = document.createElement('span'); r.className = 'krono-ripple'; r.style.width = size + 'px'; r.style.height = size + 'px'; r.style.left = Math.round(e.clientX - rect.left) + 'px'; r.style.top = Math.round(e.clientY - rect.top) + 'px'; el.appendChild(r); setTimeout(function() { r.remove(); }, 540); }, { passive: true }); } if (!window.__KRONO_DD_V6517__) { window.__KRONO_DD_V6517__ = true; let activeSelect = null; function closeGlassDropdown() { const existing = document.getElementById('krono-glass-dropdown'); if (existing) existing.remove(); if (activeSelect) { activeSelect.classList.remove('krono-dd-open'); activeSelect = null; } } function openGlassDropdown(sel) { if (activeSelect === sel && document.getElementById('krono-glass-dropdown')) { closeGlassDropdown(); return; } closeGlassDropdown(); activeSelect = sel; sel.classList.add('krono-dd-open'); const menu = document.createElement('div'); menu.id = 'krono-glass-dropdown'; const opts = Array.from(sel.options || []); opts.forEach(function(opt) { const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'krono-dd-item' + (opt.value === sel.value ? ' is-selected' : ''); const lbl = document.createElement('span'); lbl.textContent = opt.textContent; lbl.style.overflow = 'hidden'; lbl.style.textOverflow = 'ellipsis'; lbl.style.whiteSpace = 'nowrap'; btn.appendChild(lbl); if (opt.value === sel.value) { const chk = document.createElement('span'); chk.className = 'krono-dd-check'; chk.textContent = '\u2713'; btn.appendChild(chk); } btn.addEventListener('mousedown', function(ev) { ev.preventDefault(); ev.stopPropagation(); const changed = sel.value !== opt.value; sel.value = opt.value; closeGlassDropdown(); if (changed) sel.dispatchEvent(new Event('change', { bubbles: true })); }); menu.appendChild(btn); }); document.body.appendChild(menu); const rect = sel.getBoundingClientRect(); const minW = Math.min(Math.max(rect.width, 195), window.innerWidth - 24); menu.style.minWidth = Math.round(minW) + 'px'; menu.style.maxWidth = Math.round(window.innerWidth - 24) + 'px'; const mRect = menu.getBoundingClientRect(); let left = rect.left; if (left + mRect.width > window.innerWidth - 12) left = window.innerWidth - mRect.width - 12; if (left < 12) left = 12; let top = rect.bottom + 6; if (top + mRect.height > window.innerHeight - 12 && rect.top > mRect.height + 16) { top = rect.top - mRect.height - 6; menu.classList.add('krono-dd-up'); } menu.style.left = Math.round(left) + 'px'; menu.style.top = Math.round(Math.max(12, top)) + 'px'; } document.addEventListener('mousedown', function(e) { if (e.target && e.target.closest && e.target.closest('#krono-glass-dropdown')) return; if (e.target && e.target.tagName === 'SELECT') { e.preventDefault(); e.target.focus(); openGlassDropdown(e.target); return; } closeGlassDropdown(); }, true); document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeGlassDropdown(); return; } if (e.target && e.target.tagName === 'SELECT' && (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown')) { e.preventDefault(); openGlassDropdown(e.target); } }, true); window.addEventListener('resize', closeGlassDropdown, { passive: true }); window.addEventListener('scroll', function(e) { if (e.target && e.target.id === 'krono-glass-dropdown') return; closeGlassDropdown(); }, true); } if (!window.__KRONO_NAV_V6519__) { window.__KRONO_NAV_V6519__ = true; window.__KRONO_KEEP_MOV_FILTERS__ = false; function resetMovementFilters() { if (typeof ui === 'undefined') return; ui.txFilterAccount = 'all'; ui.txFilterType = 'all'; ui.txFilterCurrency = 'all'; ui.txSearch = ''; } function openMovementsWithFilters(opts) { if (typeof ui === 'undefined') return; resetMovementFilters(); if (opts && opts.accountId) ui.txFilterAccount = opts.accountId; if (opts && opts.type) ui.txFilterType = opts.type; if (opts && opts.search) ui.txSearch = opts.search; window.__KRONO_KEEP_MOV_FILTERS__ = true; if (typeof window.switchTab === 'function') { window.switchTab('movements'); } else { ui.activeTab = 'movements'; if (typeof render === 'function') render(); } try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (err) {} } if (typeof window.switchTab === 'function' && !window.switchTab.__kronoWrapped6519) { const origSwitchTab = window.switchTab; window.switchTab = function(tabId) { const prev = (typeof ui !== 'undefined') ? ui.activeTab : null; if (prev === 'movements' && tabId !== 'movements') { resetMovementFilters(); } else if (tabId === 'movements' && !window.__KRONO_KEEP_MOV_FILTERS__) { resetMovementFilters(); } window.__KRONO_KEEP_MOV_FILTERS__ = false; return origSwitchTab.call(this, tabId); }; window.switchTab.__kronoWrapped6519 = true; } function findNavigableCard(target) { if (typeof ui === 'undefined' || !target || !target.closest) return null; if (target.closest('button, input, select, textarea, a')) return null; if (ui.activeTab === 'dashboard') { const row = target.closest('main .glass-97 .rounded-2xl'); if (!row) return null; const list = row.parentElement; const card = list ? list.parentElement : null; if (!card || !card.classList || !card.classList.contains('glass-97')) return null; const h3 = card.querySelector('h3'); if (!h3 || !h3.textContent) return null; const idx = Array.from(list.children).indexOf(row); if (h3.textContent.indexOf('Cuentas Activas') !== -1) { return { kind: 'account', el: row, idx: idx, needsRipple: true }; } if (h3.textContent.indexOf('Top Presupuestos') !== -1) { return { kind: 'budget', el: row, idx: idx, needsRipple: true }; } return null; } if (ui.activeTab === 'accounts') { const card = target.closest('main .grid > .spring-card.glass-97'); if (!card || !card.parentElement) return null; return { kind: 'account', el: card, idx: Array.from(card.parentElement.children).indexOf(card), needsRipple: false }; } if (ui.activeTab === 'budgets') { const card = target.closest('main .grid > .spring-card.glass-97'); if (!card || !card.parentElement) return null; return { kind: 'budget', el: card, idx: Array.from(card.parentElement.children).indexOf(card), needsRipple: false }; } return null; } document.addEventListener('pointerdown', function(e) { const hit = findNavigableCard(e.target); if (!hit || !hit.needsRipple) return; const rect = hit.el.getBoundingClientRect(); const size = Math.max(rect.width, rect.height) * 0.85; const r = document.createElement('span'); r.className = 'krono-ripple'; r.style.width = size + 'px'; r.style.height = size + 'px'; r.style.left = Math.round(e.clientX - rect.left) + 'px'; r.style.top = Math.round(e.clientY - rect.top) + 'px'; hit.el.appendChild(r); setTimeout(function() { r.remove(); }, 540); }, { passive: true }); document.addEventListener('click', function(e) { const hit = findNavigableCard(e.target); if (!hit || typeof state === 'undefined') return; if (hit.kind === 'account') { const acc = Array.isArray(state.accounts) ? state.accounts[hit.idx] : null; if (!acc || !acc.id) return; e.stopPropagation(); openMovementsWithFilters({ accountId: acc.id }); } else if (hit.kind === 'budget') { const bg = Array.isArray(state.budgets) ? state.budgets[hit.idx] : null; if (!bg || !bg.name) return; e.stopPropagation(); openMovementsWithFilters({ type: 'expense', search: bg.name }); } }, true); }"))(); } catch (e) {}
       render();
     });
 
@@ -1799,10 +1645,23 @@ input[type=number]::-webkit-outer-spin-button:hover {
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${cardsBreakdown.map(c => {
             const isSelected = ui.debtFilterCard && ui.debtFilterCard.toLowerCase() === c.name.toLowerCase();
+            const savedCardObj = (Array.isArray(state.creditCards) ? state.creditCards : []).find(sc => String(sc.name || '').trim().toLowerCase() === String(c.name || '').trim().toLowerCase());
+            const metaParts = [];
+            if (savedCardObj && savedCardObj.bank) metaParts.push(escapeAttr(savedCardObj.bank));
+            if (savedCardObj && savedCardObj.brand) metaParts.push(escapeAttr(savedCardObj.brand));
+            if (savedCardObj && savedCardObj.closingDay) metaParts.push('Cierre día ' + escapeAttr(savedCardObj.closingDay));
+            if (savedCardObj && savedCardObj.dueDay) metaParts.push('Vto. día ' + escapeAttr(savedCardObj.dueDay));
             return `<div onclick="ui.debtFilterCard = (${isSelected ? "'all'" : "'" + escapeAttr(c.name).replace(/'/g, "\\'") + "'"});render();" class="spring-card p-4 rounded-2xl bg-slate-950/50 border ${isSelected ? 'border-cyan-400 bg-cyan-500/10' : 'border-white/10'} space-y-2 cursor-pointer">
-              <div class="flex justify-between items-center gap-2">
-                <div class="text-sm font-extrabold text-white truncate">💳 ${escapeAttr(c.name)}</div>
-                <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-violet-500/20 border border-violet-400/30 text-violet-200 mono shrink-0">${c.pendingItems} pend.</span>
+              <div class="flex justify-between items-start gap-2">
+                <div class="min-w-0">
+                  <div class="text-sm font-extrabold text-white truncate">💳 ${escapeAttr(c.name)}</div>
+                  ${metaParts.length ? `<div class="text-[10px] text-slate-400 truncate mt-0.5">${metaParts.join(' • ')}</div>` : ''}
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0" onclick="event.stopPropagation();">
+                  <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-violet-500/20 border border-violet-400/30 text-violet-200 mono">${c.pendingItems} pend.</span>
+                  ${savedCardObj ? `<button type="button" onclick="openEditCreditCardModal('${savedCardObj.id}')" title="Editar tarjeta" class="px-2 py-1 rounded-lg bg-white/10 hover:bg-cyan-500/25 border border-white/10 hover:border-cyan-400/40 text-[11px] text-cyan-200 font-bold">✏️</button>
+                  <button type="button" onclick="deleteCreditCard('${savedCardObj.id}')" title="Borrar tarjeta" class="px-2 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 border border-rose-400/25 text-[11px] text-rose-200 font-bold">🗑️</button>` : ''}
+                </div>
               </div>
               <div class="grid grid-cols-2 gap-2 text-xs pt-1">
                 <div>
@@ -1868,8 +1727,9 @@ input[type=number]::-webkit-outer-spin-button:hover {
               ${!isSettled && instCount > 1 ? `<button onclick="payNextDebtInstallment('${d.id}', true)" class="spring-btn px-3 py-1.5 rounded-xl bg-cyan-500/25 border border-cyan-400/40 text-cyan-200 font-bold">💳 Pagar/Cobrar Cuota #${nextInstNum} (${formatMoney(instVal, d.currency)})</button>` : ''}
               ${!isSettled ? `<button onclick="toggleDebtSettled('${d.id}', true)" class="spring-btn px-3 py-1.5 rounded-xl bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 font-bold">✓ Saldar Todo y Asentar</button>` : ''}
               <button onclick="toggleDebtSettled('${d.id}', false)" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">${isSettled ? 'Reabrir' : 'Marcar Saldado'}</button>
-              <button onclick="editDebtAmount('${d.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">Editar Monto</button>
-              <button onclick="deleteDebtItem('${d.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-200">Eliminar</button>
+              <button onclick="openEditDebtModal('${d.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/35 text-cyan-200 font-bold">✏️ Editar</button>
+              <button onclick="editDebtAmount('${d.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">Monto</button>
+              <button onclick="deleteDebtItem('${d.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 font-bold">🗑️ Borrar</button>
             </div>
           </div>`;
         }).join('') : '<div class="glass-97 rounded-3xl p-8 text-center text-xs text-slate-400 col-span-full">No hay registros en este filtro.</div>'}</div>
@@ -2024,6 +1884,20 @@ input[type=number]::-webkit-outer-spin-button:hover {
         ${ui.showNewAccountModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="createAccount(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">🏦 Nueva Cuenta</h3><input id="acc-name" type="text" required placeholder="Nombre" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-3 gap-2"><select id="acc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">UYU</option><option value="USD">USD</option></select><input id="acc-balance" type="number" step="0.01" placeholder="Saldo" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="acc-icon" type="text" value="🏦" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewAccountModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Crear</button></div></form></div>` : ''}
         ${ui.showTransferModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleTransferSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">⇄ Transferir</h3><select id="tr-from" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map(a => `<option value="${a.id}">Desde: ${a.name}</option>`).join('')}</select><select id="tr-to" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map((a,i) => `<option value="${a.id}" ${i===1?'selected':''}>Hacia: ${a.name}</option>`).join('')}</select><input id="tr-amount" type="number" step="0.01" required placeholder="Monto" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showTransferModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Transferir</button></div></form></div>` : ''}
                         ${ui.showNewCardModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateCreditCardSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-violet-400/50 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">💳 Nueva Tarjeta de Crédito</h3><input id="cc-name" type="text" required placeholder="Nombre de la tarjeta (ej: Itaú Visa, BROU Master)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="cc-bank" type="text" placeholder="Banco / Emisor (ej: Itaú)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><select id="cc-brand" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="Visa">Visa</option><option value="Mastercard">Mastercard</option><option value="Oca">Oca</option><option value="Amex">Amex</option><option value="Cabal">Cabal</option><option value="Comercio">Comercio</option></select></div><div class="grid grid-cols-3 gap-2"><select id="cc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select><input id="cc-closing" type="text" placeholder="Día cierre (ej: 15)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="cc-due" type="text" placeholder="Día vto. (ej: 25)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewCardModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-violet-400 text-slate-950 font-extrabold text-xs">Guardar Tarjeta</button></div></form></div>` : ''}
+        ${(() => {
+          if (!ui.showEditCardModal || !ui.editingCardId) return '';
+          const ec = (Array.isArray(state.creditCards) ? state.creditCards : []).find(x => x.id === ui.editingCardId);
+          if (!ec) return '';
+          return `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleEditCreditCardSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-violet-400/50 space-y-3 animate-pop-elastic"><div class="flex items-center justify-between gap-2"><h3 class="text-base font-extrabold text-white">✏️ Editar Tarjeta de Crédito</h3><button type="button" onclick="deleteCreditCard('${ec.id}')" class="px-2.5 py-1 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/30 text-rose-200 font-bold text-xs">🗑️ Borrar</button></div><input id="ecc-name" type="text" required value="${escapeAttr(ec.name)}" placeholder="Nombre de la tarjeta" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="ecc-bank" type="text" value="${escapeAttr(ec.bank || '')}" placeholder="Banco / Emisor" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><select id="ecc-brand" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="Visa" ${ec.brand==='Visa'?'selected':''}>Visa</option><option value="Mastercard" ${ec.brand==='Mastercard'?'selected':''}>Mastercard</option><option value="Oca" ${ec.brand==='Oca'?'selected':''}>Oca</option><option value="Amex" ${ec.brand==='Amex'?'selected':''}>Amex</option><option value="Cabal" ${ec.brand==='Cabal'?'selected':''}>Cabal</option><option value="Comercio" ${ec.brand==='Comercio'?'selected':''}>Comercio</option></select></div><div class="grid grid-cols-3 gap-2"><select id="ecc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU" ${ec.currency==='UYU'?'selected':''}>$ UYU</option><option value="USD" ${ec.currency==='USD'?'selected':''}>US$ USD</option></select><input id="ecc-closing" type="text" value="${escapeAttr(ec.closingDay || '')}" placeholder="Día cierre" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="ecc-due" type="text" value="${escapeAttr(ec.dueDay || '')}" placeholder="Día vto." class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showEditCardModal=false;ui.editingCardId=null;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-violet-400 text-slate-950 font-extrabold text-xs">Guardar Cambios</button></div></form></div>`;
+        })()}
+        ${(() => {
+          if (!ui.showEditDebtModal || !ui.editingDebtId) return '';
+          const ed = (Array.isArray(state.debts) ? state.debts : []).find(x => x.id === ui.editingDebtId);
+          if (!ed) return '';
+          const instC = Math.max(1, parseInt(ed.installmentsCount, 10) || 1);
+          const paidC = Math.max(0, Math.min(instC, parseInt(ed.paidInstallments, 10) || 0));
+          return `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleEditDebtSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-cyan-400/50 space-y-3 animate-pop-elastic"><div class="flex items-center justify-between gap-2"><h3 class="text-base font-extrabold text-white">✏️ Editar Deuda / Crédito</h3><button type="button" onclick="deleteDebtItem('${ed.id}')" class="px-2.5 py-1 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/30 text-rose-200 font-bold text-xs">🗑️ Borrar</button></div><input id="edb-title" type="text" required value="${escapeAttr(ed.title)}" placeholder="Concepto" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><select id="edb-kind" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="debt" ${ed.kind!=='credit'?'selected':''}>📉 Deuda / Debo (-)</option><option value="credit" ${ed.kind==='credit'?'selected':''}>📈 Crédito / Me deben (+)</option></select><select id="edb-method" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="credit_card" ${ed.paymentMethod==='credit_card'?'selected':''}>💳 Tarjeta de Crédito</option><option value="installment_plan" ${ed.paymentMethod==='installment_plan'?'selected':''}>🗓️ Plan / Cuotas</option><option value="personal" ${ed.paymentMethod==='personal'?'selected':''}>🤝 Préstamo / Persona</option><option value="general" ${ed.paymentMethod==='general'?'selected':''}>📌 General</option></select></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div class="flex gap-1.5 items-center"><select id="edb-card-pick" onchange="const c=document.getElementById('edb-card');if(c && this.value) c.value=this.value;" class="flex-1 bg-slate-950/80 border border-white/15 rounded-xl px-2.5 py-2.5 text-xs text-cyan-200"><option value="">Elegir tarjeta...</option>${(Array.isArray(state.creditCards)?state.creditCards:[]).map(cc => `<option value="${escapeAttr(cc.name)}" ${String(ed.cardName||'').toLowerCase()===String(cc.name||'').toLowerCase()?'selected':''}>💳 ${escapeAttr(cc.name)}</option>`).join('')}</select></div><input id="edb-card" type="text" value="${escapeAttr(ed.cardName || '')}" placeholder="Tarjeta o banco" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /></div><input id="edb-counterparty" type="text" value="${escapeAttr(ed.counterparty || '')}" placeholder="Comercio o persona (opcional)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-3 gap-2"><input id="edb-amount" type="number" step="0.01" required value="${escapeAttr(ed.amount)}" placeholder="Monto" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><select id="edb-amount-mode" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="total" selected>Monto Total</option><option value="installment">Valor x Cuota</option></select><select id="edb-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU" ${ed.currency==='UYU'?'selected':''}>$ UYU</option><option value="USD" ${ed.currency==='USD'?'selected':''}>US$ USD</option></select></div><div class="grid grid-cols-2 gap-2"><div><label class="text-[10px] text-slate-400 block mb-1">Total cuotas</label><input id="edb-installments" type="number" min="1" max="120" value="${instC}" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" /></div><div><label class="text-[10px] text-slate-400 block mb-1">Cuotas pagadas/cobradas</label><input id="edb-paid-inst" type="number" min="0" max="120" value="${paidC}" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" /></div></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><input id="edb-due" type="text" value="${escapeAttr(ed.dueDate || '')}" placeholder="Vencimiento / Cierre" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><input id="edb-notes" type="text" value="${escapeAttr(ed.notes || '')}" placeholder="Notas adicionales" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showEditDebtModal=false;ui.editingDebtId=null;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Guardar Cambios</button></div></form></div>`;
+        })()}
         ${ui.showNewDebtModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateDebtSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">📌 Nuevo Crédito / Deuda / Tarjeta</h3><input id="db-title" type="text" required placeholder="Concepto (ej: Compra en cuotas, préstamo, tarjeta)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><select id="db-kind" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="debt">📉 Deuda / Debo (-)</option><option value="credit">📈 Crédito / Me deben (+)</option></select><select id="db-method" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="credit_card">💳 Tarjeta de Crédito</option><option value="installment_plan">🗓️ Plan / Cuotas</option><option value="personal">🤝 Préstamo / Persona</option><option value="general">📌 General</option></select></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div class="flex gap-1.5 items-center"><select id="db-card-pick" onchange="const c=document.getElementById('db-card');if(c && this.value) c.value=this.value;" class="flex-1 bg-slate-950/80 border border-white/15 rounded-xl px-2.5 py-2.5 text-xs text-cyan-200"><option value="">Elegir tarjeta...</option>${(Array.isArray(state.creditCards)?state.creditCards:[]).map(cc => `<option value="${escapeAttr(cc.name)}">💳 ${escapeAttr(cc.name)}</option>`).join('')}</select><button type="button" onclick="ui.showNewCardModal=true;render();" title="Crear tarjeta" class="px-2.5 py-2.5 rounded-xl bg-violet-500/25 border border-violet-400/40 text-violet-200 text-xs font-bold shrink-0">+</button></div><input id="db-card" type="text" placeholder="Tarjeta o banco (ej: Itaú Visa)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /></div><input id="db-counterparty" type="text" placeholder="Comercio o persona (opcional)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-3 gap-2"><input id="db-amount" type="number" step="0.01" required placeholder="Monto" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><select id="db-amount-mode" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="total">Monto Total</option><option value="installment">Valor x Cuota</option></select><select id="db-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select></div><div class="grid grid-cols-2 gap-2"><input id="db-installments" type="number" min="1" max="120" value="1" placeholder="Cantidad de cuotas (1 = pago único)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="db-due" type="text" placeholder="Vencimiento / Cierre (ej: 30/11)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /></div><input id="db-notes" type="text" placeholder="Notas adicionales (opcional)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewDebtModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Guardar</button></div></form></div>` : ''}
         ${ui.showNewBudgetModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateBudgetSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">🎯 Nueva Categoría</h3><input id="bg-name" type="text" required placeholder="Nombre" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="bg-limit" type="number" required placeholder="Tope ($ UYU)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="bg-icon" type="text" value="🎯" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewBudgetModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Crear</button></div></form></div>` : ''}
         ${ui.showVoiceWidgetOverlay ? `<div class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4 text-center"><div class="glass-97 w-full max-w-sm rounded-3xl p-6 border-2 border-cyan-400/50 animate-pop-elastic space-y-3"><div class="text-4xl">${ui.isListening?'🎙️':'✨'}</div><h3 class="text-base font-extrabold text-white">${ui.isListening?'Escuchando...':'Dictado por Voz'}</h3>${ui.voiceHintMsg?`<p class="text-[11px] text-amber-200 bg-amber-500/15 rounded-xl p-2">${ui.voiceHintMsg}</p>`:''}<input id="voice-overlay-manual-input" type="text" value="${escapeAttr(ui.voiceTranscript)}" oninput="ui.voiceTranscript=this.value;" onkeydown="if(event.key==='Enter')submitVoiceOverlayInput();" placeholder="Dictá con el teclado o escribí..." class="w-full bg-slate-950/85 border border-cyan-400/50 rounded-2xl px-3.5 py-3 text-xs text-white" /><div class="grid grid-cols-2 gap-2.5 pt-1"><button onclick="submitVoiceOverlayInput()" class="spring-btn py-2.5 rounded-2xl bg-cyan-400 text-slate-950 font-extrabold text-xs">✅ Procesar</button><button onclick="stopVoiceCapture();ui.showVoiceWidgetOverlay=false;render();" class="py-2.5 rounded-2xl bg-white/10 text-slate-300 font-bold text-xs">Cerrar</button></div></div></div>` : ''}
@@ -2031,4 +1905,4 @@ input[type=number]::-webkit-outer-spin-button:hover {
       syncFloatingVoiceButton();
     }
   </script>
-<button id="krono-voice-fab" type="button" title="Dictado por voz" aria-label="Dictado por voz"><span>🎙️</span></button></body></html>
+</body></html>
