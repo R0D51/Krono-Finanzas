@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795492595546,
+  "updatedAt": 1795492598852,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -190,14 +190,15 @@
       "paymentMethod": "credit_card",
       "cardName": "Itaú Dolares",
       "installmentsCount": 12,
-      "paidInstallments": 0,
+      "paidInstallments": 12,
       "amount": 100000,
       "currency": "UYU",
       "kind": "debt",
       "dueDate": "",
-      "status": "pending",
+      "status": "settled",
       "notes": "",
-      "createdAt": 1795484236579
+      "createdAt": 1795484236579,
+      "settledAt": 1795492598852
     },
     {
       "id": "debt_sync_tx_1795483635646_280_871",
