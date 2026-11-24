@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795482996303,
+  "updatedAt": 1795483585971,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -121,7 +121,7 @@
       "id": "acc_cash",
       "name": "Efectivo / Billetera",
       "currency": "UYU",
-      "balance": -49956,
+      "balance": -500,
       "color": "from-violet-400 to-purple-500",
       "icon": "👛"
     }
@@ -241,18 +241,6 @@
     }
   ],
   "transactions": [
-    {
-      "id": "tx_1795482996299_690",
-      "title": "🤖 Pago tarjeta de crédito (Tarjeta de crédito) con Efectivo / Billetera",
-      "amount": 49456,
-      "currency": "UYU",
-      "type": "expense",
-      "category": "Tarjeta / Crédito",
-      "accountId": "acc_cash",
-      "accountName": "Efectivo / Billetera",
-      "date": "23/11 22:16",
-      "timestamp": 1795482996299
-    },
     {
       "id": "tx_1795464231098_522",
       "title": "4234",
