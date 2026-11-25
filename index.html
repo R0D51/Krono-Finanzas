@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.71
+    // KRONO OTA BOOTLOADER v6.5.70
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.71';
+    const APP_BASE_VERSION = '6.5.70';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,7 +230,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.71',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.70',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -245,8 +245,8 @@ input[type=number]::-webkit-outer-spin-button:hover {
         { id: 'cat_transport', name: 'Transporte y Nafta', limit: 7000, icon: '🚗', color: '#10b981' }
       ],
       creditCards: [
-        { id: 'card_itau_visa', name: 'Itaú Visa', brand: 'Visa', bank: 'Itaú', currency: 'UYU', creditLimit: 60000, closingDay: '15', dueDay: '25' },
-        { id: 'card_zodimac', name: 'Zodimac', brand: 'Comercio', bank: 'Zodimac', currency: 'UYU', creditLimit: 30000, closingDay: '10', dueDay: '23' }
+        { id: 'card_itau_visa', name: 'Itaú Visa', brand: 'Visa', bank: 'Itaú', currency: 'UYU', closingDay: '15', dueDay: '25' },
+        { id: 'card_zodimac', name: 'Zodimac', brand: 'Comercio', bank: 'Zodimac', currency: 'UYU', closingDay: '10', dueDay: '23' }
       ],
       debts: [
         { id: 'debt_demo_1', title: 'Préstamo a amigo / Crédito', counterparty: 'Lucas', amount: 3500, currency: 'UYU', kind: 'credit', dueDate: '', status: 'pending', notes: '' },
@@ -1174,7 +1174,6 @@ input[type=number]::-webkit-outer-spin-button:hover {
             id: sc.id,
             name: label,
             currency: sc.currency || 'UYU',
-            creditLimit: Math.max(0, Number(sc.creditLimit) || 0),
             closingDay: sc.closingDay || '',
             dueDay: sc.dueDay || '',
             totalItems: 0,
@@ -1194,8 +1193,6 @@ input[type=number]::-webkit-outer-spin-button:hover {
         if (!map.has(key)) {
           map.set(key, {
             name: cardLabel,
-            currency: d.currency || 'UYU',
-            creditLimit: 0,
             totalItems: 0,
             pendingItems: 0,
             activeInstallmentPlans: 0,
@@ -1227,21 +1224,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
           }
         }
       });
-      return Array.from(map.values()).map(entry => {
-        const cardCur = entry.currency || 'UYU';
-        const usedInCardCur = cardCur === 'USD'
-          ? Number((Math.max(0, entry.remainingBalanceUYU) / rate).toFixed(2))
-          : Math.max(0, entry.remainingBalanceUYU);
-        const totalLim = Math.max(0, Number(entry.creditLimit) || 0);
-        const availLim = totalLim > 0 ? Number((totalLim - usedInCardCur).toFixed(2)) : null;
-        const usedPct = totalLim > 0 ? Math.min(100, Math.max(0, Math.round((usedInCardCur / totalLim) * 100))) : 0;
-        return {
-          ...entry,
-          usedInCardCur,
-          availableLimit: availLim,
-          usedPct
-        };
-      });
+      return Array.from(map.values());
     }
     function getDebtsSummary() {
       const rate = Number(state.exchangeRate) || 41.5;
@@ -1577,7 +1560,6 @@ input[type=number]::-webkit-outer-spin-button:hover {
       const bank = (document.getElementById('ecc-bank').value || '').trim();
       const brand = (document.getElementById('ecc-brand').value || 'Visa').trim();
       const currency = document.getElementById('ecc-currency').value || 'UYU';
-      const creditLimit = Math.max(0, parseFloat(document.getElementById('ecc-limit') ? document.getElementById('ecc-limit').value : '0') || 0);
       const closingDay = (document.getElementById('ecc-closing').value || '').trim();
       const dueDay = (document.getElementById('ecc-due').value || '').trim();
 
@@ -1585,7 +1567,6 @@ input[type=number]::-webkit-outer-spin-button:hover {
       c.bank = bank;
       c.brand = brand;
       c.currency = currency;
-      c.creditLimit = creditLimit;
       c.closingDay = closingDay;
       c.dueDay = dueDay;
 
@@ -1617,7 +1598,6 @@ input[type=number]::-webkit-outer-spin-button:hover {
       const bank = (document.getElementById('cc-bank').value || '').trim();
       const brand = (document.getElementById('cc-brand').value || 'Visa').trim();
       const currency = document.getElementById('cc-currency').value || 'UYU';
-      const creditLimit = Math.max(0, parseFloat(document.getElementById('cc-limit') ? document.getElementById('cc-limit').value : '0') || 0);
       const closingDay = (document.getElementById('cc-closing').value || '').trim();
       const dueDay = (document.getElementById('cc-due').value || '').trim();
       const cardObj = {
@@ -1626,7 +1606,6 @@ input[type=number]::-webkit-outer-spin-button:hover {
         bank,
         brand,
         currency,
-        creditLimit,
         closingDay,
         dueDay
       };
@@ -2767,9 +2746,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       }
       setInterval(() => { pullFromCloudBridge(false); pullStateFromGitHubCloud(false); }, 10000);
       setInterval(() => { if (state.autoCheckOta && cleanRepoSlug()) checkGitHubReleaseOtaUpdate(false); }, 60000);
-      try { (new Function("\nif (!window.__KRONO_SPOTLIGHT_V6545__) {\n  window.__KRONO_SPOTLIGHT_V6545__ = true;\n  let spotRaf = 0;\n  let targetX = -9999, targetY = -9999;\n  let curX = -9999, curY = -9999;\n  let lastPointerTarget = null;\n\n  function ensureSpotlight() {\n    let sp = document.getElementById('krono-cursor-spotlight');\n    if (!sp) {\n      sp = document.createElement('div');\n      sp.id = 'krono-cursor-spotlight';\n      document.body.insertBefore(sp, document.body.firstChild);\n    }\n    return sp;\n  }\n\n  function stepSpotlight() {\n    spotRaf = 0;\n    const sp = ensureSpotlight();\n    if (targetX < -1000) {\n      sp.style.opacity = '0';\n      return;\n    }\n    if (curX < -1000) {\n      curX = targetX;
-      curY = targetY;
-    } else {\n      curX += (targetX - curX) * 0.22;\n      curY += (targetY - curY) * 0.22;\n    }\n    sp.style.opacity = '1';\n    sp.style.transform = `translate3d(${Math.round(curX - 270)}px, ${Math.round(curY - 270)}px, 0)`;\n\n    if (lastPointerTarget && lastPointerTarget.closest) {\n      const card = lastPointerTarget.closest('.glass-97');\n      if (card) {\n        const rect = card.getBoundingClientRect();\n        card.style.setProperty('--mx', Math.round(targetX - rect.left) + 'px');\n        card.style.setProperty('--my', Math.round(targetY - rect.top) + 'px');\n      }\n    }\n\n    if (Math.abs(targetX - curX) > 0.4 || Math.abs(targetY - curY) > 0.4) {\n      spotRaf = requestAnimationFrame(stepSpotlight);\n    }\n  }\n\n  document.addEventListener('pointermove', function(e) {\n    targetX = e.clientX;\n    targetY = e.clientY;\n    lastPointerTarget = e.target;\n    if (!spotRaf) spotRaf = requestAnimationFrame(stepSpotlight);\n  }, { passive: true });\n\n  document.addEventListener('pointerleave', function() {\n    targetX = -9999;\n    targetY = -9999;\n    if (!spotRaf) spotRaf = requestAnimationFrame(stepSpotlight);\n  }, { passive: true });\n}\n"))(); } catch (e) {}
+      try { (new Function("\nif (!window.__KRONO_SPOTLIGHT_V6545__) {\n  window.__KRONO_SPOTLIGHT_V6545__ = true;\n  let spotRaf = 0;\n  let targetX = -9999, targetY = -9999;\n  let curX = -9999, curY = -9999;\n  let lastPointerTarget = null;\n\n  function ensureSpotlight() {\n    let sp = document.getElementById('krono-cursor-spotlight');\n    if (!sp) {\n      sp = document.createElement('div');\n      sp.id = 'krono-cursor-spotlight';\n      document.body.insertBefore(sp, document.body.firstChild);\n    }\n    return sp;\n  }\n\n  function stepSpotlight() {\n    spotRaf = 0;\n    const sp = ensureSpotlight();\n    if (targetX < -1000) {\n      sp.style.opacity = '0';\n      return;\n    }\n    if (curX < -1000) {\n      curX = targetX;\n      curY = targetY;\n    } else {\n      curX += (targetX - curX) * 0.22;\n      curY += (targetY - curY) * 0.22;\n    }\n    sp.style.opacity = '1';\n    sp.style.transform = `translate3d(${Math.round(curX - 270)}px, ${Math.round(curY - 270)}px, 0)`;\n\n    if (lastPointerTarget && lastPointerTarget.closest) {\n      const card = lastPointerTarget.closest('.glass-97');\n      if (card) {\n        const rect = card.getBoundingClientRect();\n        card.style.setProperty('--mx', Math.round(targetX - rect.left) + 'px');\n        card.style.setProperty('--my', Math.round(targetY - rect.top) + 'px');\n      }\n    }\n\n    if (Math.abs(targetX - curX) > 0.4 || Math.abs(targetY - curY) > 0.4) {\n      spotRaf = requestAnimationFrame(stepSpotlight);\n    }\n  }\n\n  document.addEventListener('pointermove', function(e) {\n    targetX = e.clientX;\n    targetY = e.clientY;\n    lastPointerTarget = e.target;\n    if (!spotRaf) spotRaf = requestAnimationFrame(stepSpotlight);\n  }, { passive: true });\n\n  document.addEventListener('pointerleave', function() {\n    targetX = -9999;\n    targetY = -9999;\n    if (!spotRaf) spotRaf = requestAnimationFrame(stepSpotlight);\n  }, { passive: true });\n}\n"))(); } catch (e) {}
       if (window.KronoAppFunctions && typeof window.KronoAppFunctions.flushQueuedCalls === 'function') { window.KronoAppFunctions.flushQueuedCalls(); }
       render();
     });
@@ -2860,30 +2837,18 @@ input[type=number]::-webkit-outer-spin-button:hover {
                 c.remainingInstallmentsTotal > 0 ? (c.remainingInstallmentsTotal + ' cuotas rest.') : (c.pendingItems > 0 ? (c.pendingItems + ' mov. pend.') : 'Al día')
               ].filter(Boolean);
               const safeCardArg = escapeAttr(c.name).replace(/'/g, "\\'");
-              const hasLimit = c.creditLimit > 0;
-              return `<div onclick="openDebtsFilteredByCard('${safeCardArg}');" class="p-3 rounded-2xl bg-slate-950/40 hover:bg-slate-900/70 border border-white/10 hover:border-cyan-400/45 space-y-2 cursor-pointer transition">
-                <div class="flex justify-between items-center gap-2.5">
-                  <div class="flex items-center gap-2.5 min-w-0">
-                    <span class="text-xl shrink-0">💳</span>
-                    <div class="min-w-0">
-                      <div class="text-xs font-extrabold text-white truncate">${escapeAttr(c.name)}</div>
-                      <div class="text-[10px] text-slate-400 truncate">${escapeAttr(specsParts.join(' • '))}</div>
-                    </div>
-                  </div>
-                  <div class="text-right shrink-0">
-                    <div class="text-xs font-extrabold mono text-amber-200">Cuota: ${formatMoney(c.nextPaymentUYU, 'UYU')}</div>
-                    <div class="text-[10px] font-bold mono text-rose-300">Deuda: ${formatMoney(c.remainingBalanceUYU, 'UYU')}</div>
+              return `<div onclick="openDebtsFilteredByCard('${safeCardArg}');" class="p-3 rounded-2xl bg-slate-950/40 hover:bg-slate-900/70 border border-white/10 hover:border-cyan-400/45 flex justify-between items-center gap-2.5 cursor-pointer transition">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="text-xl shrink-0">💳</span>
+                  <div class="min-w-0">
+                    <div class="text-xs font-extrabold text-white truncate">${escapeAttr(c.name)}</div>
+                    <div class="text-[10px] text-slate-400 truncate">${escapeAttr(specsParts.join(' • '))}</div>
                   </div>
                 </div>
-                ${hasLimit ? `<div class="pt-1.5 border-t border-white/10 space-y-1">
-                  <div class="flex justify-between items-center text-[10px] mono">
-                    <span class="text-slate-400">Límite: <strong class="text-slate-200">${formatMoney(c.creditLimit, curLabel)}</strong></span>
-                    <span class="${c.availableLimit >= 0 ? 'text-emerald-300' : 'text-rose-300'} font-bold">Disp.: ${formatMoney(c.availableLimit, curLabel)}</span>
-                  </div>
-                  <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                    <div class="h-full rounded-full ${c.usedPct >= 85 ? 'bg-rose-500' : (c.usedPct >= 60 ? 'bg-amber-400' : 'bg-emerald-400')}" style="width:${c.usedPct}%"></div>
-                  </div>
-                </div>` : ''}
+                <div class="text-right shrink-0">
+                  <div class="text-xs font-extrabold mono text-amber-200">Cuota: ${formatMoney(c.nextPaymentUYU, 'UYU')}</div>
+                  <div class="text-[10px] font-bold mono text-rose-300">Total: ${formatMoney(c.remainingBalanceUYU, 'UYU')}</div>
+                </div>
               </div>`;
             }).join('') : '<div class="text-xs text-slate-400 py-4 text-center">Sin tarjetas asociadas. Tocá "+ Tarjeta" para agregar una.</div>'}</div>
           </div>
@@ -3021,15 +2986,6 @@ input[type=number]::-webkit-outer-spin-button:hover {
                   <div class="font-extrabold mono text-rose-300">${formatMoney(c.remainingBalanceUYU, 'UYU')}</div>
                 </div>
               </div>
-              ${c.creditLimit > 0 ? `<div class="pt-1.5 border-t border-white/10 space-y-1 text-[11px]">
-                <div class="flex justify-between items-center mono">
-                  <span class="text-slate-400">Límite total: <strong class="text-white">${formatMoney(c.creditLimit, c.currency || 'UYU')}</strong></span>
-                  <span class="${c.availableLimit >= 0 ? 'text-emerald-300' : 'text-rose-300'} font-bold">Disponible: ${formatMoney(c.availableLimit, c.currency || 'UYU')}</span>
-                </div>
-                <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                  <div class="h-full rounded-full ${c.usedPct >= 85 ? 'bg-rose-500' : (c.usedPct >= 60 ? 'bg-amber-400' : 'bg-emerald-400')}" style="width:${c.usedPct}%"></div>
-                </div>
-              </div>` : ''}
               <div class="flex flex-wrap justify-between items-center gap-2 pt-1.5 border-t border-white/10 text-[11px] text-slate-300">
                 <span>Cuotas restantes: <strong class="mono text-cyan-200">${c.remainingInstallmentsTotal}</strong> (${c.activeInstallmentPlans} planes)</span>
                 ${c.dueDates.length ? `<span class="mono text-amber-200">Vence: ${escapeAttr(c.dueDates.join(', '))}</span>` : ''}
@@ -3348,12 +3304,12 @@ input[type=number]::-webkit-outer-spin-button:hover {
         </form></div>` : ''}
         ${ui.showNewAccountModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="createAccount(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">🏦 Nueva Cuenta</h3><input id="acc-name" type="text" required placeholder="Nombre" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-3 gap-2"><select id="acc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">UYU</option><option value="USD">USD</option></select><input id="acc-balance" type="number" step="0.01" placeholder="Saldo" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="acc-icon" type="text" value="🏦" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewAccountModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Crear</button></div></form></div>` : ''}
         ${ui.showTransferModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleTransferSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">⇄ Transferir</h3><select id="tr-from" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map(a => `<option value="${a.id}">Desde: ${a.name}</option>`).join('')}</select><select id="tr-to" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map((a,i) => `<option value="${a.id}" ${i===1?'selected':''}>Hacia: ${a.name}</option>`).join('')}</select><input id="tr-amount" type="number" step="0.01" required placeholder="Monto" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showTransferModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Transferir</button></div></form></div>` : ''}
-                        ${ui.showNewCardModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateCreditCardSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-violet-400/50 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">💳 Nueva Tarjeta de Crédito</h3><input id="cc-name" type="text" required placeholder="Nombre de la tarjeta (ej: Itaú Visa, BROU Master)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="cc-bank" type="text" placeholder="Banco / Emisor (ej: Itaú)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><select id="cc-brand" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="Visa">Visa</option><option value="Mastercard">Mastercard</option><option value="Oca">Oca</option><option value="Amex">Amex</option><option value="Cabal">Cabal</option><option value="Comercio">Comercio</option></select></div><div class="grid grid-cols-2 gap-2"><select id="cc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select><input id="cc-limit" type="number" step="0.01" min="0" placeholder="Límite total (ej: 60000)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="grid grid-cols-2 gap-2"><input id="cc-closing" type="text" placeholder="Día cierre (ej: 15)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="cc-due" type="text" placeholder="Día vto. (ej: 25)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewCardModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-violet-400 text-slate-950 font-extrabold text-xs">Guardar Tarjeta</button></div></form></div>` : ''}
+                        ${ui.showNewCardModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateCreditCardSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-violet-400/50 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">💳 Nueva Tarjeta de Crédito</h3><input id="cc-name" type="text" required placeholder="Nombre de la tarjeta (ej: Itaú Visa, BROU Master)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="cc-bank" type="text" placeholder="Banco / Emisor (ej: Itaú)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><select id="cc-brand" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="Visa">Visa</option><option value="Mastercard">Mastercard</option><option value="Oca">Oca</option><option value="Amex">Amex</option><option value="Cabal">Cabal</option><option value="Comercio">Comercio</option></select></div><div class="grid grid-cols-3 gap-2"><select id="cc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select><input id="cc-closing" type="text" placeholder="Día cierre (ej: 15)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="cc-due" type="text" placeholder="Día vto. (ej: 25)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewCardModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-violet-400 text-slate-950 font-extrabold text-xs">Guardar Tarjeta</button></div></form></div>` : ''}
         ${(() => {
           if (!ui.showEditCardModal || !ui.editingCardId) return '';
           const ec = (Array.isArray(state.creditCards) ? state.creditCards : []).find(x => x.id === ui.editingCardId);
           if (!ec) return '';
-          return `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleEditCreditCardSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-violet-400/50 space-y-3 animate-pop-elastic"><div class="flex items-center justify-between gap-2"><h3 class="text-base font-extrabold text-white">✏️ Editar Tarjeta de Crédito</h3><button type="button" onclick="deleteCreditCard('${ec.id}')" class="px-2.5 py-1 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/30 text-rose-200 font-bold text-xs">🗑️ Borrar</button></div><input id="ecc-name" type="text" required value="${escapeAttr(ec.name)}" placeholder="Nombre de la tarjeta" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="ecc-bank" type="text" value="${escapeAttr(ec.bank || '')}" placeholder="Banco / Emisor" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><select id="ecc-brand" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="Visa" ${ec.brand==='Visa'?'selected':''}>Visa</option><option value="Mastercard" ${ec.brand==='Mastercard'?'selected':''}>Mastercard</option><option value="Oca" ${ec.brand==='Oca'?'selected':''}>Oca</option><option value="Amex" ${ec.brand==='Amex'?'selected':''}>Amex</option><option value="Cabal" ${ec.brand==='Cabal'?'selected':''}>Cabal</option><option value="Comercio" ${ec.brand==='Comercio'?'selected':''}>Comercio</option></select></div><div class="grid grid-cols-2 gap-2"><select id="ecc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU" ${ec.currency==='UYU'?'selected':''}>$ UYU</option><option value="USD" ${ec.currency==='USD'?'selected':''}>US$ USD</option></select><input id="ecc-limit" type="number" step="0.01" min="0" value="${escapeAttr(ec.creditLimit || '')}" placeholder="Límite total" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="grid grid-cols-2 gap-2"><input id="ecc-closing" type="text" value="${escapeAttr(ec.closingDay || '')}" placeholder="Día cierre" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="ecc-due" type="text" value="${escapeAttr(ec.dueDay || '')}" placeholder="Día vto." class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showEditCardModal=false;ui.editingCardId=null;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-violet-400 text-slate-950 font-extrabold text-xs">Guardar Cambios</button></div></form></div>`;
+          return `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleEditCreditCardSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-violet-400/50 space-y-3 animate-pop-elastic"><div class="flex items-center justify-between gap-2"><h3 class="text-base font-extrabold text-white">✏️ Editar Tarjeta de Crédito</h3><button type="button" onclick="deleteCreditCard('${ec.id}')" class="px-2.5 py-1 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/30 text-rose-200 font-bold text-xs">🗑️ Borrar</button></div><input id="ecc-name" type="text" required value="${escapeAttr(ec.name)}" placeholder="Nombre de la tarjeta" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="ecc-bank" type="text" value="${escapeAttr(ec.bank || '')}" placeholder="Banco / Emisor" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><select id="ecc-brand" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="Visa" ${ec.brand==='Visa'?'selected':''}>Visa</option><option value="Mastercard" ${ec.brand==='Mastercard'?'selected':''}>Mastercard</option><option value="Oca" ${ec.brand==='Oca'?'selected':''}>Oca</option><option value="Amex" ${ec.brand==='Amex'?'selected':''}>Amex</option><option value="Cabal" ${ec.brand==='Cabal'?'selected':''}>Cabal</option><option value="Comercio" ${ec.brand==='Comercio'?'selected':''}>Comercio</option></select></div><div class="grid grid-cols-3 gap-2"><select id="ecc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU" ${ec.currency==='UYU'?'selected':''}>$ UYU</option><option value="USD" ${ec.currency==='USD'?'selected':''}>US$ USD</option></select><input id="ecc-closing" type="text" value="${escapeAttr(ec.closingDay || '')}" placeholder="Día cierre" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="ecc-due" type="text" value="${escapeAttr(ec.dueDay || '')}" placeholder="Día vto." class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showEditCardModal=false;ui.editingCardId=null;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-violet-400 text-slate-950 font-extrabold text-xs">Guardar Cambios</button></div></form></div>`;
         })()}
         ${(() => {
           if (!ui.showEditDebtModal || !ui.editingDebtId) return '';
