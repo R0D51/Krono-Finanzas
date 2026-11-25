@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795629677503,
+  "updatedAt": 1795637550379,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -71,9 +71,15 @@
     "gtask_dHlZV1lSSTRYWjgwc1JXVA",
     "gtask_STBrUXNSLXlsZFRYUEN5bA",
     "gtask_QUhYYXBVUDRsUnpuT3o2LQ",
-    "gtask_V3JKYThVUHJXa1JfNVV0cA"
+    "gtask_V3JKYThVUHJXa1JfNVV0cA",
+    "gtask_SGt3TzhSSmR3Y0RIRVhlaQ"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_SGt3TzhSSmR3Y0RIRVhlaQ",
+      "command": "Gasté 1,500 pesos en tres cuotas con crédito",
+      "date": "05:12 p. m."
+    },
     {
       "id": "gtask_V3JKYThVUHJXa1JfNVV0cA",
       "command": "Gasté 1500 pesos en crédito en 4 cuotas",
@@ -118,11 +124,6 @@
       "id": "gtask_TmRWZ29YS20zeE9vX0lKdA",
       "command": "Gasté 1500 pesos en tres cuotas",
       "date": "12:43 a. m."
-    },
-    {
-      "id": "gtask_TWVXT2pvd1RGbWNSOWN5WQ",
-      "command": "Gasté 3578 pesos en siete cuotas",
-      "date": "12:34 a. m."
     }
   ],
   "accounts": [
@@ -189,6 +190,22 @@
     }
   ],
   "debts": [
+    {
+      "id": "debt_1795637550371_516",
+      "title": "Gasté en tres cuotas con crédito",
+      "counterparty": "Itaú Visa",
+      "paymentMethod": "credit_card",
+      "cardName": "Itaú Visa",
+      "installmentsCount": 3,
+      "paidInstallments": 0,
+      "amount": 1500,
+      "currency": "UYU",
+      "kind": "debt",
+      "dueDate": "",
+      "status": "pending",
+      "notes": "",
+      "createdAt": 1795637550371
+    },
     {
       "id": "debt_1795629677473_837",
       "title": "Compra en crédito",
@@ -435,6 +452,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_ai_1795637550371_101",
+      "title": "🤖 💳 Gasté en tres cuotas con crédito (Itaú Visa • 3 cuotas)",
+      "amount": 1500,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Tarjeta / Crédito",
+      "accountId": "card_ita_visa",
+      "accountName": "Itaú Visa",
+      "date": "25/11 17:12",
+      "timestamp": 1795637550371
+    },
     {
       "id": "tx_ai_1795629677473_715",
       "title": "🤖 💳 Compra en crédito (Itaú Visa • 4 cuotas)",
