@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795629170572,
+  "updatedAt": 1795629677503,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -70,9 +70,15 @@
     "gtask_LVBnWnc2UDczZXA0TjN4bQ",
     "gtask_dHlZV1lSSTRYWjgwc1JXVA",
     "gtask_STBrUXNSLXlsZFRYUEN5bA",
-    "gtask_QUhYYXBVUDRsUnpuT3o2LQ"
+    "gtask_QUhYYXBVUDRsUnpuT3o2LQ",
+    "gtask_V3JKYThVUHJXa1JfNVV0cA"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_V3JKYThVUHJXa1JfNVV0cA",
+      "command": "Gasté 1500 pesos en crédito en 4 cuotas",
+      "date": "03:01 p. m."
+    },
     {
       "id": "gtask_QUhYYXBVUDRsUnpuT3o2LQ",
       "command": "Gasté 1500 pesos en efectivo",
@@ -117,11 +123,6 @@
       "id": "gtask_TWVXT2pvd1RGbWNSOWN5WQ",
       "command": "Gasté 3578 pesos en siete cuotas",
       "date": "12:34 a. m."
-    },
-    {
-      "id": "gtask_MVZYMVBsb3pSVVpqbC1kXw",
-      "command": "Gasté 3500 pesos en tres cuotas con Itaú",
-      "date": "12:32 a. m."
     }
   ],
   "accounts": [
@@ -188,6 +189,22 @@
     }
   ],
   "debts": [
+    {
+      "id": "debt_1795629677473_837",
+      "title": "Compra en crédito",
+      "counterparty": "Itaú Visa",
+      "paymentMethod": "credit_card",
+      "cardName": "Itaú Visa",
+      "installmentsCount": 4,
+      "paidInstallments": 0,
+      "amount": 1500,
+      "currency": "UYU",
+      "kind": "credit",
+      "dueDate": "",
+      "status": "pending",
+      "notes": "",
+      "createdAt": 1795629677473
+    },
     {
       "id": "debt_sync_tx_1795483635646_280_929",
       "title": "Pago tarjeta (Itaú Visa) con Cuenta Itaú / Débito",
@@ -418,6 +435,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_ai_1795629677473_715",
+      "title": "🤖 💳 Compra en crédito (Itaú Visa • 4 cuotas)",
+      "amount": 1500,
+      "currency": "UYU",
+      "type": "income",
+      "category": "Tarjeta / Crédito",
+      "accountId": "card_ita_visa",
+      "accountName": "Itaú Visa",
+      "date": "25/11 15:01",
+      "timestamp": 1795629677494
+    },
     {
       "id": "tx_1795629170555_58",
       "title": "🤖 Gasté",
