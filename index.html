@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.67
+    // KRONO OTA BOOTLOADER v6.5.68
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.67';
+    const APP_BASE_VERSION = '6.5.68';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,7 +230,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.67',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.68',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -1835,24 +1835,59 @@ input[type=number]::-webkit-outer-spin-button:hover {
       };
     }
 
-    const GEMINI_MODEL_CANDIDATES = [
+    const GEMINI_MODEL_PRIORITY = [
       'gemini-2.5-flash',
-      'gemini-2.0-flash',
       'gemini-2.5-flash-lite',
-      'gemini-3.8-flash'
+      'gemini-2.0-flash',
+      'gemini-2.0-flash-lite',
+      'gemini-1.5-flash'
     ];
+
+    async function discoverGeminiModelsForKey(cleanKey) {
+      const cachedListRaw = sessionStorage.getItem('KRONO_DISCOVERED_GEMINI_MODELS');
+      if (cachedListRaw) {
+        try {
+          const parsed = JSON.parse(cachedListRaw);
+          if (Array.isArray(parsed) && parsed.length) return parsed;
+        } catch (e) {}
+      }
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(cleanKey)}`, { cache: 'no-store' });
+        if (!res.ok) return GEMINI_MODEL_PRIORITY.slice();
+        const data = await res.json();
+        const available = (data.models || [])
+          .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+          .map(m => String(m.name || '').replace(/^models\//, ''))
+          .filter(name => name && name.includes('gemini') && !/embedding|imagen|veo|tts|audio|robotics|computer-use|deep-research|thinking/i.test(name));
+
+        if (!available.length) return GEMINI_MODEL_PRIORITY.slice();
+
+        const ordered = [];
+        for (const pref of GEMINI_MODEL_PRIORITY) {
+          if (available.includes(pref) && !ordered.includes(pref)) ordered.push(pref);
+        }
+        for (const name of available) {
+          if (/flash/i.test(name) && !/3\.8/i.test(name) && !ordered.includes(name)) ordered.push(name);
+        }
+        for (const name of available) {
+          if (!ordered.includes(name)) ordered.push(name);
+        }
+        sessionStorage.setItem('KRONO_DISCOVERED_GEMINI_MODELS', JSON.stringify(ordered));
+        return ordered;
+      } catch (e) {
+        return GEMINI_MODEL_PRIORITY.slice();
+      }
+    }
 
     function resolveBestGeminiModelFast() {
       const cached = (localStorage.getItem('KRONO_GEMINI_MODEL') || '').trim();
-      if (cached && GEMINI_MODEL_CANDIDATES.includes(cached)) {
-        return cached;
-      }
-      return GEMINI_MODEL_CANDIDATES[0];
+      if (cached && !/3\.8/i.test(cached)) return cached;
+      return GEMINI_MODEL_PRIORITY[0];
     }
 
     async function callSingleGeminiModel(modelName, compactPrompt, cleanKey) {
       const controller = ('AbortController' in window) ? new AbortController() : null;
-      const timer = controller ? setTimeout(() => controller.abort(), 9000) : null;
+      const timer = controller ? setTimeout(() => controller.abort(), 14000) : null;
       try {
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(cleanKey)}`;
         const res = await fetch(endpoint, {
@@ -1871,7 +1906,9 @@ input[type=number]::-webkit-outer-spin-button:hover {
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
           const apiErr = (data && data.error && data.error.message) ? data.error.message : `HTTP ${res.status}`;
-          throw new Error(`${modelName}: ${apiErr}`);
+          const err = new Error(`${modelName}: ${apiErr}`);
+          err.status = res.status;
+          throw err;
         }
         const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
         if (!rawText.trim()) {
@@ -1895,35 +1932,42 @@ input[type=number]::-webkit-outer-spin-button:hover {
       }
       const ctx = buildCompactContextForAI();
       const compactPrompt = [
-        'Traducí la frase a JSON {"actions":[...]} para Krono Finanzas.',
-        'Reglas:',
-        '- Pago tarjeta/cuotas sin decir "todo" ni "saldo total": scope="current_installments" (solo cuota corriente).',
-        '- Solo usá scope="full_balance" si dice explícitamente "todo" o "saldo total".',
-        '- Monto puntual tarjeta/deuda: scope="exact_amount", amount, currency.',
-        '- Gasto/ingreso contado: op="add_transaction", title, amount, currency, type, category, accountQuery.',
-        '- Compra tarjeta o préstamo: op="add_debt", title, amount, currency, kind, paymentMethod, cardName/counterparty, installmentsCount, perInstallment.',
-        '- Saldo/patrimonio: op="query_balance", accountQuery.',
-        `Ctx:${JSON.stringify(ctx)}`,
+        'Traducí la frase financiera en español a JSON {"actions":[...]} para Krono Finanzas.',
+        'Operaciones válidas:',
+        '1) Gasto o ingreso al contado: {"op":"add_transaction","title":"...","amount":1500,"currency":"UYU|USD","type":"expense|income","category":"Comida y Súper|Servicios y Luz|Transporte y Nafta|Ahorro|Ingreso|General","accountQuery":"nombre de cuenta o vacío"}',
+        '2) Compra con tarjeta o préstamo: {"op":"add_debt","title":"...","amount":1500,"currency":"UYU|USD","kind":"debt|credit","paymentMethod":"credit_card|personal","cardName":"nombre tarjeta","counterparty":"persona/comercio","installmentsCount":1,"perInstallment":false}',
+        '3) Pago de tarjeta, cuotas o deuda: {"op":"pay_obligations","scope":"current_installments|full_balance|exact_amount","cardQuery":"nombre tarjeta o vacío","accountQuery":"cuenta origen","amount":0,"currency":"UYU|USD"}',
+        '   - Sin decir "todo" ni "saldo total": scope="current_installments".',
+        '   - Solo usá scope="full_balance" si dice explícitamente "todo" o "saldo total".',
+        '4) Consulta de saldo o patrimonio: {"op":"query_balance","accountQuery":"nombre cuenta o vacío"}',
+        `Contexto:${JSON.stringify(ctx)}`,
         `Frase:"${commandText}"`
       ].join('\n');
 
+      const discovered = await discoverGeminiModelsForKey(cleanKey);
       const preferred = resolveBestGeminiModelFast();
-      const orderedModels = [preferred, ...GEMINI_MODEL_CANDIDATES.filter(m => m !== preferred)];
-      let lastError = null;
+      const orderedModels = [
+        ...(discovered.includes(preferred) ? [preferred] : []),
+        ...discovered.filter(m => m !== preferred)
+      ];
 
-      for (const modelName of orderedModels) {
-        try {
-          const actions = await callSingleGeminiModel(modelName, compactPrompt, cleanKey);
-          localStorage.setItem('KRONO_GEMINI_MODEL', modelName);
-          return { actions, modelName };
-        } catch (err) {
-          lastError = err;
-          if (localStorage.getItem('KRONO_GEMINI_MODEL') === modelName) {
-            localStorage.removeItem('KRONO_GEMINI_MODEL');
+      let lastError = null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        for (const modelName of orderedModels) {
+          try {
+            const actions = await callSingleGeminiModel(modelName, compactPrompt, cleanKey);
+            localStorage.setItem('KRONO_GEMINI_MODEL', modelName);
+            return { actions, modelName };
+          } catch (err) {
+            lastError = err;
+            if (localStorage.getItem('KRONO_GEMINI_MODEL') === modelName) {
+              localStorage.removeItem('KRONO_GEMINI_MODEL');
+            }
           }
         }
+        await new Promise(r => setTimeout(r, 900));
       }
-      throw lastError || new Error('No se pudo conectar con ningún modelo Gemini.');
+      throw lastError || new Error('No se pudo conectar con la API de Gemini.');
     }
 
     function executeStructuredActions(actions, originalText, fromExternal) {
@@ -1933,13 +1977,20 @@ input[type=number]::-webkit-outer-spin-button:hover {
       const summaryParts = [];
       let executedAny = false;
 
-      function matchAccount(q) {
+      function matchAccount(q, preferredCurrency = null) {
         const nq = normalizeStr(q || '');
-        if (!nq) return state.accounts[0];
-        if (/\b(efectivo|billetera|cash|contado|en mano|monedero|plata)\b/.test(nq)) {
-          return state.accounts.find(a => a.id === 'acc_cash' || /efectivo|billetera|cash|mano/i.test(normalizeStr(a.name))) || state.accounts[0];
+        if (nq) {
+          if (/\b(efectivo|billetera|cash|contado|en mano|monedero|plata)\b/.test(nq)) {
+            return state.accounts.find(a => a.id === 'acc_cash' || /efectivo|billetera|cash|mano/i.test(normalizeStr(a.name))) || state.accounts[0];
+          }
+          const found = findAccountMentionInText(nq);
+          if (found) return found;
         }
-        return findAccountMentionInText(nq) || state.accounts[0];
+        if (preferredCurrency) {
+          const byCur = state.accounts.find(a => a.currency === preferredCurrency);
+          if (byCur) return byCur;
+        }
+        return state.accounts[0];
       }
 
       function matchOpenDebts(cardQuery) {
@@ -1967,7 +2018,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
           const rawScope = act.scope || 'current_installments';
           const explicitlyAskedFull = /\b(?:todo|toda|todas|saldo\s+total|totalidad|completo|completa|cancele\s+todo|liquide\s+todo)\b/i.test(normalizeStr(originalText || ''));
           const scope = (rawScope === 'full_balance' && !explicitlyAskedFull) ? 'current_installments' : rawScope;
-          const sourceAcc = matchAccount(act.accountQuery);
+          const sourceAcc = matchAccount(act.accountQuery, act.currency || null);
           const targets = matchOpenDebts(act.cardQuery);
           if (!targets.length) continue;
 
@@ -2088,13 +2139,14 @@ input[type=number]::-webkit-outer-spin-button:hover {
         } else if (act.op === 'add_transaction') {
           const amt = Math.abs(Number(act.amount) || 0);
           if (amt > 0) {
-            const acc = matchAccount(act.accountQuery);
+            const reqCur = act.currency || state.defaultCurrency || 'UYU';
+            const acc = matchAccount(act.accountQuery, reqCur);
             const isSavAct = /\b(ahorr[eo]|ahorrar|ahorro|reservar|reserve)\b/i.test(normalizeStr(`${act.title || ''} ${act.category || ''} ${originalText || ''}`));
             const finalTitle = isSavAct ? (`Ahorro: ${(act.title || 'Reserva').replace(/^ahorro:?\s*/i, '')}`) : (act.title || 'Movimiento al contado');
             const tx = addTransaction({
               title: finalTitle,
               amount: amt,
-              currency: act.currency || (acc ? acc.currency : 'UYU'),
+              currency: reqCur,
               type: act.type === 'income' ? 'income' : 'expense',
               category: act.category || (act.type === 'income' ? 'Ingreso' : 'Comida y Súper'),
               accountId: acc ? acc.id : null,
@@ -2194,41 +2246,47 @@ input[type=number]::-webkit-outer-spin-button:hover {
       if (activeKey && !state.geminiApiKey) state.geminiApiKey = activeKey;
 
       if (!activeKey) {
-        ui.lastInterpreterMode = '⚡ Motor Local Instantáneo (sin API Key)';
-        runLocalRuleInterpreter(text, normalizeStr(text), fromExternal);
+        ui.lastInterpreterMode = '⚠️ Falta Gemini API Key';
+        ui.geminiResponse = {
+          mode: 'error',
+          prompt: text,
+          reply: '⚠️ Configurá tu Gemini API Key en ⚙️ Ajustes para usar 100% IA Gemini (el respaldo local está desactivado).',
+          items: []
+        };
+        render();
         return;
       }
 
-      ui.lastInterpreterMode = '🧠 IA Gemini (consultando...)';
+      ui.lastInterpreterMode = '🧠 IA Gemini (procesando...)';
       render();
       try {
         const { actions, modelName } = await interpretWithGeminiAI(text, activeKey);
         if (actions && actions.length && executeStructuredActions(actions, text, fromExternal)) {
-          ui.lastInterpreterMode = `🧠 IA Gemini (${modelName})`;
+          ui.lastInterpreterMode = `🧠 100% IA Gemini (${modelName})`;
           if (ui.geminiResponse) {
             ui.geminiResponse.reply = `[🧠 ${modelName}] ` + ui.geminiResponse.reply;
             render();
           }
           return;
         }
-        ui.lastInterpreterMode = '⚡ Respaldo Local (IA sin acciones)';
-        runLocalRuleInterpreter(text, normalizeStr(text), fromExternal);
+        ui.lastInterpreterMode = `🧠 IA Gemini (${modelName} • sin acción)`;
+        ui.geminiResponse = {
+          mode: 'error',
+          prompt: text,
+          reply: `🧠 Gemini (${modelName}) no detectó una acción financiera en esa frase. Probá indicando monto y concepto.`,
+          items: []
+        };
+        render();
       } catch (err) {
-        const reason = (err && err.message) ? err.message : 'error de red/API';
-        ui.lastInterpreterMode = `⚡ Respaldo Local (IA saturada)`;
-        runLocalRuleInterpreter(text, normalizeStr(text), fromExternal);
-        if (ui.geminiResponse && ui.geminiResponse.mode === 'action') {
-          ui.geminiResponse.reply = `[⚡ Respaldo Local] ` + ui.geminiResponse.reply;
-          render();
-        } else {
-          ui.geminiResponse = {
-            mode: 'error',
-            prompt: text,
-            reply: `❌ Error de IA Gemini (${reason}) y no se detectó monto local.`,
-            items: []
-          };
-          render();
-        }
+        const reason = (err && err.message) ? err.message : 'error de conexión con la API de Gemini';
+        ui.lastInterpreterMode = '❌ Error IA Gemini';
+        ui.geminiResponse = {
+          mode: 'error',
+          prompt: text,
+          reply: `❌ Error de IA Gemini: ${reason}`,
+          items: []
+        };
+        render();
       }
     }
 
@@ -2642,7 +2700,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       }
     };
 
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', () => { if ((localStorage.getItem('KRONO_GEMINI_MODEL') || '').includes('3.8')) localStorage.removeItem('KRONO_GEMINI_MODEL');
       loadLivePatches();
       let upd = false;
       if (!state.githubRepo) { state.githubRepo = DEFAULT_GH_REPO; upd = true; }
