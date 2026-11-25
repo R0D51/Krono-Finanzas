@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.70
+    // KRONO OTA BOOTLOADER v6.5.71
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.70';
+    const APP_BASE_VERSION = '6.5.71';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,9 +230,9 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.70',
-      lastReleaseNotes: 'v6.5.70: Tarjetas de crédito en Panel y filtro directo a Pendientes.',
-      lastGithubSync: '', autoCheckOta: false, processedCommandIds: [], externalCommandHistory: [],
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.71',
+      lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
+      lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
       accounts: [
         { id: 'acc_uyu', name: 'Cuenta Brou / Débito', currency: 'UYU', balance: 48500, icon: '🏦' },
@@ -245,8 +245,8 @@ input[type=number]::-webkit-outer-spin-button:hover {
         { id: 'cat_transport', name: 'Transporte y Nafta', limit: 7000, icon: '🚗', color: '#10b981' }
       ],
       creditCards: [
-        { id: 'card_itau_visa', name: 'Itaú Visa', brand: 'Visa', bank: 'Itaú', currency: 'UYU', closingDay: '15', dueDay: '25' },
-        { id: 'card_zodimac', name: 'Zodimac', brand: 'Comercio', bank: 'Zodimac', currency: 'UYU', closingDay: '10', dueDay: '23' }
+        { id: 'card_itau_visa', name: 'Itaú Visa', brand: 'Visa', bank: 'Itaú', currency: 'UYU', creditLimit: 60000, closingDay: '15', dueDay: '25' },
+        { id: 'card_zodimac', name: 'Zodimac', brand: 'Comercio', bank: 'Zodimac', currency: 'UYU', creditLimit: 30000, closingDay: '10', dueDay: '23' }
       ],
       debts: [
         { id: 'debt_demo_1', title: 'Préstamo a amigo / Crédito', counterparty: 'Lucas', amount: 3500, currency: 'UYU', kind: 'credit', dueDate: '', status: 'pending', notes: '' },
@@ -359,11 +359,13 @@ input[type=number]::-webkit-outer-spin-button:hover {
         const titleStr = String(tx.title || '');
         const isCardOrFinanced = (tx.category === 'Tarjeta / Crédito') || /💳|cuotas?/i.test(titleStr);
         if (!isCardOrFinanced) continue;
-        if (/^(?:🤖\s*)?(?:Cuotas del mes|Saldo total|Pago\b)/i.test(titleStr)) continue;
+        // Skip payment/installment settlement transactions
+        if (/^(?:🤖\s*)?(?:Cuotas del mes|Saldo total|Pago)/i.test(titleStr)) continue;
 
         const amt = Math.abs(Number(tx.amount) || 0);
         if (amt <= 0) continue;
 
+        // Extract card name if present in parentheses or from accountName
         let cardName = '';
         const parenMatch = titleStr.match(/\(([^()]+)\)\s*$/);
         if (parenMatch && parenMatch[1]) {
@@ -506,7 +508,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
           syncCode: state.syncCode, updatedAt: state.updatedAt, cloudWebhookUrl: state.cloudWebhookUrl || DEFAULT_CLOUD_WEBHOOK_URL,
           exchangeRate: state.exchangeRate, defaultCurrency: state.defaultCurrency,
           processedCommandIds: state.processedCommandIds || [], externalCommandHistory: state.externalCommandHistory || [],
-          accounts: state.accounts, budgets: state.budgets, creditCards: state.creditCards || [], debts: state.debts || [], transactions: state.transactions
+          accounts: state.accounts, budgets: state.budgets, debts: state.debts || [], transactions: state.transactions
         };
         await pushSingleFileToGitHub(repo, branch, path, JSON.stringify(payload, null, 2), `🔄 Sync ${state.syncCode}`, token);
         ui.syncStatusText = 'Sync ' + new Date().toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
@@ -662,7 +664,10 @@ input[type=number]::-webkit-outer-spin-button:hover {
       ui.otaStatusMsg = '⚠️ Formato OTA no reconocido.'; render(); return false;
     }
     function rollbackFactoryOta() {
-      openConfirmModal({ title: '⏪ Restaurar Versión Base', message: '¿Querés restaurar la versión base de Krono Finanzas? Tus cuentas y datos no se borrarán.', confirmText: 'Restaurar Base', danger: false, onConfirm: () => { localStorage.removeItem('KRONO_OTA_CUSTOM_HTML'); localStorage.removeItem('KRONO_OTA_VERSION_TAG'); localStorage.removeItem('KRONO_OTA_LIVE_CSS'); localStorage.removeItem('KRONO_OTA_LIVE_JS'); setTimeout(() => window.location.reload(), 450); } });
+      openConfirmModal({ title: '⏪ Restaurar Versión Base', message: '¿Querés restaurar la versión base de Krono Finanzas? Tus cuentas y datos no se borrarán.', confirmText: 'Restaurar Base', danger: false, onConfirm: () => { localStorage.removeItem('KRONO_OTA_CUSTOM_HTML'); localStorage.removeItem('KRONO_OTA_VERSION_TAG'); localStorage.removeItem('KRONO_OTA_LIVE_CSS'); localStorage.removeItem('KRONO_OTA_LIVE_JS'); setTimeout(() => window.location.reload(), 450); } }); return;
+      localStorage.removeItem('KRONO_OTA_CUSTOM_HTML'); localStorage.removeItem('KRONO_OTA_VERSION_TAG');
+      localStorage.removeItem('KRONO_OTA_LIVE_CSS'); localStorage.removeItem('KRONO_OTA_LIVE_JS');
+      setTimeout(() => window.location.reload(), 450);
     }
     async function fetchPayloadForReleaseTag(repo, releaseObj) {
       const tag = releaseObj.tag_name || (state.githubBranch || 'main');
@@ -969,6 +974,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       if (amt <= 0) return null;
       const cur = tx.currency || 'UYU';
 
+      // Check if it was a savings move between two accounts ("Origen → Destino")
       if (tx.category === 'Ahorro' && typeof tx.accountName === 'string' && tx.accountName.includes(' → ')) {
         const parts = tx.accountName.split(' → ');
         const originName = normalizeStr(parts[0] || '');
@@ -1016,6 +1022,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       const newAccId = document.getElementById('etx-account').value;
       const targetAcc = state.accounts.find(a => a.id === newAccId) || state.accounts[0];
 
+      // Revert old effect from accounts first
       applyTxEffectToAccounts(oldTx, -1);
 
       const updatedTx = {
@@ -1029,6 +1036,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
         accountName: targetAcc ? targetAcc.name : oldTx.accountName
       };
 
+      // Apply new effect to accounts
       applyTxEffectToAccounts(updatedTx, 1);
       state.transactions[idx] = updatedTx;
       ui.editingTxId = null;
@@ -1166,6 +1174,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
             id: sc.id,
             name: label,
             currency: sc.currency || 'UYU',
+            creditLimit: Math.max(0, Number(sc.creditLimit) || 0),
             closingDay: sc.closingDay || '',
             dueDay: sc.dueDay || '',
             totalItems: 0,
@@ -1185,6 +1194,8 @@ input[type=number]::-webkit-outer-spin-button:hover {
         if (!map.has(key)) {
           map.set(key, {
             name: cardLabel,
+            currency: d.currency || 'UYU',
+            creditLimit: 0,
             totalItems: 0,
             pendingItems: 0,
             activeInstallmentPlans: 0,
@@ -1216,7 +1227,21 @@ input[type=number]::-webkit-outer-spin-button:hover {
           }
         }
       });
-      return Array.from(map.values());
+      return Array.from(map.values()).map(entry => {
+        const cardCur = entry.currency || 'UYU';
+        const usedInCardCur = cardCur === 'USD'
+          ? Number((Math.max(0, entry.remainingBalanceUYU) / rate).toFixed(2))
+          : Math.max(0, entry.remainingBalanceUYU);
+        const totalLim = Math.max(0, Number(entry.creditLimit) || 0);
+        const availLim = totalLim > 0 ? Number((totalLim - usedInCardCur).toFixed(2)) : null;
+        const usedPct = totalLim > 0 ? Math.min(100, Math.max(0, Math.round((usedInCardCur / totalLim) * 100))) : 0;
+        return {
+          ...entry,
+          usedInCardCur,
+          availableLimit: availLim,
+          usedPct
+        };
+      });
     }
     function getDebtsSummary() {
       const rate = Number(state.exchangeRate) || 41.5;
@@ -1462,7 +1487,10 @@ input[type=number]::-webkit-outer-spin-button:hover {
       }
     }
     function deleteDebtItem(id) {
-      openConfirmModal({ title: '🗑️ Eliminar Registro', message: '¿Querés eliminar este registro pendiente? Esta acción no se puede deshacer.', confirmText: 'Eliminar', danger: true, onConfirm: () => { state.debts = (Array.isArray(state.debts) ? state.debts : []).filter(x => x.id !== id); if (ui.editingDebtId === id) { ui.showEditDebtModal = false; ui.editingDebtId = null; } saveState(true, true); spawnFloatingBurst('🗑️ Registro eliminado', false); } });
+      openConfirmModal({ title: '🗑️ Eliminar Registro', message: '¿Querés eliminar este registro pendiente? Esta acción no se puede deshacer.', confirmText: 'Eliminar', danger: true, onConfirm: () => { state.debts = (Array.isArray(state.debts) ? state.debts : []).filter(x => x.id !== id); if (ui.editingDebtId === id) { ui.showEditDebtModal = false; ui.editingDebtId = null; } saveState(true, true); spawnFloatingBurst('🗑️ Registro eliminado', false); } }); return;
+      state.debts = (Array.isArray(state.debts) ? state.debts : []).filter(x => x.id !== id);
+      if (ui.editingDebtId === id) { ui.showEditDebtModal = false; ui.editingDebtId = null; }
+      saveState(true, true);
     }
 
     function openEditDebtModal(id) {
@@ -1549,6 +1577,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       const bank = (document.getElementById('ecc-bank').value || '').trim();
       const brand = (document.getElementById('ecc-brand').value || 'Visa').trim();
       const currency = document.getElementById('ecc-currency').value || 'UYU';
+      const creditLimit = Math.max(0, parseFloat(document.getElementById('ecc-limit') ? document.getElementById('ecc-limit').value : '0') || 0);
       const closingDay = (document.getElementById('ecc-closing').value || '').trim();
       const dueDay = (document.getElementById('ecc-due').value || '').trim();
 
@@ -1556,6 +1585,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       c.bank = bank;
       c.brand = brand;
       c.currency = currency;
+      c.creditLimit = creditLimit;
       c.closingDay = closingDay;
       c.dueDay = dueDay;
 
@@ -1587,6 +1617,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       const bank = (document.getElementById('cc-bank').value || '').trim();
       const brand = (document.getElementById('cc-brand').value || 'Visa').trim();
       const currency = document.getElementById('cc-currency').value || 'UYU';
+      const creditLimit = Math.max(0, parseFloat(document.getElementById('cc-limit') ? document.getElementById('cc-limit').value : '0') || 0);
       const closingDay = (document.getElementById('cc-closing').value || '').trim();
       const dueDay = (document.getElementById('cc-due').value || '').trim();
       const cardObj = {
@@ -1595,6 +1626,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
         bank,
         brand,
         currency,
+        creditLimit,
         closingDay,
         dueDay
       };
@@ -1794,7 +1826,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       if (!state.ttsEnabled || !('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = state.voiceLang || 'es-UY'; u.rate = 1.06; window.speechSynthesis.speak(u);
     }
-    function buildCompactContextForAI() {
+        function buildCompactContextForAI() {
       return {
         defaultCurrency: state.defaultCurrency || 'UYU',
         exchangeRate: Number(state.exchangeRate) || 41.5,
@@ -2283,6 +2315,296 @@ input[type=number]::-webkit-outer-spin-button:hover {
       }
     }
 
+    function runLocalRuleInterpreter(text, lower, fromExternal = false) {
+      if ((lower.includes('actualiza') || lower.includes('release')) && lower.includes('app')) {
+        ui.showOtaModal = true;
+        checkGitHubReleaseOtaUpdate(true);
+        render();
+        return;
+      }
+
+      if (lower.includes('cuanto') || lower.includes('saldo') || lower.includes('patrimonio')) {
+        const sp = findAccountMentionInText(text);
+        const reply = sp ? `El saldo de ${sp.name} es de ${formatMoney(sp.balance, sp.currency)}.` : `Tu patrimonio total es de ${formatMoney(getTotals().totalUYU, 'UYU')}.`;
+        ui.geminiResponse = { mode: 'query', prompt: text, reply, items: [] };
+        speakText(reply);
+        render();
+        return;
+      }
+
+      function isCardOrDebtItem(item) {
+        if (!item || item.status === 'settled') return false;
+        const label = `${getDebtInstrumentLabel(item)} ${item.title || ''} ${item.counterparty || ''}`;
+        return item.paymentMethod === 'credit_card' || Boolean((item.cardName || '').trim()) || /tarjeta|visa|master|oca|amex|cabal|zodimac|brou|itau|itaú|santander|bbva|scotia|prex|midinero|cuota|prestamo|préstamo|deuda/i.test(normalizeStr(label));
+      }
+
+      function findMatchingCardName(normText) {
+        const cards = Array.isArray(state.creditCards) ? state.creditCards : [];
+        for (const c of cards) {
+          const cNorm = normalizeStr(c.name || '');
+          if (cNorm && normText.includes(cNorm)) return c.name;
+          const bNorm = normalizeStr(c.bank || '');
+          if (bNorm && bNorm.length >= 3 && normText.includes(bNorm)) return c.name;
+        }
+        const m = normText.match(/\b(?:(?:itau|itaú|brou|santander|bbva|scotia|hsbc|prex|midinero|zodimac)\s+(?:visa|mastercard|master|oca|amex|cabal|recompensa)|visa|mastercard|master|oca|american\s+express|amex|cabal|brou\s+recompensa|santander|itau|itaú|bbva|scotia|hsbc|prex|midinero|zodimac)\b/i);
+        return m ? m[0].replace(/\b\w/g, ch => ch.toUpperCase()) : '';
+      }
+
+      function resolvePaymentSourceAccount(normText) {
+        if (/\b(efectivo|billetera|cash|contado|en mano|monedero|plata en efectivo)\b/i.test(normText)) {
+          return state.accounts.find(a => a.id === 'acc_cash' || /efectivo|billetera|cash|mano/i.test(normalizeStr(a.name))) || state.accounts[0];
+        }
+        const mentioned = findAccountMentionInText(normText);
+        if (mentioned) return mentioned;
+        return state.accounts.find(a => a.id === 'acc_cash' || /efectivo|billetera|cash/i.test(normalizeStr(a.name))) || state.accounts[0];
+      }
+
+      const isPayingCardOrDebt = /\b(?:pague|pagar|abone|abonar|cancele|cancelar|liquide|liquidar|salde|saldar)\b/i.test(lower)
+        && /\b(?:tarjeta|visa|mastercard|master|oca|amex|cabal|zodimac|cierre|resumen|deuda|cuota|cuotas|prestamo|préstamo|credito|crédito|pendiente)\b/i.test(lower);
+
+      if (isPayingCardOrDebt) {
+        if (!Array.isArray(state.debts)) state.debts = [];
+        const rate = Number(state.exchangeRate) || 41.5;
+        const explicitAmount = extractSmartAmount(lower);
+        const targetCardName = findMatchingCardName(lower);
+        const sourceAcc = resolvePaymentSourceAccount(lower);
+        const targetCurrency = detectCurrencyInText(lower) || (sourceAcc ? sourceAcc.currency : (state.defaultCurrency || 'UYU'));
+
+        // Distinguish whether user asked for THIS MONTH'S installments ("cuotas de este mes" / "cuotas del mes" / "cuota de este mes" / "cuotas") vs FULL BALANCE ("todo" / "saldo total")
+        const wantsCurrentInstallmentsOnly = !/\b(?:todo|toda|todas|saldo\s+total|totalidad|completo|completa|cancele\s+todo|liquide\s+todo)\b/i.test(lower);
+
+        let candidateDebts = state.debts.filter(d => {
+          if (d.status === 'settled' || d.kind === 'credit') return false;
+          if (targetCardName) {
+            const dLabel = normalizeStr(getDebtInstrumentLabel(d) || `${d.title || ''} ${d.counterparty || ''}`);
+            return dLabel.includes(normalizeStr(targetCardName)) || normalizeStr(targetCardName).includes(dLabel);
+          }
+          return isCardOrDebtItem(d);
+        });
+
+        if (!candidateDebts.length && !explicitAmount) {
+          candidateDebts = state.debts.filter(d => d.status !== 'settled' && d.kind !== 'credit');
+        }
+
+        let calcUYU = 0;
+        if (explicitAmount > 0) {
+          calcUYU = (targetCurrency === 'USD' ? explicitAmount * rate : explicitAmount);
+        } else if (wantsCurrentInstallmentsOnly) {
+          candidateDebts.forEach(d => {
+            const rem = getDebtRemainingAmount(d);
+            if (rem <= 0.01) return;
+            const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+            const instVal = getDebtInstallmentValue(d);
+            const payNow = instCount > 1 ? Math.min(rem, instVal) : rem;
+            calcUYU += (d.currency === 'USD' ? payNow * rate : payNow);
+          });
+        } else {
+          candidateDebts.forEach(d => {
+            const rem = getDebtRemainingAmount(d);
+            calcUYU += (d.currency === 'USD' ? rem * rate : rem);
+          });
+        }
+
+        const payAmountTargetCur = explicitAmount > 0
+          ? explicitAmount
+          : (targetCurrency === 'USD' ? Number((calcUYU / rate).toFixed(2)) : Math.round(calcUYU));
+
+        if (payAmountTargetCur > 0) {
+          let deductInAccCur = payAmountTargetCur;
+          if (sourceAcc && sourceAcc.currency !== targetCurrency) {
+            deductInAccCur = (targetCurrency === 'USD' && sourceAcc.currency === 'UYU')
+              ? payAmountTargetCur * rate
+              : payAmountTargetCur / rate;
+          }
+
+          let remainingCreditToApplyUYU = (targetCurrency === 'USD' ? payAmountTargetCur * rate : payAmountTargetCur);
+          let settledCount = 0;
+          let updatedInstallmentsCount = 0;
+
+          for (const d of candidateDebts) {
+            if (remainingCreditToApplyUYU <= 0.01) break;
+            const remItem = getDebtRemainingAmount(d);
+            if (remItem <= 0.01) continue;
+            const remItemUYU = (d.currency === 'USD' ? remItem * rate : remItem);
+            const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+            const paidInst = Math.max(0, Math.min(instCount, parseInt(d.paidInstallments, 10) || 0));
+            const instVal = getDebtInstallmentValue(d);
+            const instValUYU = (d.currency === 'USD' ? instVal * rate : instVal);
+
+            if (wantsCurrentInstallmentsOnly && !explicitAmount) {
+              // Advance ONLY 1 installment (current month) per debt/card plan, keeping future installments pending
+              const payNow = instCount > 1 ? Math.min(remItem, instVal) : remItem;
+              const nextPaid = Math.min(instCount, paidInst + 1);
+              d.paidInstallments = nextPaid;
+              if (nextPaid >= instCount || getDebtRemainingAmount(d) <= 0.01) {
+                d.status = 'settled';
+                d.settledAt = Date.now();
+                settledCount++;
+              } else {
+                updatedInstallmentsCount++;
+              }
+              remainingCreditToApplyUYU = Math.max(0, remainingCreditToApplyUYU - (d.currency === 'USD' ? payNow * rate : payNow));
+            } else if (remainingCreditToApplyUYU >= remItemUYU - 0.01 || (!explicitAmount && instCount === 1)) {
+              d.paidInstallments = instCount;
+              d.status = 'settled';
+              d.settledAt = Date.now();
+              remainingCreditToApplyUYU = Math.max(0, remainingCreditToApplyUYU - remItemUYU);
+              settledCount++;
+            } else if (instCount > 1 && remainingCreditToApplyUYU >= instValUYU * 0.5) {
+              const coveredInst = Math.max(1, Math.min(instCount - paidInst, Math.floor((remainingCreditToApplyUYU + 0.01) / Math.max(0.01, instValUYU))));
+              const newPaid = Math.min(instCount, paidInst + coveredInst);
+              const appliedVal = Number((instVal * coveredInst).toFixed(2));
+              d.paidInstallments = newPaid;
+              if (newPaid >= instCount) {
+                d.status = 'settled';
+                d.settledAt = Date.now();
+                settledCount++;
+              } else {
+                updatedInstallmentsCount++;
+              }
+              remainingCreditToApplyUYU = Math.max(0, remainingCreditToApplyUYU - (d.currency === 'USD' ? appliedVal * rate : appliedVal));
+            } else if (explicitAmount > 0) {
+              const paidUYU = Math.min(remItemUYU, remainingCreditToApplyUYU);
+              const paidInDebtCur = (d.currency === 'USD' ? paidUYU / rate : paidUYU);
+              const newRemInDebtCur = Math.max(0, remItem - paidInDebtCur);
+              if (newRemInDebtCur <= 0.01) {
+                d.amount = 0;
+                d.paidInstallments = instCount;
+                d.status = 'settled';
+                d.settledAt = Date.now();
+                settledCount++;
+              } else {
+                if (instCount > 1) {
+                  const remInstLeft = Math.max(1, instCount - paidInst);
+                  const newInstVal = Number((newRemInDebtCur / remInstLeft).toFixed(2));
+                  d.amount = Number((newInstVal * instCount).toFixed(2));
+                } else {
+                  d.amount = Number(newRemInDebtCur.toFixed(2));
+                }
+                updatedInstallmentsCount++;
+              }
+              remainingCreditToApplyUYU = 0;
+            }
+          }
+
+          if (sourceAcc) {
+            sourceAcc.balance = Number((sourceAcc.balance - deductInAccCur).toFixed(2));
+          }
+          const now = new Date();
+          const cardLabelDesc = targetCardName ? ` (${targetCardName})` : ' (Tarjeta de crédito)';
+          const modeLabelDesc = (wantsCurrentInstallmentsOnly && !explicitAmount) ? 'Cuotas del mes ' : 'Pago ';
+          const accLabelDesc = sourceAcc ? sourceAcc.name : 'Efectivo';
+          const tx = {
+            id: 'tx_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+            title: (fromExternal ? '🤖 ' : '') + `${modeLabelDesc}tarjeta${cardLabelDesc} con ${accLabelDesc}`,
+            amount: payAmountTargetCur,
+            currency: targetCurrency,
+            type: 'expense',
+            category: 'Tarjeta / Crédito',
+            accountId: sourceAcc ? sourceAcc.id : 'acc_cash',
+            accountName: accLabelDesc,
+            date: `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
+            timestamp: Date.now()
+          };
+          state.transactions.unshift(tx);
+
+          const dsAfter = getDebtsSummary();
+          const reply = (fromExternal ? '[Google Tasks] ' : '')
+            + `${modeLabelDesc}registrado: ${formatMoney(payAmountTargetCur, targetCurrency)}${cardLabelDesc} desde ${accLabelDesc}. `
+            + `Saldados: ${settledCount}, cuotas actualizadas: ${updatedInstallmentsCount}. `
+            + `Próximo pago de cuotas: ${formatMoney(dsAfter.nextInstallmentsUYU, 'UYU')} y saldo en ${accLabelDesc}: ${sourceAcc ? formatMoney(sourceAcc.balance, sourceAcc.currency) : '$ 0'}.`;
+
+          ui.geminiResponse = { mode: 'action', prompt: text, reply, items: [tx] };
+          spawnFloatingBurst(`-${formatMoney(payAmountTargetCur, targetCurrency)} (${accLabelDesc})`, false);
+          speakText(reply);
+          saveState(true, true);
+          return;
+        }
+      }
+
+      const debtIntentMatch = /(?:^|\b)(?:debo|me\s+deben|me\s+debe|prestamo|préstamo|credito|crédito|deuda|cuota\s+pendiente|pendiente\s+de\s+(?:cobro|pago)|tarjeta\s+de\s+credito|en\s+\d+\s+cuotas?|\d+\s+cuotas?)(?:\b|$)/i.test(lower) && !/\b(?:pague|pagué|cobre|cobré|gaste|gasté)\b/i.test(lower);
+      if (debtIntentMatch) {
+        if (!Array.isArray(state.debts)) state.debts = [];
+        let installmentsCount = 1;
+        const instMatch = lower.match(/(?:en|de|a|son)\s+(\d{1,3})\s+cuotas?/) || lower.match(/(\d{1,3})\s+cuotas?/);
+        if (instMatch && parseInt(instMatch[1], 10) > 1) {
+          installmentsCount = Math.min(120, parseInt(instMatch[1], 10));
+        }
+        const perInstallmentPhrase = /\b(?:por\s+cuota|cada\s+cuota|cuota\s+de|de\s+cuota)\b/i.test(lower);
+        let workText = text;
+        if (installmentsCount > 1) {
+          workText = workText.replace(new RegExp(`(?:\\b(?:en|de|a|son)\\s+)?${installmentsCount}\\s+cuotas?`, 'gi'), ' ');
+        }
+        const rawAmount = extractSmartAmount(workText);
+        if (rawAmount > 0) {
+          const isCredit = /\b(?:me\s+deben|me\s+debe|preste|presté|por\s+cobrar)\b/i.test(lower) && !/\b(?:gaste|gasté|compre|compré|en\s+credito|en\s+crédito|a\s+credito|a\s+crédito|tarjeta)\b/i.test(lower);
+          const cardMatch = workText.match(/\b(?:(?:itau|itaú|brou|santander|bbva|scotia|hsbc|prex|midinero)\s+(?:visa|mastercard|master|oca|amex|cabal|recompensa)|visa|mastercard|master|oca|american\s+express|amex|cabal|brou\s+recompensa|santander|itau|itaú|bbva|scotia|hsbc|prex|midinero)\b/i);
+          const cardName = cardMatch ? cardMatch[0].replace(/\b\w/g, c => c.toUpperCase()) : '';
+          const paymentMethod = cardName || /\btarjeta\b/i.test(lower) ? 'credit_card' : (installmentsCount > 1 ? 'installment_plan' : (/\bprestamo|préstamo\b/i.test(lower) ? 'personal' : 'general'));
+          const currency = detectCurrencyInText(lower) || state.defaultCurrency || 'UYU';
+          const totalAmount = (installmentsCount > 1 && perInstallmentPhrase) ? Number((rawAmount * installmentsCount).toFixed(2)) : rawAmount;
+          let cleanTitle = workText.replace(/(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?)\s*(mil)?/gi, ' ')
+            .replace(/\b(un mil|dos mil|tres mil|cuatro mil|cinco mil|diez mil|quince mil|veinte mil|quinientos|seiscientos|setecientos|ochocientos|novecientos|cien|doscientos|trescientos|cuatrocientos|mil)\b/gi, ' ')
+            .replace(/\b(?:debo|me\s+deben|me\s+debe|prestamo|préstamo|credito|crédito|deuda|cuota|cuotas|por\s+cuota|cada\s+cuota|tarjeta|pesos|dólares|dolares|dolar|dólar|usd|uyu|en|de|por|a|con|la|el)\b/gi, ' ')
+            .replace(/\$/g, ' ').replace(/\s+/g, ' ').trim();
+          cleanTitle = cleanTitle ? (cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1)) : (cardName ? `Compra ${cardName}` : (isCredit ? 'Crédito pendiente' : 'Deuda pendiente'));
+          state.debts.unshift({
+            id: 'debt_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+            title: cleanTitle,
+            counterparty: cardName || (fromExternal ? 'Google Tasks' : (isCredit ? 'Por cobrar' : 'Por pagar')),
+            paymentMethod,
+            cardName,
+            installmentsCount,
+            paidInstallments: 0,
+            amount: totalAmount,
+            currency,
+            kind: isCredit ? 'credit' : 'debt',
+            dueDate: '',
+            status: 'pending',
+            notes: '',
+            createdAt: Date.now()
+          });
+          const cuotaInfo = installmentsCount > 1 ? ` en ${installmentsCount} cuotas (${formatMoney(Number((totalAmount / installmentsCount).toFixed(2)), currency)} c/u)` : '';
+          const cardInfo = cardName ? ` en ${cardName}` : '';
+          const reply = (fromExternal ? '[Google Tasks] ' : '') + `Agregué ${isCredit ? 'crédito' : 'deuda'} pendiente: ${cleanTitle} (${formatMoney(totalAmount, currency)}${cuotaInfo}${cardInfo}).`;
+          ui.geminiResponse = { mode: 'action', prompt: text, reply, items: [] };
+          speakText(reply);
+          saveState(true, true);
+          return;
+        }
+      }
+
+      const rawSegs = text.split(/(?:;|\s+y\s+(?=[^,.;]*?(?:\d|mil|quinientos|cien))|,(?=[^,.;]*?(?:\d|mil|quinientos|cien)))/i).map(s => s.trim()).filter(Boolean);
+      const created = [];
+      (rawSegs.length ? rawSegs : [text]).forEach(seg => {
+        const sLower = normalizeStr(seg), amount = extractSmartAmount(seg);
+        if (!amount || amount <= 0) return;
+        const segCurrency = detectCurrencyInText(sLower);
+        const hasExplicitSegCurrency = Boolean(segCurrency);
+        const currency = segCurrency || detectCurrencyInText(lower) || state.defaultCurrency || 'UYU';
+        const txType = detectTransactionType(sLower);
+        const isInc = txType === 'income';
+        const targetAcc = resolveAccountForSegment(seg, text, currency, hasExplicitSegCurrency);
+        let cat = isInc ? 'Ingreso' : 'Comida y Súper';
+        if (!isInc) {
+          if (/\b(luz|agua|internet|antel|ute|ose|gas|alquiler|servicio)\b/i.test(sLower)) cat = 'Servicios y Luz';
+          else if (/\b(nafta|uber|boleto|auto|bus|omnibus|taxi|peaje)\b/i.test(sLower)) cat = 'Transporte y Nafta';
+          else { const mb = state.budgets.find(b => sLower.includes(normalizeStr(b.name.split(' ')[0]))); if (mb) cat = mb.name; }
+        }
+        let title = seg.replace(/^(hey\s+gemini|gemini|krono)[,\s]*/i,'').replace(/(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?)\s*(mil)?/gi,' ').replace(/\b(un mil|dos mil|tres mil|cuatro mil|cinco mil|diez mil|quince mil|veinte mil|quinientos|seiscientos|setecientos|ochocientos|novecientos|cien|doscientos|trescientos|cuatrocientos|mil)\b/gi,' ').replace(/\b(me\s+(?:entro|entró|ingreso|ingresó|ingresaron|pagaron|depositaron|transfirieron|dieron|devolvieron)|ingresaron|ahorr[eé]|ahorrar|gané|gane|cobr[eé]|cobre|ingres[eé]|ingrese|recib[ií]|recibi|deposit[eé]|deposite|gasté|gaste|pagué|pague|compré|compre|en|de|por|con|desde|pesos|dólares|dolares|dolar|dólar|usd|uyu)\b/gi,' ').replace(/\$/g, ' ');
+        title = stripAccountPhrasesFromTitle(title);
+        title = title ? (title.charAt(0).toUpperCase() + title.slice(1)) : (isInc ? 'Ingreso' : cat);
+        const tx = addTransaction({ title, amount, currency, type: txType, category: cat, accountId: targetAcc ? targetAcc.id : null, fromExternal });
+        if (tx) created.push(tx);
+      });
+      if (created.length > 0) {
+        const reply = (fromExternal ? '[Google Tasks] ' : '') + `Registré ${created.map(i => `${i.title} (${formatMoney(i.amount, i.currency)} en ${i.accountName})`).join(' y ')}.`;
+        ui.geminiResponse = { mode: 'action', prompt: text, reply, items: created }; speakText(reply);
+      } else if (!fromExternal) {
+        ui.geminiResponse = { mode: 'error', prompt: text, reply: 'No detecté un monto. Probá: "Me ingresaron 5,000 pesos".', items: [] };
+      }
+      render();
+    }
     let recognition = null;
     function openInAppVoiceFallback(hint) {
       const isWinDesktop = Boolean(window.kronoDesktop && window.kronoDesktop.isElectron);
@@ -2322,8 +2644,88 @@ input[type=number]::-webkit-outer-spin-button:hover {
     window.addEventListener('focus', () => { pullFromCloudBridge(false); pullStateFromGitHubCloud(false); });
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { pullFromCloudBridge(false); pullStateFromGitHubCloud(false); } });
 
-    window.addEventListener('DOMContentLoaded', () => {
-      if ((localStorage.getItem('KRONO_GEMINI_MODEL') || '').includes('3.8')) localStorage.removeItem('KRONO_GEMINI_MODEL');
+    window.KronoAppFunctions = {
+      schemaVersion: '1.0',
+      supportedFunctions: [
+        'add_expense',
+        'add_income',
+        'record_transaction',
+        'get_balance'
+      ],
+      async executeAppFunction(fnName, params = {}) {
+        const cleanFn = String(fnName || '').trim().toLowerCase();
+        const p = (params && typeof params === 'object') ? params : {};
+        const amount = Math.abs(Number(p.amount ?? p.monto ?? 0) || 0);
+        const currency = String(p.currency || p.moneda || state.defaultCurrency || 'UYU').toUpperCase();
+        const category = String(p.category || p.categoria || (cleanFn === 'add_income' ? 'Ingreso' : 'Comida y Súper'));
+        const title = String(p.title || p.descripcion || p.concepto || p.query || (cleanFn === 'add_income' ? 'Ingreso por Gemini' : category));
+        const accountHint = String(p.account || p.cuenta || p.accountQuery || '');
+
+        if (cleanFn === 'get_balance') {
+          const acc = accountHint ? (findAccountMentionInText(accountHint) || state.accounts[0]) : null;
+          const totals = getTotals();
+          const msg = acc
+            ? `El saldo de ${acc.name} es de ${formatMoney(acc.balance, acc.currency)}.`
+            : `Tu patrimonio total es de ${formatMoney(totals.totalUYU, 'UYU')}.`;
+          return { ok: true, function: cleanFn, message: msg, balance: acc ? acc.balance : totals.totalUYU, currency: acc ? acc.currency : 'UYU' };
+        }
+
+        let txType = 'expense';
+        if (cleanFn === 'add_income') txType = 'income';
+        else if (cleanFn === 'add_expense') txType = 'expense';
+        else if (p.type === 'income' || p.tipo === 'ingreso') txType = 'income';
+
+        if (amount <= 0 && p.query) {
+          await processGeminiCommand(String(p.query), true);
+          return { ok: true, function: cleanFn || 'command', message: ui.geminiResponse?.reply || 'Comando procesado.' };
+        }
+
+        if (amount <= 0) {
+          return { ok: false, function: cleanFn, message: 'Monto inválido o faltante para AppFunction.' };
+        }
+
+        const targetAcc = accountHint ? (findAccountMentionInText(accountHint) || state.accounts[0]) : pickBestAccountForCurrency(currency, false);
+        const tx = addTransaction({
+          title,
+          amount,
+          currency,
+          type: txType,
+          category,
+          accountId: targetAcc ? targetAcc.id : null,
+          fromExternal: true
+        });
+        const confirmMsg = `Registrado en Krono: ${tx ? tx.title : title} por ${formatMoney(amount, currency)}${targetAcc ? ' en ' + targetAcc.name : ''}.`;
+        ui.geminiResponse = { mode: 'action', prompt: `${cleanFn} (${title})`, reply: `[AppFunctions] ${confirmMsg}`, items: tx ? [tx] : [] };
+        saveState(true, true);
+        return { ok: true, function: cleanFn, transaction: tx || null, message: confirmMsg };
+      },
+      async flushQueuedCalls(rawQueue = null) {
+        try {
+          let list = [];
+          if (Array.isArray(rawQueue)) {
+            list = rawQueue;
+          } else {
+            const saved = JSON.parse(localStorage.getItem('KRONO_APPFUNCTIONS_QUEUE') || '[]');
+            if (Array.isArray(saved)) list = saved;
+          }
+          if (!list.length) return { flushed: 0 };
+          let count = 0;
+          for (const item of list) {
+            const parsed = (typeof item === 'string') ? JSON.parse(item) : item;
+            if (parsed && parsed.fn) {
+              await this.executeAppFunction(parsed.fn, parsed.params || {});
+              count++;
+            }
+          }
+          localStorage.removeItem('KRONO_APPFUNCTIONS_QUEUE');
+          return { flushed: count };
+        } catch (e) {
+          return { flushed: 0, error: e && e.message ? e.message : 'error' };
+        }
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => { if ((localStorage.getItem('KRONO_GEMINI_MODEL') || '').includes('3.8')) localStorage.removeItem('KRONO_GEMINI_MODEL');
       loadLivePatches();
       let upd = false;
       if (!state.githubRepo) { state.githubRepo = DEFAULT_GH_REPO; upd = true; }
@@ -2332,6 +2734,21 @@ input[type=number]::-webkit-outer-spin-button:hover {
       if (upd) localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       const params = new URLSearchParams(window.location.search);
       if (params.get('sync')) { state.syncCode = params.get('sync').toUpperCase(); saveState(false, false); }
+      const appFnName = params.get('appfn') || params.get('appfunction');
+      if (appFnName) {
+        setTimeout(async () => {
+          const fnParams = {
+            amount: params.get('amount') || params.get('monto'),
+            currency: params.get('currency') || params.get('moneda'),
+            category: params.get('category') || params.get('categoria'),
+            title: params.get('title') || params.get('descripcion'),
+            account: params.get('account') || params.get('cuenta'),
+            query: params.get('query') || params.get('q')
+          };
+          await window.KronoAppFunctions.executeAppFunction(appFnName, fnParams);
+          try { window.history.replaceState({}, document.title, window.location.pathname); } catch (e) {}
+        }, 250);
+      }
       const extCmd = params.get('gemini') || params.get('cmd');
       if (extCmd) {
         setTimeout(async () => {
@@ -2343,7 +2760,17 @@ input[type=number]::-webkit-outer-spin-button:hover {
         setTimeout(async () => { await pullStateFromGitHubCloud(false); await pullFromCloudBridge(false); }, 450);
       }
       if (params.get('voice') === '1') setTimeout(() => startVoiceCapture(), 350);
+      if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
+        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.'), 1200);
+      } else if (state.autoCheckOta && cleanRepoSlug()) {
+        setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
+      }
       setInterval(() => { pullFromCloudBridge(false); pullStateFromGitHubCloud(false); }, 10000);
+      setInterval(() => { if (state.autoCheckOta && cleanRepoSlug()) checkGitHubReleaseOtaUpdate(false); }, 60000);
+      try { (new Function("\nif (!window.__KRONO_SPOTLIGHT_V6545__) {\n  window.__KRONO_SPOTLIGHT_V6545__ = true;\n  let spotRaf = 0;\n  let targetX = -9999, targetY = -9999;\n  let curX = -9999, curY = -9999;\n  let lastPointerTarget = null;\n\n  function ensureSpotlight() {\n    let sp = document.getElementById('krono-cursor-spotlight');\n    if (!sp) {\n      sp = document.createElement('div');\n      sp.id = 'krono-cursor-spotlight';\n      document.body.insertBefore(sp, document.body.firstChild);\n    }\n    return sp;\n  }\n\n  function stepSpotlight() {\n    spotRaf = 0;\n    const sp = ensureSpotlight();\n    if (targetX < -1000) {\n      sp.style.opacity = '0';\n      return;\n    }\n    if (curX < -1000) {\n      curX = targetX;
+      curY = targetY;
+    } else {\n      curX += (targetX - curX) * 0.22;\n      curY += (targetY - curY) * 0.22;\n    }\n    sp.style.opacity = '1';\n    sp.style.transform = `translate3d(${Math.round(curX - 270)}px, ${Math.round(curY - 270)}px, 0)`;\n\n    if (lastPointerTarget && lastPointerTarget.closest) {\n      const card = lastPointerTarget.closest('.glass-97');\n      if (card) {\n        const rect = card.getBoundingClientRect();\n        card.style.setProperty('--mx', Math.round(targetX - rect.left) + 'px');\n        card.style.setProperty('--my', Math.round(targetY - rect.top) + 'px');\n      }\n    }\n\n    if (Math.abs(targetX - curX) > 0.4 || Math.abs(targetY - curY) > 0.4) {\n      spotRaf = requestAnimationFrame(stepSpotlight);\n    }\n  }\n\n  document.addEventListener('pointermove', function(e) {\n    targetX = e.clientX;\n    targetY = e.clientY;\n    lastPointerTarget = e.target;\n    if (!spotRaf) spotRaf = requestAnimationFrame(stepSpotlight);\n  }, { passive: true });\n\n  document.addEventListener('pointerleave', function() {\n    targetX = -9999;\n    targetY = -9999;\n    if (!spotRaf) spotRaf = requestAnimationFrame(stepSpotlight);\n  }, { passive: true });\n}\n"))(); } catch (e) {}
+      if (window.KronoAppFunctions && typeof window.KronoAppFunctions.flushQueuedCalls === 'function') { window.KronoAppFunctions.flushQueuedCalls(); }
       render();
     });
 
@@ -2433,18 +2860,30 @@ input[type=number]::-webkit-outer-spin-button:hover {
                 c.remainingInstallmentsTotal > 0 ? (c.remainingInstallmentsTotal + ' cuotas rest.') : (c.pendingItems > 0 ? (c.pendingItems + ' mov. pend.') : 'Al día')
               ].filter(Boolean);
               const safeCardArg = escapeAttr(c.name).replace(/'/g, "\\'");
-              return `<div onclick="openDebtsFilteredByCard('${safeCardArg}');" class="p-3 rounded-2xl bg-slate-950/40 hover:bg-slate-900/70 border border-white/10 hover:border-cyan-400/45 flex justify-between items-center gap-2.5 cursor-pointer transition">
-                <div class="flex items-center gap-2.5 min-w-0">
-                  <span class="text-xl shrink-0">💳</span>
-                  <div class="min-w-0">
-                    <div class="text-xs font-extrabold text-white truncate">${escapeAttr(c.name)}</div>
-                    <div class="text-[10px] text-slate-400 truncate">${escapeAttr(specsParts.join(' • '))}</div>
+              const hasLimit = c.creditLimit > 0;
+              return `<div onclick="openDebtsFilteredByCard('${safeCardArg}');" class="p-3 rounded-2xl bg-slate-950/40 hover:bg-slate-900/70 border border-white/10 hover:border-cyan-400/45 space-y-2 cursor-pointer transition">
+                <div class="flex justify-between items-center gap-2.5">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="text-xl shrink-0">💳</span>
+                    <div class="min-w-0">
+                      <div class="text-xs font-extrabold text-white truncate">${escapeAttr(c.name)}</div>
+                      <div class="text-[10px] text-slate-400 truncate">${escapeAttr(specsParts.join(' • '))}</div>
+                    </div>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <div class="text-xs font-extrabold mono text-amber-200">Cuota: ${formatMoney(c.nextPaymentUYU, 'UYU')}</div>
+                    <div class="text-[10px] font-bold mono text-rose-300">Deuda: ${formatMoney(c.remainingBalanceUYU, 'UYU')}</div>
                   </div>
                 </div>
-                <div class="text-right shrink-0">
-                  <div class="text-xs font-extrabold mono text-amber-200">Cuota: ${formatMoney(c.nextPaymentUYU, 'UYU')}</div>
-                  <div class="text-[10px] font-bold mono text-rose-300">Total: ${formatMoney(c.remainingBalanceUYU, 'UYU')}</div>
-                </div>
+                ${hasLimit ? `<div class="pt-1.5 border-t border-white/10 space-y-1">
+                  <div class="flex justify-between items-center text-[10px] mono">
+                    <span class="text-slate-400">Límite: <strong class="text-slate-200">${formatMoney(c.creditLimit, curLabel)}</strong></span>
+                    <span class="${c.availableLimit >= 0 ? 'text-emerald-300' : 'text-rose-300'} font-bold">Disp.: ${formatMoney(c.availableLimit, curLabel)}</span>
+                  </div>
+                  <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                    <div class="h-full rounded-full ${c.usedPct >= 85 ? 'bg-rose-500' : (c.usedPct >= 60 ? 'bg-amber-400' : 'bg-emerald-400')}" style="width:${c.usedPct}%"></div>
+                  </div>
+                </div>` : ''}
               </div>`;
             }).join('') : '<div class="text-xs text-slate-400 py-4 text-center">Sin tarjetas asociadas. Tocá "+ Tarjeta" para agregar una.</div>'}</div>
           </div>
@@ -2492,6 +2931,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${state.budgets.map(bg => { const sp = state.transactions.filter(t => t.type==='expense' && t.category===bg.name).reduce((s,t) => s + (t.currency==='USD'?t.amount*rate:t.amount), 0); const pct = bg.limit>0?Math.min(100,Math.round((sp/bg.limit)*100)):0; return `<div class="spring-card glass-97 rounded-3xl p-5"><div class="flex justify-between mb-2"><div class="text-base font-extrabold text-white truncate">${bg.icon||'🎯'} ${bg.name}</div><span class="text-xs font-bold mono ${pct>=90?'text-rose-300':'text-cyan-300'}">${pct}%</span></div><div class="text-xs text-slate-300 mono mb-3">${formatMoney(sp,'UYU')} / ${formatMoney(bg.limit,'UYU')}</div><div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden mb-4"><div class="h-full rounded-full ${pct>=90?'bg-rose-500':'bg-cyan-400'}" style="width:${pct}%"></div></div><div class="flex gap-2 text-xs"><button onclick="editBudgetLimit('${bg.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">Editar Tope</button><button onclick="deleteBudgetCategory('${bg.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-200">Eliminar</button></div></div>`; }).join('')}</div>
       </div>`;
     }
+
 
     function renderDebtsTab(anim) {
       reconcileFinancedTransactionsWithDebts();
@@ -2581,6 +3021,15 @@ input[type=number]::-webkit-outer-spin-button:hover {
                   <div class="font-extrabold mono text-rose-300">${formatMoney(c.remainingBalanceUYU, 'UYU')}</div>
                 </div>
               </div>
+              ${c.creditLimit > 0 ? `<div class="pt-1.5 border-t border-white/10 space-y-1 text-[11px]">
+                <div class="flex justify-between items-center mono">
+                  <span class="text-slate-400">Límite total: <strong class="text-white">${formatMoney(c.creditLimit, c.currency || 'UYU')}</strong></span>
+                  <span class="${c.availableLimit >= 0 ? 'text-emerald-300' : 'text-rose-300'} font-bold">Disponible: ${formatMoney(c.availableLimit, c.currency || 'UYU')}</span>
+                </div>
+                <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                  <div class="h-full rounded-full ${c.usedPct >= 85 ? 'bg-rose-500' : (c.usedPct >= 60 ? 'bg-amber-400' : 'bg-emerald-400')}" style="width:${c.usedPct}%"></div>
+                </div>
+              </div>` : ''}
               <div class="flex flex-wrap justify-between items-center gap-2 pt-1.5 border-t border-white/10 text-[11px] text-slate-300">
                 <span>Cuotas restantes: <strong class="mono text-cyan-200">${c.remainingInstallmentsTotal}</strong> (${c.activeInstallmentPlans} planes)</span>
                 ${c.dueDates.length ? `<span class="mono text-amber-200">Vence: ${escapeAttr(c.dueDates.join(', '))}</span>` : ''}
@@ -2655,11 +3104,11 @@ input[type=number]::-webkit-outer-spin-button:hover {
             <button onclick="pullFromCloudBridge(true)" class="spring-btn px-4 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs shrink-0">🔄 Cosechar Tareas</button>
           </div>
           <div class="pt-2 border-t border-white/10 space-y-1.5">
-            <label class="text-[11px] font-bold text-cyan-300 block">🧠 Intérprete IA Gemini (100% IA — sin reglas fijas)</label>
+            <label class="text-[11px] font-bold text-cyan-300 block">🧠 Intérprete IA Gemini (opcional — sin reglas fijas)</label>
             <input type="password" placeholder="Pegá tu Gemini API Key para interpretar frases con IA..." value="${escapeAttr(state.geminiApiKey || '')}" onchange="const k=this.value.trim(); state.geminiApiKey=k; if(k) localStorage.setItem('KRONO_GEMINI_API_KEY',k); else localStorage.removeItem('KRONO_GEMINI_API_KEY'); saveState(false,false);" class="w-full bg-slate-950/70 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" />
             <div class="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400">
               <span>Modo 100% IA Gemini: interpreta y ejecuta tus comandos exclusivamente mediante la API de Gemini.</span>
-              <span class="mono px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/30 text-cyan-200">${escapeAttr(ui.lastInterpreterMode || (state.geminiApiKey ? '🧠 IA Gemini lista' : '⚠️ Falta API Key'))}</span>
+              <span class="mono px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/30 text-cyan-200">${escapeAttr(ui.lastInterpreterMode || (state.geminiApiKey ? '🧠 IA Gemini lista' : '⚙️ Parámetros locales'))}</span>
             </div>
           </div>
         </div>
@@ -2704,6 +3153,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       if (ui.activeTab === 'settings') return renderSettingsTab(anim);
       return renderDashboardTab(totals, displayTotal, anim);
     }
+
 
     function syncFloatingVoiceButton() {
       const existing = document.getElementById('krono-voice-fab');
@@ -2796,7 +3246,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
         ${ui.inputModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="submitInputModal(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-cyan-400/50 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">${ui.inputModal.title}</h3><label class="text-xs text-slate-300 block">${ui.inputModal.label}</label><input id="krono-input-modal-field" type="${ui.inputModal.inputType}" ${ui.inputModal.inputType==='number'?'step="any"':''} required value="${escapeAttr(ui.inputModal.value)}" placeholder="${escapeAttr(ui.inputModal.placeholder)}" class="w-full bg-slate-950/80 border border-cyan-400/40 rounded-xl px-3.5 py-2.5 text-sm text-white ${ui.inputModal.inputType==='number'?'mono':''} focus:outline-none focus:border-cyan-400" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="closeInputModal()" class="px-4 py-2 text-xs text-slate-300 hover:text-white">Cancelar</button><button type="submit" class="spring-btn px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Guardar</button></div></form></div>` : ''}
         ${ui.confirmModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><div class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 ${ui.confirmModal.danger ? 'border-rose-400/50' : 'border-cyan-400/50'} space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">${ui.confirmModal.title}</h3><p class="text-xs text-slate-300 leading-relaxed">${ui.confirmModal.message}</p><div class="flex justify-end gap-2 pt-3"><button type="button" onclick="closeConfirmModal()" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-slate-200">${ui.confirmModal.cancelText || 'Cancelar'}</button><button type="button" onclick="executeConfirmModal()" class="spring-btn px-5 py-2 rounded-xl ${ui.confirmModal.danger ? 'bg-rose-500 text-white' : 'bg-cyan-400 text-slate-950'} font-extrabold text-xs">${ui.confirmModal.confirmText || 'Confirmar'}</button></div></div></div>` : ''}
         ${ui.showOtaModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><div class="glass-97 w-full max-w-xl rounded-3xl p-5 border-2 border-cyan-400/50 animate-pop-elastic"><div class="flex justify-between mb-2"><h3 class="text-base font-extrabold text-white">🚀 Actualizador OTA</h3><span class="text-xs mono text-cyan-300">v${ver}</span></div><input id="ota-release-notes" type="text" placeholder="Notas opcionales..." value="${escapeAttr(ui.releaseNotesInput)}" oninput="ui.releaseNotesInput=this.value;" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mb-2" /><textarea id="ota-paste-box" rows="5" placeholder='Pegá aquí el JSON {"version","html"}...' class="w-full p-3 rounded-2xl bg-slate-950/80 border border-white/15 text-xs text-white mono mb-3"></textarea>${ui.otaStatusMsg ? `<div class="p-2.5 rounded-xl bg-slate-950/80 text-xs text-cyan-200 mb-3">${ui.otaStatusMsg}</div>` : ''}<div class="flex justify-between gap-2"><button onclick="publishGitHubRelease()" class="px-3 py-2 rounded-xl bg-violet-500/30 text-violet-200 font-bold text-xs">🏷️ Publicar Release</button><div class="flex gap-2"><button onclick="ui.showOtaModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cerrar</button><button onclick="handleOtaPasteApply()" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Instalar</button></div></div></div></div>` : ''}
-        ${(() => {
+                ${(() => {
           if (!ui.editingTxId) return '';
           const etx = (state.transactions || []).find(t => t.id === ui.editingTxId);
           if (!etx) return '';
@@ -2898,12 +3348,12 @@ input[type=number]::-webkit-outer-spin-button:hover {
         </form></div>` : ''}
         ${ui.showNewAccountModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="createAccount(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">🏦 Nueva Cuenta</h3><input id="acc-name" type="text" required placeholder="Nombre" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-3 gap-2"><select id="acc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">UYU</option><option value="USD">USD</option></select><input id="acc-balance" type="number" step="0.01" placeholder="Saldo" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="acc-icon" type="text" value="🏦" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewAccountModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Crear</button></div></form></div>` : ''}
         ${ui.showTransferModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleTransferSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">⇄ Transferir</h3><select id="tr-from" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map(a => `<option value="${a.id}">Desde: ${a.name}</option>`).join('')}</select><select id="tr-to" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map((a,i) => `<option value="${a.id}" ${i===1?'selected':''}>Hacia: ${a.name}</option>`).join('')}</select><input id="tr-amount" type="number" step="0.01" required placeholder="Monto" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showTransferModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Transferir</button></div></form></div>` : ''}
-        ${ui.showNewCardModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateCreditCardSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-violet-400/50 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">💳 Nueva Tarjeta de Crédito</h3><input id="cc-name" type="text" required placeholder="Nombre de la tarjeta (ej: Itaú Visa, BROU Master)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="cc-bank" type="text" placeholder="Banco / Emisor (ej: Itaú)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><select id="cc-brand" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="Visa">Visa</option><option value="Mastercard">Mastercard</option><option value="Oca">Oca</option><option value="Amex">Amex</option><option value="Cabal">Cabal</option><option value="Comercio">Comercio</option></select></div><div class="grid grid-cols-3 gap-2"><select id="cc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select><input id="cc-closing" type="text" placeholder="Día cierre (ej: 15)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="cc-due" type="text" placeholder="Día vto. (ej: 25)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewCardModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-violet-400 text-slate-950 font-extrabold text-xs">Guardar Tarjeta</button></div></form></div>` : ''}
+                        ${ui.showNewCardModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateCreditCardSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-violet-400/50 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">💳 Nueva Tarjeta de Crédito</h3><input id="cc-name" type="text" required placeholder="Nombre de la tarjeta (ej: Itaú Visa, BROU Master)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="cc-bank" type="text" placeholder="Banco / Emisor (ej: Itaú)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><select id="cc-brand" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="Visa">Visa</option><option value="Mastercard">Mastercard</option><option value="Oca">Oca</option><option value="Amex">Amex</option><option value="Cabal">Cabal</option><option value="Comercio">Comercio</option></select></div><div class="grid grid-cols-2 gap-2"><select id="cc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select><input id="cc-limit" type="number" step="0.01" min="0" placeholder="Límite total (ej: 60000)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="grid grid-cols-2 gap-2"><input id="cc-closing" type="text" placeholder="Día cierre (ej: 15)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="cc-due" type="text" placeholder="Día vto. (ej: 25)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewCardModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-violet-400 text-slate-950 font-extrabold text-xs">Guardar Tarjeta</button></div></form></div>` : ''}
         ${(() => {
           if (!ui.showEditCardModal || !ui.editingCardId) return '';
           const ec = (Array.isArray(state.creditCards) ? state.creditCards : []).find(x => x.id === ui.editingCardId);
           if (!ec) return '';
-          return `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleEditCreditCardSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-violet-400/50 space-y-3 animate-pop-elastic"><div class="flex items-center justify-between gap-2"><h3 class="text-base font-extrabold text-white">✏️ Editar Tarjeta de Crédito</h3><button type="button" onclick="deleteCreditCard('${ec.id}')" class="px-2.5 py-1 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/30 text-rose-200 font-bold text-xs">🗑️ Borrar</button></div><input id="ecc-name" type="text" required value="${escapeAttr(ec.name)}" placeholder="Nombre de la tarjeta" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="ecc-bank" type="text" value="${escapeAttr(ec.bank || '')}" placeholder="Banco / Emisor" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><select id="ecc-brand" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="Visa" ${ec.brand==='Visa'?'selected':''}>Visa</option><option value="Mastercard" ${ec.brand==='Mastercard'?'selected':''}>Mastercard</option><option value="Oca" ${ec.brand==='Oca'?'selected':''}>Oca</option><option value="Amex" ${ec.brand==='Amex'?'selected':''}>Amex</option><option value="Cabal" ${ec.brand==='Cabal'?'selected':''}>Cabal</option><option value="Comercio" ${ec.brand==='Comercio'?'selected':''}>Comercio</option></select></div><div class="grid grid-cols-3 gap-2"><select id="ecc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU" ${ec.currency==='UYU'?'selected':''}>$ UYU</option><option value="USD" ${ec.currency==='USD'?'selected':''}>US$ USD</option></select><input id="ecc-closing" type="text" value="${escapeAttr(ec.closingDay || '')}" placeholder="Día cierre" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="ecc-due" type="text" value="${escapeAttr(ec.dueDay || '')}" placeholder="Día vto." class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showEditCardModal=false;ui.editingCardId=null;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-violet-400 text-slate-950 font-extrabold text-xs">Guardar Cambios</button></div></form></div>`;
+          return `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleEditCreditCardSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-violet-400/50 space-y-3 animate-pop-elastic"><div class="flex items-center justify-between gap-2"><h3 class="text-base font-extrabold text-white">✏️ Editar Tarjeta de Crédito</h3><button type="button" onclick="deleteCreditCard('${ec.id}')" class="px-2.5 py-1 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/30 text-rose-200 font-bold text-xs">🗑️ Borrar</button></div><input id="ecc-name" type="text" required value="${escapeAttr(ec.name)}" placeholder="Nombre de la tarjeta" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="ecc-bank" type="text" value="${escapeAttr(ec.bank || '')}" placeholder="Banco / Emisor" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><select id="ecc-brand" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="Visa" ${ec.brand==='Visa'?'selected':''}>Visa</option><option value="Mastercard" ${ec.brand==='Mastercard'?'selected':''}>Mastercard</option><option value="Oca" ${ec.brand==='Oca'?'selected':''}>Oca</option><option value="Amex" ${ec.brand==='Amex'?'selected':''}>Amex</option><option value="Cabal" ${ec.brand==='Cabal'?'selected':''}>Cabal</option><option value="Comercio" ${ec.brand==='Comercio'?'selected':''}>Comercio</option></select></div><div class="grid grid-cols-2 gap-2"><select id="ecc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU" ${ec.currency==='UYU'?'selected':''}>$ UYU</option><option value="USD" ${ec.currency==='USD'?'selected':''}>US$ USD</option></select><input id="ecc-limit" type="number" step="0.01" min="0" value="${escapeAttr(ec.creditLimit || '')}" placeholder="Límite total" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="grid grid-cols-2 gap-2"><input id="ecc-closing" type="text" value="${escapeAttr(ec.closingDay || '')}" placeholder="Día cierre" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="ecc-due" type="text" value="${escapeAttr(ec.dueDay || '')}" placeholder="Día vto." class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showEditCardModal=false;ui.editingCardId=null;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-violet-400 text-slate-950 font-extrabold text-xs">Guardar Cambios</button></div></form></div>`;
         })()}
         ${(() => {
           if (!ui.showEditDebtModal || !ui.editingDebtId) return '';
