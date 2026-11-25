@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.69
+    // KRONO OTA BOOTLOADER v6.5.70
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.69';
+    const APP_BASE_VERSION = '6.5.70';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,7 +230,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.69',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.70',
       lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
@@ -2751,6 +2751,13 @@ input[type=number]::-webkit-outer-spin-button:hover {
       render();
     });
 
+    function openDebtsFilteredByCard(cardName) {
+      ui.debtFilterKind = 'all';
+      ui.debtFilterStatus = 'pending';
+      ui.debtFilterCard = cardName ? String(cardName).trim() : 'all';
+      switchTab('debts');
+    }
+
     function renderDashboardTab(totals, displayTotal, anim) {
       const rate = Number(state.exchangeRate) || 41.5;
       return `<div class="space-y-4 sm:space-y-5 ${anim}">
@@ -2802,7 +2809,9 @@ input[type=number]::-webkit-outer-spin-button:hover {
           <button onclick="ui.showTransferModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">⇄</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Transferir</div><div class="text-[10px] text-slate-400 truncate">Entre cuentas</div></div></button>
         </div>
         ${(() => {
-          const openDebts = (Array.isArray(state.debts) ? state.debts : []).filter(d => d.status !== 'settled');
+          reconcileFinancedTransactionsWithDebts();
+          const cardsList = getDebtsCardsBreakdown();
+          const savedCards = Array.isArray(state.creditCards) ? state.creditCards : [];
           return `
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="glass-97 rounded-3xl p-5 flex flex-col">
@@ -2810,16 +2819,38 @@ input[type=number]::-webkit-outer-spin-button:hover {
             <div class="krono-recent-scroll space-y-2.5 max-h-72 overflow-y-auto pr-1.5">${state.accounts.map(a => `<div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="flex items-center gap-2.5 min-w-0"><span class="text-xl">${a.icon||'🏦'}</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">${a.name}</div><div class="text-[10px] text-slate-400">${a.currency}</div></div></div><div class="text-sm font-extrabold mono text-white shrink-0">${formatMoney(a.balance,a.currency)}</div></div>`).join('')}</div>
           </div>
           <div class="glass-97 rounded-3xl p-5 flex flex-col">
-            <div class="flex justify-between items-center mb-3 shrink-0"><h3 class="text-sm font-extrabold text-white">📌 Cuentas de Deudas</h3><button onclick="switchTab('debts');" class="text-xs text-cyan-300">Ver todas →</button></div>
-            <div class="krono-recent-scroll space-y-2.5 max-h-72 overflow-y-auto pr-1.5">${openDebts.length ? openDebts.map(d => {
-              const isCred = d.kind === 'credit';
-              const rem = getDebtRemainingAmount(d);
-              const instC = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
-              const paidC = Math.max(0, Math.min(instC, parseInt(d.paidInstallments, 10) || 0));
-              const cardLbl = getDebtInstrumentLabel(d);
-              const subLbl = [cardLbl || d.counterparty || (isCred ? 'Prestado' : 'Deuda'), instC > 1 ? `Cuota ${Math.min(instC, paidC + 1)}/${instC}` : 'Pago único', d.currency].filter(Boolean).join(' • ');
-              return `<div onclick="switchTab('debts');" class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2 cursor-pointer"><div class="flex items-center gap-2.5 min-w-0"><span class="text-xl">${d.paymentMethod === 'credit_card' || cardLbl ? '💳' : (isCred ? '📈' : '📉')}</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">${escapeAttr(d.title)}</div><div class="text-[10px] text-slate-400 truncate">${escapeAttr(subLbl)}</div></div></div><div class="text-xs font-extrabold mono shrink-0 ${isCred ? 'text-emerald-300' : 'text-rose-300'}">${isCred ? '+' : '-'}${formatMoney(rem, d.currency)}</div></div>`;
-            }).join('') : '<div class="text-xs text-slate-400 py-4 text-center">Sin deudas pendientes.</div>'}</div>
+            <div class="flex justify-between items-center mb-3 shrink-0">
+              <h3 class="text-sm font-extrabold text-white">💳 Tarjetas de Crédito</h3>
+              <div class="flex items-center gap-2.5">
+                <button onclick="ui.showNewCardModal=true;render();" class="text-xs font-bold text-violet-300 hover:text-violet-200">+ Tarjeta</button>
+                <button onclick="ui.debtFilterCard='all';switchTab('debts');" class="text-xs text-cyan-300">Ver todas →</button>
+              </div>
+            </div>
+            <div class="krono-recent-scroll space-y-2.5 max-h-72 overflow-y-auto pr-1.5">${cardsList.length ? cardsList.map(c => {
+              const meta = savedCards.find(sc => String(sc.name || '').trim().toLowerCase() === String(c.name || '').trim().toLowerCase()) || {};
+              const curLabel = meta.currency || c.currency || 'UYU';
+              const specsParts = [
+                meta.bank || '',
+                meta.brand || '',
+                curLabel,
+                meta.dueDay ? ('Vto. día ' + meta.dueDay) : (c.dueDates && c.dueDates.length ? ('Vto. ' + c.dueDates[0]) : ''),
+                c.remainingInstallmentsTotal > 0 ? (c.remainingInstallmentsTotal + ' cuotas rest.') : (c.pendingItems > 0 ? (c.pendingItems + ' mov. pend.') : 'Al día')
+              ].filter(Boolean);
+              const safeCardArg = escapeAttr(c.name).replace(/'/g, "\\'");
+              return `<div onclick="openDebtsFilteredByCard('${safeCardArg}');" class="p-3 rounded-2xl bg-slate-950/40 hover:bg-slate-900/70 border border-white/10 hover:border-cyan-400/45 flex justify-between items-center gap-2.5 cursor-pointer transition">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="text-xl shrink-0">💳</span>
+                  <div class="min-w-0">
+                    <div class="text-xs font-extrabold text-white truncate">${escapeAttr(c.name)}</div>
+                    <div class="text-[10px] text-slate-400 truncate">${escapeAttr(specsParts.join(' • '))}</div>
+                  </div>
+                </div>
+                <div class="text-right shrink-0">
+                  <div class="text-xs font-extrabold mono text-amber-200">Cuota: ${formatMoney(c.nextPaymentUYU, 'UYU')}</div>
+                  <div class="text-[10px] font-bold mono text-rose-300">Total: ${formatMoney(c.remainingBalanceUYU, 'UYU')}</div>
+                </div>
+              </div>`;
+            }).join('') : '<div class="text-xs text-slate-400 py-4 text-center">Sin tarjetas asociadas. Tocá "+ Tarjeta" para agregar una.</div>'}</div>
           </div>
         </div>
         <div class="glass-97 rounded-3xl p-5 flex flex-col">
