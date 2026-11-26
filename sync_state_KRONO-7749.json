@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795727869342,
+  "updatedAt": 1795727886529,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -134,7 +134,7 @@
       "id": "acc_uyu",
       "name": "Cuenta Itaú / Débito",
       "currency": "UYU",
-      "balance": -10238,
+      "balance": -16660,
       "color": "from-cyan-400 to-blue-500",
       "icon": "🏦"
     },
@@ -249,7 +249,7 @@
       "paymentMethod": "credit_card",
       "cardName": "Itaú Visa",
       "installmentsCount": 6,
-      "paidInstallments": 2,
+      "paidInstallments": 3,
       "amount": 38532,
       "currency": "UYU",
       "kind": "debt",
@@ -257,7 +257,7 @@
       "status": "pending",
       "notes": "",
       "createdAt": 1795720446298,
-      "lastPaidAt": 1795727869341
+      "lastPaidAt": 1795727886529
     },
     {
       "id": "debt_sync_tx_ai_1795637550371_101_745",
@@ -507,6 +507,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_pcc_1795727886529_82",
+      "title": "💳 Pago Próximo Cierre Itaú Visa (1 cuota)",
+      "amount": 6422,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Tarjeta / Crédito",
+      "accountId": "acc_uyu",
+      "accountName": "Cuenta Itaú / Débito",
+      "date": "26/11 18:18",
+      "timestamp": 1795727886529
+    },
     {
       "id": "tx_pcc_1795727869341_387",
       "title": "💳 Pago Próximo Cierre Itaú Visa (1 cuota)",
