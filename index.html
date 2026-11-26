@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.74
+    // KRONO OTA BOOTLOADER v6.5.75
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -71,7 +71,703 @@
     ::-webkit-scrollbar-track { background: rgba(4,7,17,0.6); }
     ::-webkit-scrollbar-thumb { background: rgba(6,182,212,0.35); border-radius: 9999px; }
   </style>
-  <style id="krono-live-custom-css">html, body { -webkit-font-smoothing: auto !important; height: 100dvh !important; max-height: 100dvh !important; overflow: hidden !important; overscroll-behavior: none !important; } @keyframes kronoTabIn { 0% { opacity: 0; transform: translateY(14px); } 100% { opacity: 1; transform: none; } } @keyframes kronoModalIn { 0% { opacity: 0; transform: translateY(18px); } 100% { opacity: 1; transform: none; } } @keyframes kronoBurstIn { 0% { opacity: 0; transform: translateY(12px); } 14% { opacity: 1; transform: translateY(0px); } 84% { opacity: 1; transform: translateY(-20px); } 100% { opacity: 0; transform: translateY(-34px); } } @keyframes kronoRipple { 0% { opacity: 0.45; transform: translate(-50%, -50%) scale(0); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); } } @keyframes kronoBarShine { 0% { transform: translateX(-100%); } 100% { transform: translateX(240%); } } @keyframes kronoDotPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6); } 60% { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); } } .krono-sync-dot { animation: kronoDotPulse 2.4s ease-out infinite; } .glass-97 { position: relative; backdrop-filter: blur(20px) saturate(190%) !important; -webkit-backdrop-filter: blur(20px) saturate(190%) !important; background: rgba(255, 255, 255, 0.036) !important; transition: transform 0.32s cubic-bezier(0.22, 1.45, 0.36, 1), box-shadow 0.28s ease, border-color 0.22s ease, background-color 0.22s ease !important; } .glass-97::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 0.22s ease; background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgba(34, 211, 238, 0.16), rgba(139, 92, 246, 0.08) 45%, transparent 72%); z-index: 0; } .glass-97:hover::before { opacity: 1; } .glass-97 > *:not(.krono-ripple) { position: relative; z-index: 1; } main .glass-97:hover { border-color: rgba(34, 211, 238, 0.45) !important; box-shadow: 0 20px 44px -12px rgba(6, 182, 212, 0.28), 0 1px 0 0 rgba(255, 255, 255, 0.34) inset !important; } .spring-card { position: relative !important; overflow: visible !important; transform-origin: center center !important; transition: transform 0.34s cubic-bezier(0.22, 1.45, 0.36, 1), box-shadow 0.28s ease, border-color 0.22s ease, background-color 0.22s ease !important; } .spring-card:hover { transform: translateY(-5px) !important; background-color: rgba(255, 255, 255, 0.06) !important; border-color: rgba(34, 211, 238, 0.58) !important; box-shadow: 0 22px 44px -12px rgba(6, 182, 212, 0.34), 0 1px 0 0 rgba(255, 255, 255, 0.38) inset !important; } .spring-card:active { transform: translateY(-2px) scale(0.99) !important; border-color: rgba(34, 211, 238, 0.8) !important; } .spring-btn { position: relative !important; overflow: visible !important; transform-origin: center center !important; transition: transform 0.28s cubic-bezier(0.22, 1.5, 0.36, 1), box-shadow 0.24s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important; } .spring-btn:hover { transform: translateY(-3px) !important; box-shadow: 0 12px 26px -6px rgba(6, 182, 212, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.25) inset !important; } .spring-btn:active { transform: translateY(0px) scale(0.985) !important; box-shadow: 0 4px 12px -2px rgba(6, 182, 212, 0.32) !important; } .spring-btn > span, .spring-card span.text-xl, .spring-card span.text-2xl, aside nav button > span:first-child, nav.md\:hidden button > span:first-child, .glass-97 .bg-slate-950\/40 span.text-xl, .glass-97 .bg-slate-950\/50 span.text-xl { display: inline-block !important; transition: transform 0.32s cubic-bezier(0.34, 1.7, 0.64, 1) !important; } .spring-btn:hover > span:first-child, .spring-card:hover span.text-xl, .spring-card:hover span.text-2xl, aside nav button:hover > span:first-child, .glass-97 .bg-slate-950\/40:hover span.text-xl, .glass-97 .bg-slate-950\/50:hover span.text-xl { transform: scale(1.2) rotate(-7deg) !important; } aside nav { overflow: visible !important; } aside nav button { position: relative; overflow: hidden; min-height: 40px !important; max-height: 44px !important; transform-origin: center center !important; transition: transform 0.26s cubic-bezier(0.22, 1.45, 0.36, 1), background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.24s ease !important; } aside nav button:hover { transform: translateX(4px) !important; background-color: rgba(255, 255, 255, 0.07) !important; border-color: rgba(255, 255, 255, 0.18) !important; box-shadow: 0 8px 20px -8px rgba(6, 182, 212, 0.35); } aside nav button:active { transform: translateX(2px) scale(0.99) !important; } aside nav button.bg-cyan-400, nav.md\:hidden button.bg-cyan-400 { background: linear-gradient(135deg, rgba(34, 211, 238, 0.22), rgba(139, 92, 246, 0.14)) !important; color: #ecfeff !important; border: 1px solid rgba(103, 232, 249, 0.58) !important; box-shadow: 0 10px 26px -8px rgba(34, 211, 238, 0.45), 0 1px 0 0 rgba(255, 255, 255, 0.34) inset !important; } aside nav button.bg-cyan-400::after { content: ""; position: absolute; left: 6px; top: 22%; height: 56%; width: 3px; border-radius: 9999px; background: #67e8f9; box-shadow: 0 0 12px rgba(34, 211, 238, 0.95); } aside .grid-cols-2 > button.spring-btn { height: 36px !important; min-height: 36px !important; max-height: 36px !important; align-self: center !important; } .glass-97 .bg-slate-950\/40, .glass-97 .bg-slate-950\/50 { position: relative; overflow: visible !important; transition: transform 0.28s cubic-bezier(0.22, 1.45, 0.36, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.24s ease !important; } .glass-97 .bg-slate-950\/40:hover, .glass-97 .bg-slate-950\/50:hover { transform: translateY(-2px) !important; background-color: rgba(15, 23, 42, 0.78) !important; border-color: rgba(34, 211, 238, 0.52) !important; box-shadow: 0 12px 24px -8px rgba(34, 211, 238, 0.32) !important; } .glass-97 .bg-slate-950\/40:active, .glass-97 .bg-slate-950\/50:active { transform: translateY(0px) scale(0.99) !important; } .bg-slate-800 > div { position: relative; overflow: hidden; transition: width 0.65s cubic-bezier(0.22, 1.25, 0.36, 1) !important; } .bg-slate-800 > div::after { content: ""; position: absolute; inset: 0; width: 45%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.48), transparent); animation: kronoBarShine 2.6s ease-in-out infinite; } #krono-cursor-spotlight { position: fixed; left: 0; top: 0; width: 540px; height: 540px; border-radius: 9999px; pointer-events: none; z-index: 1; opacity: 0; transform: translate3d(-9999px, -9999px, 0); background: radial-gradient(circle, rgba(34, 211, 238, 0.16) 0%, rgba(139, 92, 246, 0.08) 42%, rgba(16, 185, 129, 0.03) 62%, transparent 74%); filter: blur(28px); transition: opacity 0.35s ease; will-change: transform; }</style>
+  <style id="krono-core-fx-css">
+/* === KRONO FINANZAS v6.5.75 MASTER VISUAL & MOTION ENGINE === */
+html, body {
+  -webkit-font-smoothing: antialiased !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+@keyframes kronoTabIn {
+  0% { opacity: 0; transform: translateY(18px) scale(0.992); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes kronoModalIn {
+  0% { opacity: 0; transform: translateY(22px) scale(0.965); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes kronoBackdropIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes kronoDropIn {
+  0% { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes kronoDropInUp {
+  0% { opacity: 0; transform: translateY(8px) scale(0.98); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes kronoBurstIn {
+  0% { opacity: 0; transform: translateY(16px) scale(0.92); }
+  14% { opacity: 1; transform: translateY(0px) scale(1); }
+  84% { opacity: 1; transform: translateY(-22px) scale(1); }
+  100% { opacity: 0; transform: translateY(-40px) scale(0.96); }
+}
+@keyframes kronoRipple {
+  0% { opacity: 0.52; transform: translate(-50%, -50%) scale(0); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(2.6); }
+}
+@keyframes kronoBarShine {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(260%); }
+}
+@keyframes kronoDotPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.65); }
+  60% { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }
+}
+@keyframes kronoFabRing {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 0; transform: scale(1.36); }
+}
+@keyframes kronoHeroSheen {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.krono-sync-dot {
+  animation: kronoDotPulse 2.4s ease-out infinite;
+}
+
+/* === AMBIENT CURSOR SPOTLIGHT === */
+#krono-cursor-spotlight {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 580px;
+  height: 580px;
+  border-radius: 9999px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transform: translate3d(-9999px, -9999px, 0);
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.17) 0%, rgba(139, 92, 246, 0.095) 40%, rgba(16, 185, 129, 0.035) 62%, transparent 74%);
+  filter: blur(30px);
+  transition: opacity 0.35s ease;
+  will-change: transform;
+}
+
+/* === LIVING FROSTED GLASS CARDS (.glass-97) === */
+.glass-97 {
+  position: relative;
+  backdrop-filter: blur(22px) saturate(195%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(195%) !important;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.048) 0%, rgba(15, 23, 42, 0.26) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 18px 42px -12px rgba(0, 0, 0, 0.52), 0 1px 0 0 rgba(255, 255, 255, 0.24) inset, 0 -1px 0 0 rgba(255, 255, 255, 0.06) inset !important;
+  transition: transform 0.38s cubic-bezier(0.22, 1.45, 0.36, 1), box-shadow 0.3s ease, border-color 0.24s ease, background-color 0.24s ease !important;
+}
+.glass-97::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.28s ease;
+  background: radial-gradient(400px circle at var(--mx, 50%) var(--my, 50%), rgba(34, 211, 238, 0.16), rgba(139, 92, 246, 0.08) 45%, transparent 72%);
+  z-index: 0;
+}
+.glass-97::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.28s ease;
+  background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), rgba(103, 232, 249, 0.65), rgba(167, 139, 250, 0.28) 45%, transparent 70%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index: 2;
+}
+.glass-97:hover::before,
+.glass-97:hover::after {
+  opacity: 1;
+}
+.glass-97 > *:not(.krono-ripple) {
+  position: relative;
+  z-index: 1;
+}
+main .glass-97:hover {
+  border-color: rgba(34, 211, 238, 0.38) !important;
+  box-shadow: 0 22px 48px -12px rgba(6, 182, 212, 0.26), 0 1px 0 0 rgba(255, 255, 255, 0.34) inset !important;
+}
+
+/* === HERO CONSOLIDATED NET WORTH CARD === */
+.krono-hero-card {
+  background: linear-gradient(128deg, rgba(34, 211, 238, 0.08) 0%, rgba(15, 23, 42, 0.35) 45%, rgba(139, 92, 246, 0.09) 100%) !important;
+  background-size: 180% 180% !important;
+  animation: kronoHeroSheen 14s ease-in-out infinite;
+}
+
+/* === SPRING CARDS (.spring-card) === */
+.spring-card {
+  position: relative !important;
+  top: 0 !important;
+  overflow: hidden !important;
+  filter: none !important;
+  cursor: pointer !important;
+  transform-origin: center center !important;
+  transition: transform 0.38s cubic-bezier(0.22, 1.48, 0.36, 1), box-shadow 0.32s ease, border-color 0.24s ease, background-color 0.24s ease !important;
+}
+.spring-card:hover {
+  top: 0 !important;
+  transform: translateY(-7px) !important;
+  background-color: rgba(255, 255, 255, 0.065) !important;
+  border-color: rgba(34, 211, 238, 0.58) !important;
+  box-shadow: 0 28px 54px -12px rgba(6, 182, 212, 0.36), 0 0 24px -8px rgba(139, 92, 246, 0.25), 0 1px 0 0 rgba(255, 255, 255, 0.42) inset !important;
+}
+.spring-card:active {
+  top: 0 !important;
+  transform: translateY(-2px) scale(0.992) !important;
+  border-color: rgba(34, 211, 238, 0.85) !important;
+}
+.spring-card .rounded-full.mono {
+  transition: background-color 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease, transform 0.32s cubic-bezier(0.22, 1.45, 0.36, 1);
+}
+.spring-card:hover .rounded-full.mono {
+  transform: translateY(-1px) scale(1.03);
+  background-color: rgba(34, 211, 238, 0.28);
+  border-color: rgba(103, 232, 249, 0.72);
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.42);
+}
+
+/* === SPRING BUTTONS (.spring-btn) === */
+.spring-btn {
+  position: relative !important;
+  top: 0 !important;
+  overflow: hidden !important;
+  filter: none !important;
+  transform-origin: center center !important;
+  transition: transform 0.3s cubic-bezier(0.22, 1.52, 0.36, 1), box-shadow 0.24s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+}
+.spring-btn:hover {
+  top: 0 !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 14px 28px -6px rgba(6, 182, 212, 0.42), 0 0 0 1px rgba(255, 255, 255, 0.24) inset !important;
+}
+.spring-btn:active {
+  top: 0 !important;
+  transform: translateY(0px) scale(0.985) !important;
+  box-shadow: 0 4px 12px -2px rgba(6, 182, 212, 0.32) !important;
+}
+
+/* === SEMANTIC KPI TILES IN PENDIENTES WIDGET === */
+.krono-kpi-tile {
+  transition: transform 0.32s cubic-bezier(0.22, 1.5, 0.36, 1), box-shadow 0.26s ease, border-color 0.22s ease, background-color 0.22s ease !important;
+}
+.krono-kpi-tile .krono-kpi-arrow {
+  display: inline-block;
+  transition: transform 0.28s cubic-bezier(0.34, 1.7, 0.64, 1), opacity 0.2s ease;
+}
+.krono-kpi-tile:hover .krono-kpi-arrow {
+  transform: translate(2px, -2px) scale(1.2);
+}
+.krono-kpi-emerald:hover {
+  border-color: rgba(52, 211, 153, 0.55) !important;
+  background-color: rgba(16, 185, 129, 0.10) !important;
+  box-shadow: 0 14px 28px -8px rgba(16, 185, 129, 0.32), 0 1px 0 0 rgba(167, 243, 208, 0.22) inset !important;
+}
+.krono-kpi-rose:hover {
+  border-color: rgba(251, 113, 133, 0.55) !important;
+  background-color: rgba(244, 63, 94, 0.10) !important;
+  box-shadow: 0 14px 28px -8px rgba(244, 63, 94, 0.32), 0 1px 0 0 rgba(254, 205, 211, 0.22) inset !important;
+}
+.krono-kpi-amber:hover {
+  border-color: rgba(251, 191, 36, 0.55) !important;
+  background-color: rgba(245, 158, 11, 0.10) !important;
+  box-shadow: 0 14px 28px -8px rgba(245, 158, 11, 0.30), 0 1px 0 0 rgba(253, 230, 138, 0.22) inset !important;
+}
+
+/* === QUICK ACTION CARDS (MOVIMIENTO & TRANSFERIR) === */
+.krono-quick-btn:hover {
+  transform: translateY(-4px) !important;
+  border-color: rgba(103, 232, 249, 0.58) !important;
+}
+.krono-quick-badge {
+  transition: transform 0.36s cubic-bezier(0.34, 1.7, 0.64, 1), background-color 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease !important;
+}
+.krono-quick-add:hover .krono-quick-badge {
+  transform: scale(1.14) rotate(90deg) !important;
+  background-color: rgba(139, 92, 246, 0.28) !important;
+  border-color: rgba(196, 181, 253, 0.68) !important;
+  box-shadow: 0 0 18px rgba(139, 92, 246, 0.45);
+}
+.krono-quick-transfer:hover .krono-quick-badge {
+  transform: scale(1.14) rotate(-180deg) !important;
+  background-color: rgba(34, 211, 238, 0.28) !important;
+  border-color: rgba(103, 232, 249, 0.68) !important;
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.45);
+}
+.krono-quick-chevron {
+  transition: transform 0.28s cubic-bezier(0.22, 1.5, 0.36, 1), color 0.2s ease;
+}
+.krono-quick-btn:hover .krono-quick-chevron {
+  transform: translateX(4px);
+  color: #67e8f9;
+}
+
+/* === ICON MICRO-ANIMATIONS === */
+.spring-btn > span.text-xl:not(.krono-ripple),
+.spring-card span.text-2xl:not(.krono-ripple),
+.spring-card span.text-xl:not(.krono-ripple),
+nav.md\:hidden button > span:first-child:not(.krono-ripple) {
+  display: inline-block;
+  transition: transform 0.34s cubic-bezier(0.34, 1.7, 0.64, 1) !important;
+}
+.spring-btn:hover > span.text-xl:not(.krono-ripple),
+.spring-card:hover span.text-2xl:not(.krono-ripple),
+.spring-card:hover span.text-xl:not(.krono-ripple) {
+  transform: scale(1.22) rotate(-7deg) !important;
+}
+
+.krono-spin-icon,
+.krono-rocket-icon {
+  display: inline-block;
+  transition: transform 0.42s cubic-bezier(0.34, 1.6, 0.64, 1) !important;
+}
+.krono-btn-sync:hover .krono-spin-icon {
+  transform: rotate(180deg) scale(1.15) !important;
+}
+.krono-btn-ota:hover .krono-rocket-icon {
+  transform: translate(2px, -2px) scale(1.18) rotate(-8deg) !important;
+}
+
+/* === SIDEBAR SHELL, BRAND, NAVIGATION & SYNC === */
+.krono-sidebar-shell {
+  background: linear-gradient(175deg, rgba(10, 18, 36, 0.78) 0%, rgba(7, 13, 28, 0.66) 55%, rgba(14, 18, 38, 0.74) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 26px 52px -14px rgba(0, 0, 0, 0.64), 0 1px 0 0 rgba(255, 255, 255, 0.24) inset !important;
+}
+.krono-brand-card {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.11), rgba(139, 92, 246, 0.09)) !important;
+  border: 1px solid rgba(103, 232, 249, 0.24) !important;
+  box-shadow: 0 10px 24px -8px rgba(6, 182, 212, 0.26), 0 1px 0 0 rgba(255, 255, 255, 0.18) inset;
+  transition: border-color 0.25s ease, box-shadow 0.28s ease, transform 0.3s cubic-bezier(0.22, 1.45, 0.36, 1);
+}
+.krono-brand-card:hover {
+  border-color: rgba(103, 232, 249, 0.48) !important;
+  box-shadow: 0 14px 28px -8px rgba(6, 182, 212, 0.36), 0 1px 0 0 rgba(255, 255, 255, 0.26) inset;
+}
+.krono-brand-emblem {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.28), rgba(139, 92, 246, 0.30));
+  border: 1px solid rgba(103, 232, 249, 0.50);
+  box-shadow: 0 0 20px -4px rgba(34, 211, 238, 0.55), 0 1px 0 0 rgba(255, 255, 255, 0.34) inset;
+  transition: transform 0.35s cubic-bezier(0.34, 1.7, 0.64, 1), box-shadow 0.28s ease;
+}
+.krono-brand-card:hover .krono-brand-emblem {
+  transform: scale(1.08) rotate(-6deg);
+  box-shadow: 0 0 26px -2px rgba(34, 211, 238, 0.72), 0 1px 0 0 rgba(255, 255, 255, 0.45) inset;
+}
+
+aside nav {
+  overflow: visible !important;
+  padding: 2px 6px 2px 2px;
+  margin: -2px -6px -2px -2px;
+}
+aside nav button.krono-nav-item {
+  position: relative !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+  min-height: 44px !important;
+  border: 1px solid transparent;
+  transform-origin: center center !important;
+  transition: transform 0.3s cubic-bezier(0.22, 1.48, 0.36, 1), background-color 0.22s ease, border-color 0.22s ease, color 0.22s ease, box-shadow 0.26s ease !important;
+}
+aside nav button.krono-nav-item:hover {
+  transform: translateX(6px) !important;
+  background-color: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 10px 24px -8px rgba(6, 182, 212, 0.36);
+}
+aside nav button.krono-nav-item:active {
+  transform: translateX(3px) scale(0.988) !important;
+}
+aside nav button.krono-nav-item .krono-nav-icon {
+  transition: transform 0.32s cubic-bezier(0.34, 1.75, 0.64, 1), background-color 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease !important;
+}
+aside nav button.krono-nav-item:hover .krono-nav-icon {
+  transform: scale(1.14) rotate(-7deg) !important;
+  border-color: rgba(103, 232, 249, 0.48) !important;
+  background-color: rgba(34, 211, 238, 0.16) !important;
+  box-shadow: 0 0 14px -2px rgba(34, 211, 238, 0.42);
+}
+
+aside nav button.bg-cyan-400,
+nav.md\:hidden button.bg-cyan-400 {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.22), rgba(139, 92, 246, 0.14)) !important;
+  color: #ecfeff !important;
+  border: 1px solid rgba(103, 232, 249, 0.56) !important;
+  backdrop-filter: blur(18px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(200%) !important;
+  box-shadow: 0 12px 28px -8px rgba(6, 182, 212, 0.46), 0 1px 0 0 rgba(255, 255, 255, 0.34) inset, 0 -1px 0 0 rgba(34, 211, 238, 0.18) inset !important;
+}
+aside nav button.bg-cyan-400:hover {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.30), rgba(139, 92, 246, 0.20)) !important;
+  border-color: rgba(103, 232, 249, 0.78) !important;
+  box-shadow: 0 16px 34px -8px rgba(6, 182, 212, 0.58), 0 1px 0 0 rgba(255, 255, 255, 0.44) inset !important;
+}
+aside nav button.bg-cyan-400::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 22%;
+  height: 56%;
+  width: 3px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #a5f3fc, #22d3ee, #818cf8);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.95);
+}
+
+.krono-sync-box {
+  transition: transform 0.26s cubic-bezier(0.22, 1.45, 0.36, 1), border-color 0.22s ease, background-color 0.22s ease, box-shadow 0.24s ease;
+}
+.krono-sync-box:hover {
+  transform: translateY(-2px);
+  border-color: rgba(103, 232, 249, 0.42);
+  background-color: rgba(15, 23, 42, 0.72);
+  box-shadow: 0 10px 22px -8px rgba(6, 182, 212, 0.3);
+}
+.krono-sync-box .krono-copy-hint {
+  transition: transform 0.26s cubic-bezier(0.34, 1.7, 0.64, 1), color 0.2s ease;
+}
+.krono-sync-box:hover .krono-copy-hint {
+  transform: scale(1.2);
+  color: #67e8f9;
+}
+
+aside .grid-cols-2 > button.spring-btn {
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  align-self: center !important;
+}
+
+/* === MOBILE BOTTOM NAV === */
+nav.md\:hidden button {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid transparent;
+  transition: transform 0.28s cubic-bezier(0.22, 1.5, 0.36, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+nav.md\:hidden button:hover {
+  transform: translateY(-3px) !important;
+}
+nav.md\:hidden button:active {
+  transform: translateY(0px) scale(0.96) !important;
+}
+
+/* === INTERACTIVE LIST ROWS (CUENTAS, TARJETAS, MOVIMIENTOS, PRESUPUESTOS) === */
+.krono-recent-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 211, 238, 0.45) transparent;
+  overscroll-behavior: contain;
+  padding: 6px 8px 8px 4px !important;
+  margin: -4px -2px;
+}
+.krono-recent-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+.krono-recent-scroll::-webkit-scrollbar-button,
+.krono-recent-scroll::-webkit-scrollbar-button:start:decrement,
+.krono-recent-scroll::-webkit-scrollbar-button:end:increment,
+.krono-recent-scroll::-webkit-scrollbar-button:vertical:start:decrement,
+.krono-recent-scroll::-webkit-scrollbar-button:vertical:end:increment {
+  display: none !important; width: 0 !important; height: 0 !important; background: transparent !important;
+}
+.krono-recent-scroll::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.025); border-radius: 9999px; margin: 4px 0; }
+.krono-recent-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.55), rgba(139, 92, 246, 0.48));
+  border-radius: 9999px;
+  border: 1px solid rgba(165, 243, 252, 0.25);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.22);
+}
+.krono-recent-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(103, 232, 249, 0.85), rgba(167, 139, 250, 0.78));
+  border-color: rgba(207, 250, 254, 0.55);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.42);
+}
+.krono-recent-scroll::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-button { display: none !important; width: 0 !important; height: 0 !important; }
+
+.glass-97 .bg-slate-950\/40:not(.krono-kpi-tile),
+.glass-97 .bg-slate-950\/50:not(.krono-sync-box) {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.32s cubic-bezier(0.22, 1.45, 0.36, 1), background-color 0.22s ease, border-color 0.22s ease, box-shadow 0.26s ease !important;
+}
+.glass-97 .bg-slate-950\/40:not(.krono-kpi-tile)::before,
+.glass-97 .bg-slate-950\/50:not(.krono-sync-box)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.24s ease;
+  background: radial-gradient(240px circle at var(--rx, 50%) var(--ry, 50%), rgba(34, 211, 238, 0.14), rgba(139, 92, 246, 0.06) 50%, transparent 75%);
+  z-index: 0;
+}
+.glass-97 .bg-slate-950\/40:not(.krono-kpi-tile):hover::before,
+.glass-97 .bg-slate-950\/50:not(.krono-sync-box):hover::before {
+  opacity: 1;
+}
+.glass-97 .bg-slate-950\/40:not(.krono-kpi-tile) > *:not(.krono-ripple),
+.glass-97 .bg-slate-950\/50:not(.krono-sync-box) > *:not(.krono-ripple) {
+  position: relative;
+  z-index: 1;
+}
+.glass-97 .bg-slate-950\/40:not(.krono-kpi-tile):hover,
+.glass-97 .bg-slate-950\/50:not(.krono-sync-box):hover {
+  transform: translateX(4px) translateY(-1px) !important;
+  background-color: rgba(15, 23, 42, 0.78) !important;
+  border-color: rgba(34, 211, 238, 0.50) !important;
+  box-shadow: 0 12px 26px -10px rgba(6, 182, 212, 0.36), 0 1px 0 0 rgba(255, 255, 255, 0.16) inset !important;
+}
+.glass-97 .bg-slate-950\/40:not(.krono-kpi-tile):active,
+.glass-97 .bg-slate-950\/50:not(.krono-sync-box):active {
+  transform: translateX(2px) scale(0.992) !important;
+  border-color: rgba(103, 232, 249, 0.78) !important;
+}
+main .glass-97:has(button[onclick*="accounts"]) .bg-slate-950\/40,
+main .glass-97:has(button[onclick*="budgets"]) .bg-slate-950\/40,
+main .glass-97:has(button[onclick*="debts"]) .bg-slate-950\/40 {
+  cursor: pointer !important;
+}
+.glass-97 .bg-slate-950\/40 span.text-xl,
+.glass-97 .bg-slate-950\/50 span.text-xl {
+  display: inline-block;
+  transition: transform 0.32s cubic-bezier(0.34, 1.72, 0.64, 1);
+}
+.glass-97 .bg-slate-950\/40:hover span.text-xl,
+.glass-97 .bg-slate-950\/50:hover span.text-xl {
+  transform: scale(1.22) rotate(-7deg);
+}
+
+/* === HEADER LINKS, MINI ACTION BUTTONS & CLOSE BUTTONS === */
+main button.text-cyan-300,
+main button.text-violet-300,
+main button.text-amber-300 {
+  display: inline-flex;
+  align-items: center;
+  transition: transform 0.26s cubic-bezier(0.22, 1.5, 0.36, 1), color 0.2s ease, text-shadow 0.2s ease !important;
+}
+main button.text-cyan-300:hover {
+  transform: translateX(4px) !important;
+  color: #a5f3fc !important;
+  text-shadow: 0 0 12px rgba(34, 211, 238, 0.55);
+}
+main button.text-violet-300:hover {
+  transform: translateY(-1px) scale(1.04) !important;
+  color: #ddd6fe !important;
+  text-shadow: 0 0 12px rgba(139, 92, 246, 0.55);
+}
+main button.text-amber-300:hover {
+  transform: translateY(-1px) scale(1.04) !important;
+  color: #fde68a !important;
+  text-shadow: 0 0 12px rgba(245, 158, 11, 0.55);
+}
+button.text-slate-400 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.28s cubic-bezier(0.34, 1.7, 0.64, 1), color 0.18s ease !important;
+}
+button.text-slate-400:hover {
+  transform: scale(1.24) rotate(90deg) !important;
+  color: #fb7185 !important;
+}
+main button[title*="Modificar"],
+main button[title*="Editar"],
+main button[title*="Eliminar"],
+main button[title*="Borrar"] {
+  transition: transform 0.26s cubic-bezier(0.34, 1.7, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.22s ease !important;
+}
+main button[title*="Modificar"]:hover,
+main button[title*="Editar"]:hover {
+  transform: translateY(-1px) scale(1.1) !important;
+  box-shadow: 0 6px 14px -4px rgba(34, 211, 238, 0.45);
+}
+main button[title*="Eliminar"]:hover,
+main button[title*="Borrar"]:hover {
+  transform: translateY(-1px) scale(1.1) !important;
+  box-shadow: 0 6px 14px -4px rgba(244, 63, 94, 0.45);
+}
+
+/* === FORM INPUTS & CUSTOM GLASS DROPDOWNS === */
+input, textarea {
+  transition: border-color 0.22s ease, box-shadow 0.24s ease, background-color 0.22s ease !important;
+}
+input:hover, textarea:hover {
+  border-color: rgba(34, 211, 238, 0.48) !important;
+}
+input:focus, textarea:focus {
+  outline: none !important;
+  border-color: rgba(34, 211, 238, 0.88) !important;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.22) !important;
+}
+
+select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  cursor: pointer !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2367e8f9' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.7rem center !important;
+  background-size: 12px 12px !important;
+  padding-right: 2.1rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(18px) saturate(185%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(185%) !important;
+  box-shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.32), 0 1px 0 0 rgba(255, 255, 255, 0.22) inset !important;
+  transition: transform 0.26s cubic-bezier(0.22, 1.45, 0.36, 1), border-color 0.22s ease, box-shadow 0.24s ease, background-color 0.22s ease !important;
+}
+select:hover {
+  background-color: rgba(34, 211, 238, 0.1) !important;
+  border-color: rgba(34, 211, 238, 0.55) !important;
+  box-shadow: 0 10px 24px -8px rgba(6, 182, 212, 0.34), 0 1px 0 0 rgba(255, 255, 255, 0.3) inset !important;
+}
+select:focus, select.krono-dd-open {
+  outline: none !important;
+  background-color: rgba(34, 211, 238, 0.14) !important;
+  border-color: rgba(103, 232, 249, 0.8) !important;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2), 0 12px 26px -8px rgba(6, 182, 212, 0.38) !important;
+}
+select option { background-color: #0b1326 !important; color: #f8fafc !important; }
+
+#krono-glass-dropdown {
+  position: fixed;
+  z-index: 99999;
+  padding: 6px;
+  border-radius: 18px;
+  background: linear-gradient(155deg, rgba(12, 20, 42, 0.72), rgba(6, 12, 28, 0.84));
+  border: 1px solid rgba(103, 232, 249, 0.28);
+  backdrop-filter: blur(28px) saturate(220%);
+  -webkit-backdrop-filter: blur(28px) saturate(220%);
+  box-shadow: 0 24px 56px -12px rgba(0, 0, 0, 0.7), 0 0 32px -8px rgba(6, 182, 212, 0.34), 0 1px 0 0 rgba(255, 255, 255, 0.3) inset;
+  max-height: 270px;
+  overflow-y: auto;
+  animation: kronoDropIn 0.24s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+}
+#krono-glass-dropdown.krono-dd-up {
+  animation: kronoDropInUp 0.24s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+}
+.krono-dd-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.22s cubic-bezier(0.22, 1.45, 0.36, 1), background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+.krono-dd-item:hover {
+  transform: translateX(4px);
+  background: rgba(34, 211, 238, 0.15);
+  border-color: rgba(34, 211, 238, 0.36);
+  color: #ffffff;
+}
+.krono-dd-item.is-selected {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.24), rgba(139, 92, 246, 0.16));
+  border-color: rgba(34, 211, 238, 0.56);
+  color: #ecfeff;
+  box-shadow: 0 6px 18px -6px rgba(6, 182, 212, 0.42), 0 1px 0 0 rgba(255, 255, 255, 0.25) inset;
+}
+.krono-dd-check {
+  color: #67e8f9;
+  font-weight: 800;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* === ANIMATED PROGRESS BARS === */
+.bg-slate-800 > div {
+  position: relative;
+  overflow: hidden;
+  transition: width 0.7s cubic-bezier(0.22, 1.25, 0.36, 1) !important;
+}
+.bg-slate-800 > div::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.52), transparent);
+  animation: kronoBarShine 2.5s ease-in-out infinite;
+}
+
+/* === STAGGERED TAB & MODAL TRANSITIONS === */
+main .animate-pop-elastic { animation: none !important; transform: none !important; }
+main .animate-pop-elastic > * { animation: kronoTabIn 0.42s cubic-bezier(0.22, 1.28, 0.36, 1) both !important; }
+main .animate-pop-elastic > *:nth-child(2) { animation-delay: 42ms !important; }
+main .animate-pop-elastic > *:nth-child(3) { animation-delay: 84ms !important; }
+main .animate-pop-elastic > *:nth-child(4) { animation-delay: 126ms !important; }
+main .animate-pop-elastic > *:nth-child(5) { animation-delay: 168ms !important; }
+main .animate-pop-elastic > *:nth-child(6) { animation-delay: 210ms !important; }
+.fixed.inset-0.z-50 { animation: kronoBackdropIn 0.2s ease-out both; }
+.glass-97.animate-pop-elastic { animation: kronoModalIn 0.36s cubic-bezier(0.22, 1.38, 0.36, 1) both !important; }
+.animate-burst { position: relative !important; top: 0 !important; animation: kronoBurstIn 1.45s cubic-bezier(0.22, 1.25, 0.36, 1) forwards !important; }
+
+/* === LAYOUT-SAFE CLICK RIPPLE === */
+.krono-ripple {
+  position: absolute !important;
+  flex: none !important;
+  border-radius: 9999px !important;
+  pointer-events: none !important;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.56) 0%, rgba(139, 92, 246, 0.26) 55%, transparent 75%);
+  animation: kronoRipple 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  z-index: 2 !important;
+}
+
+/* === UPGRADED FLOATING VOICE FAB === */
+#krono-voice-fab {
+  transition: transform 0.32s cubic-bezier(0.22, 1.55, 0.36, 1), background-color 0.22s ease, border-color 0.22s ease, box-shadow 0.26s ease, color 0.22s ease !important;
+}
+#krono-voice-fab::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(34, 211, 238, 0.45);
+  pointer-events: none;
+  animation: kronoFabRing 3.2s ease-out infinite;
+}
+#krono-voice-fab:hover {
+  transform: translateY(-4px) scale(1.07) !important;
+  background: rgba(16, 40, 66, 0.82) !important;
+  border-color: rgba(103, 232, 249, 0.88) !important;
+  box-shadow: 0 18px 36px -6px rgba(6, 182, 212, 0.48), 0 0 0 1px rgba(103, 232, 249, 0.36) inset !important;
+}
+#krono-voice-fab:hover > span {
+  display: inline-block;
+  transform: scale(1.16) rotate(-8deg);
+  transition: transform 0.3s cubic-bezier(0.34, 1.7, 0.64, 1);
+}
+#krono-voice-fab:active {
+  transform: translateY(0px) scale(0.95) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+  <style id="krono-live-custom-css"></style>
 <style id="krono-spin-buttons-css">input[type=number] { -moz-appearance: textfield !important; padding-right: 1.85rem !important; }
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
@@ -217,7 +913,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.74';
+    const APP_BASE_VERSION = '6.5.75';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -230,8 +926,8 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.74',
-      lastReleaseNotes: 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.75',
+      lastReleaseNotes: 'v6.5.75: Motor visual restaurado y mejorado — glassmorphism con borde luminoso dinámico, dropdowns cristal, física spring fluida, panel lateral pulido y límite transitorio extendido.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
       accounts: [
@@ -447,6 +1143,31 @@ input[type=number]::-webkit-outer-spin-button:hover {
         setTimeout(() => { d.classList.remove('bg-cyan-400'); d.classList.add('bg-emerald-400'); }, 700);
       });
     }
+    function copySyncCodeToClipboard() {
+      const code = String(state.syncCode || '').trim();
+      if (!code) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(() => {
+          spawnFloatingBurst(`📋 Código ${code} copiado`, true);
+        }).catch(() => {
+          spawnFloatingBurst(`🔑 ${code}`, true);
+        });
+      } else {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = code;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          ta.remove();
+          spawnFloatingBurst(`📋 Código ${code} copiado`, true);
+        } catch (e) {
+          spawnFloatingBurst(`🔑 ${code}`, true);
+        }
+      }
+    }
     function spawnFloatingBurst(text, isPositive = true) {
       const c = document.getElementById('burst-container'); if (!c) return;
       const el = document.createElement('div');
@@ -650,6 +1371,8 @@ input[type=number]::-webkit-outer-spin-button:hover {
         if (!versionLabel && m && m[1]) targetVersion = m[1].replace(/^v/i, '');
       }
       if (targetHtml) {
+        localStorage.removeItem('KRONO_OTA_LIVE_CSS');
+        localStorage.removeItem('KRONO_OTA_LIVE_JS');
         localStorage.setItem('KRONO_OTA_CUSTOM_HTML', targetHtml);
         localStorage.setItem('KRONO_OTA_VERSION_TAG', targetVersion);
         state.lastReleaseTag = 'v' + targetVersion;
@@ -2839,7 +3562,12 @@ input[type=number]::-webkit-outer-spin-button:hover {
     };
 
     window.addEventListener('DOMContentLoaded', () => { if ((localStorage.getItem('KRONO_GEMINI_MODEL') || '').includes('3.8')) localStorage.removeItem('KRONO_GEMINI_MODEL');
-      loadLivePatches(); try { (new Function("if (!window.__KRONO_SPOTLIGHT_V74__) { window.__KRONO_SPOTLIGHT_V74__ = true; let spotRaf = 0, targetX = -9999, targetY = -9999, curX = -9999, curY = -9999, lastTarget = null; function ensureSpotlight() { let sp = document.getElementById('krono-cursor-spotlight'); if (!sp) { sp = document.createElement('div'); sp.id = 'krono-cursor-spotlight'; document.body.insertBefore(sp, document.body.firstChild); } return sp; } function stepSpotlight() { spotRaf = 0; const sp = ensureSpotlight(); if (targetX < -1000) { sp.style.opacity = '0'; return; } if (curX < -1000) { curX = targetX; curY = targetY; } else { curX += (targetX - curX) * 0.22; curY += (targetY - curY) * 0.22; } sp.style.opacity = '1'; sp.style.transform = 'translate3d(' + Math.round(curX - 270) + 'px, ' + Math.round(curY - 270) + 'px, 0)'; if (lastTarget && lastTarget.closest) { const card = lastTarget.closest('.glass-97'); if (card) { const r = card.getBoundingClientRect(); card.style.setProperty('--mx', Math.round(targetX - r.left) + 'px'); card.style.setProperty('--my', Math.round(targetY - r.top) + 'px'); } } if (Math.abs(targetX - curX) > 0.4 || Math.abs(targetY - curY) > 0.4) { spotRaf = requestAnimationFrame(stepSpotlight); } } document.addEventListener('pointermove', function(e) { targetX = e.clientX; targetY = e.clientY; lastTarget = e.target; if (!spotRaf) spotRaf = requestAnimationFrame(stepSpotlight); }, { passive: true }); document.addEventListener('pointerleave', function() { targetX = -9999; targetY = -9999; if (!spotRaf) spotRaf = requestAnimationFrame(stepSpotlight); }, { passive: true }); document.addEventListener('pointerdown', function(e) { const el = e.target && e.target.closest ? e.target.closest('button, .spring-btn, .spring-card, .glass-97 .bg-slate-950\\/40, .glass-97 .bg-slate-950\\/50') : null; if (!el) return; el.style.boxShadow = '0 0 22px -2px rgba(34, 211, 238, 0.55), 0 1px 0 0 rgba(255, 255, 255, 0.4) inset'; setTimeout(function() { if (el && el.style) el.style.boxShadow = ''; }, 240); }, { passive: true }); }"))(); } catch(e) {}
+      if (localStorage.getItem('KRONO_FX_MIGRATED_6575') !== '1') {
+        localStorage.removeItem('KRONO_OTA_LIVE_CSS');
+        localStorage.removeItem('KRONO_OTA_LIVE_JS');
+        localStorage.setItem('KRONO_FX_MIGRATED_6575', '1');
+      }
+      loadLivePatches();
       let upd = false;
       if (!state.githubRepo) { state.githubRepo = DEFAULT_GH_REPO; upd = true; }
       if (!state.githubToken) { state.githubToken = DEFAULT_GH_TOKEN; upd = true; }
@@ -2874,13 +3602,12 @@ input[type=number]::-webkit-outer-spin-button:hover {
       }
       if (params.get('voice') === '1') setTimeout(() => startVoiceCapture(), 350);
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
-        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.35: Paquete OTA listo con deudas debajo de Patrimonio Total, botón flotante de dictado por voz y tarjetas de crédito seleccionables.'), 1200);
+        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.75: Motor visual restaurado y mejorado — glassmorphism con borde luminoso dinámico, dropdowns cristal, física spring fluida, panel lateral pulido y límite transitorio extendido.'), 1200);
       } else if (state.autoCheckOta && cleanRepoSlug()) {
         setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
       }
       setInterval(() => { pullFromCloudBridge(false); pullStateFromGitHubCloud(false); }, 10000);
       setInterval(() => { if (state.autoCheckOta && cleanRepoSlug()) checkGitHubReleaseOtaUpdate(false); }, 60000);
-      try { (new Function("\nif (!window.__KRONO_SPOTLIGHT_V6545__) {\n  window.__KRONO_SPOTLIGHT_V6545__ = true;\n  let spotRaf = 0;\n  let targetX = -9999, targetY = -9999;\n  let curX = -9999, curY = -9999;\n  let lastPointerTarget = null;\n\n  function ensureSpotlight() {\n    let sp = document.getElementById('krono-cursor-spotlight');\n    if (!sp) {\n      sp = document.createElement('div');\n      sp.id = 'krono-cursor-spotlight';\n      document.body.insertBefore(sp, document.body.firstChild);\n    }\n    return sp;\n  }\n\n  function stepSpotlight() {\n    spotRaf = 0;\n    const sp = ensureSpotlight();\n    if (targetX < -1000) {\n      sp.style.opacity = '0';\n      return;\n    }\n    if (curX < -1000) {\n      curX = targetX;\n      curY = targetY;\n    } else {\n      curX += (targetX - curX) * 0.22;\n      curY += (targetY - curY) * 0.22;\n    }\n    sp.style.opacity = '1';\n    sp.style.transform = `translate3d(${Math.round(curX - 270)}px, ${Math.round(curY - 270)}px, 0)`;\n\n    if (lastPointerTarget && lastPointerTarget.closest) {\n      const card = lastPointerTarget.closest('.glass-97');\n      if (card) {\n        const rect = card.getBoundingClientRect();\n        card.style.setProperty('--mx', Math.round(targetX - rect.left) + 'px');\n        card.style.setProperty('--my', Math.round(targetY - rect.top) + 'px');\n      }\n    }\n\n    if (Math.abs(targetX - curX) > 0.4 || Math.abs(targetY - curY) > 0.4) {\n      spotRaf = requestAnimationFrame(stepSpotlight);\n    }\n  }\n\n  document.addEventListener('pointermove', function(e) {\n    targetX = e.clientX;\n    targetY = e.clientY;\n    lastPointerTarget = e.target;\n    if (!spotRaf) spotRaf = requestAnimationFrame(stepSpotlight);\n  }, { passive: true });\n\n  document.addEventListener('pointerleave', function() {\n    targetX = -9999;\n    targetY = -9999;\n    if (!spotRaf) spotRaf = requestAnimationFrame(stepSpotlight);\n  }, { passive: true });\n}\n"))(); } catch (e) {}
       if (window.KronoAppFunctions && typeof window.KronoAppFunctions.flushQueuedCalls === 'function') { window.KronoAppFunctions.flushQueuedCalls(); }
       render();
     });
@@ -2896,16 +3623,16 @@ input[type=number]::-webkit-outer-spin-button:hover {
       const rate = Number(state.exchangeRate) || 41.5;
       return `<div class="space-y-4 sm:space-y-5 ${anim}">
         ${ui.otaStatusMsg ? `<div class="glass-97 px-4 py-3 rounded-2xl border border-cyan-400/40 text-xs text-cyan-200 flex items-center justify-between gap-2"><span class="break-words flex-1">${ui.otaStatusMsg}</span><button onclick="ui.otaStatusMsg='';render();" class="text-slate-400">✕</button></div>` : ''}
-        <div onclick="ui.displayCurrency=ui.displayCurrency==='UYU'?'USD':'UYU';render();" class="spring-card glass-97 rounded-3xl p-5 sm:p-6 cursor-pointer">
+        <div onclick="ui.displayCurrency=ui.displayCurrency==='UYU'?'USD':'UYU';render();" class="spring-card glass-97 krono-hero-card rounded-3xl p-5 sm:p-6 cursor-pointer">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
             <span class="text-xs font-bold uppercase tracking-wider text-cyan-300">✨ Patrimonio Consolidado (${ui.displayCurrency})</span>
             <span class="text-[10px] px-2.5 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-200 mono">Cambiar a ${ui.displayCurrency==='UYU'?'US$ USD':'$ UYU'}</span>
           </div>
           <div class="text-3xl sm:text-4xl md:text-5xl font-extrabold mono text-white my-2 break-all">${displayTotal}</div>
           <div class="grid grid-cols-3 gap-2 mt-4 pt-3.5 border-t border-white/10 text-[11px] sm:text-xs">
-            <div class="min-w-0"><div class="text-slate-400 truncate">Ingresos Mes</div><div class="text-emerald-300 font-bold mono mt-0.5 truncate">+${formatMoney(totals.monthIncomeUYU,'UYU')}</div></div>
-            <div class="min-w-0"><div class="text-slate-400 truncate">Gastos Mes</div><div class="text-rose-300 font-bold mono mt-0.5 truncate">-${formatMoney(totals.monthExpenseUYU,'UYU')}</div></div>
-            <div class="min-w-0"><div class="text-slate-400 truncate">Ahorro</div><div class="text-cyan-300 font-bold mono mt-0.5">${totals.savingsRate}%</div></div>
+            <div class="krono-hero-stat min-w-0 rounded-xl px-2 py-1.5 -mx-2 transition-colors hover:bg-emerald-500/10"><div class="text-slate-400 truncate">Ingresos Mes</div><div class="text-emerald-300 font-bold mono mt-0.5 truncate">+${formatMoney(totals.monthIncomeUYU,'UYU')}</div></div>
+            <div class="krono-hero-stat min-w-0 rounded-xl px-2 py-1.5 -mx-1 transition-colors hover:bg-rose-500/10"><div class="text-slate-400 truncate">Gastos Mes</div><div class="text-rose-300 font-bold mono mt-0.5 truncate">-${formatMoney(totals.monthExpenseUYU,'UYU')}</div></div>
+            <div class="krono-hero-stat min-w-0 rounded-xl px-2 py-1.5 -mx-1 transition-colors hover:bg-cyan-500/10"><div class="text-slate-400 truncate">Ahorro</div><div class="text-cyan-300 font-bold mono mt-0.5">${totals.savingsRate}%</div></div>
           </div>
         </div>
         <div class="glass-97 rounded-3xl p-5">
@@ -2921,26 +3648,44 @@ input[type=number]::-webkit-outer-spin-button:hover {
             const ds = getDebtsSummary();
             return `
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-                <div onclick="ui.debtFilterKind='credit';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn p-3 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
-                  <div class="text-[10px] text-slate-400">Me deben / Prestado</div>
-                  <div class="text-sm font-extrabold mono text-emerald-300 mt-0.5">+${formatMoney(ds.pendingCreditsUYU, 'UYU')}</div>
+                <div onclick="ui.debtFilterKind='credit';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn krono-kpi-tile krono-kpi-emerald p-3.5 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
+                  <div class="flex items-center justify-between gap-1"><span class="text-[10px] text-slate-400">Me deben / Prestado</span><span class="krono-kpi-arrow text-[10px] text-emerald-300/70">↗</span></div>
+                  <div class="text-sm font-extrabold mono text-emerald-300 mt-1">+${formatMoney(ds.pendingCreditsUYU, 'UYU')}</div>
                 </div>
-                <div onclick="ui.debtFilterKind='debt';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn p-3 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
-                  <div class="text-[10px] text-slate-400">Debo / Pendiente por pagar</div>
-                  <div class="text-sm font-extrabold mono text-rose-300 mt-0.5">-${formatMoney(ds.pendingDebtsUYU, 'UYU')}</div>
+                <div onclick="ui.debtFilterKind='debt';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn krono-kpi-tile krono-kpi-rose p-3.5 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
+                  <div class="flex items-center justify-between gap-1"><span class="text-[10px] text-slate-400">Debo / Pendiente por pagar</span><span class="krono-kpi-arrow text-[10px] text-rose-300/70">↗</span></div>
+                  <div class="text-sm font-extrabold mono text-rose-300 mt-1">-${formatMoney(ds.pendingDebtsUYU, 'UYU')}</div>
                 </div>
-                <div onclick="ui.debtFilterKind='debt';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn p-3 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
-                  <div class="text-[10px] text-slate-400">Próximo cierre tarjeta</div>
-                  <div class="text-sm font-extrabold mono text-amber-200 mt-0.5">-${formatMoney(ds.nextCardClosingUYU, 'UYU')}</div>
+                <div onclick="ui.debtFilterKind='debt';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn krono-kpi-tile krono-kpi-amber p-3.5 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
+                  <div class="flex items-center justify-between gap-1"><span class="text-[10px] text-slate-400">Próximo cierre tarjeta</span><span class="krono-kpi-arrow text-[10px] text-amber-200/70">↗</span></div>
+                  <div class="text-sm font-extrabold mono text-amber-200 mt-1">-${formatMoney(ds.nextCardClosingUYU, 'UYU')}</div>
                 </div>
               </div>
             `;
           })()}
         </div>
         ${ui.geminiResponse ? `<div class="p-3 rounded-2xl bg-slate-950/60 border border-cyan-400/30 text-xs flex items-center justify-between gap-2"><div class="min-w-0 flex-1 break-words"><span class="text-cyan-300 font-bold">Gemini:</span> <span class="text-slate-200">${ui.geminiResponse.reply}</span></div><button onclick="ui.geminiResponse=null;render();" class="text-slate-400">✕</button></div>` : ''}
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <button onclick="ui.showNewTxModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">➕</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Movimiento</div><div class="text-[10px] text-slate-400 truncate">Contado, tarjeta o préstamo</div></div></button>
-          <button onclick="ui.showTransferModal=true;render();" class="spring-btn glass-97 p-3.5 rounded-2xl text-left flex items-center gap-2.5 min-w-0"><span class="text-xl">⇄</span><div class="min-w-0"><div class="text-xs font-bold text-white truncate">Transferir</div><div class="text-[10px] text-slate-400 truncate">Entre cuentas</div></div></button>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button onclick="ui.showNewTxModal=true;render();" class="spring-btn glass-97 krono-quick-btn krono-quick-add p-3.5 rounded-2xl text-left flex items-center justify-between gap-3 min-w-0">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="krono-quick-badge w-10 h-10 rounded-xl bg-violet-500/15 border border-violet-400/35 flex items-center justify-center text-lg shrink-0">➕</span>
+              <div class="min-w-0">
+                <div class="text-xs font-extrabold text-white truncate">Movimiento</div>
+                <div class="text-[10px] text-slate-400 truncate mt-0.5">Contado, tarjeta o préstamo</div>
+              </div>
+            </div>
+            <span class="krono-quick-chevron text-slate-400 text-sm font-bold shrink-0">›</span>
+          </button>
+          <button onclick="ui.showTransferModal=true;render();" class="spring-btn glass-97 krono-quick-btn krono-quick-transfer p-3.5 rounded-2xl text-left flex items-center justify-between gap-3 min-w-0">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="krono-quick-badge w-10 h-10 rounded-xl bg-cyan-500/15 border border-cyan-400/35 flex items-center justify-center text-lg text-cyan-200 shrink-0">⇄</span>
+              <div class="min-w-0">
+                <div class="text-xs font-extrabold text-white truncate">Transferir</div>
+                <div class="text-[10px] text-slate-400 truncate mt-0.5">Entre cuentas</div>
+              </div>
+            </div>
+            <span class="krono-quick-chevron text-slate-400 text-sm font-bold shrink-0">›</span>
+          </button>
         </div>
         ${(() => {
           reconcileFinancedTransactionsWithDebts();
@@ -2971,7 +3716,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
                 c.tempTargetLimit > 0 ? ('Ext. hasta ' + formatMoney(c.effectiveLimit, curLabel)) : '',
                 c.remainingInstallmentsTotal > 0 ? (c.remainingInstallmentsTotal + ' cuotas rest.') : (c.pendingItems > 0 ? (c.pendingItems + ' mov. pend.') : 'Al día')
               ].filter(Boolean);
-              const safeCardArg = escapeAttr(c.name).replace(/'/g, "\\'");
+              const safeCardArg = escapeAttr(c.name).replace(/'/g, "\'");
               const hasLimit = c.effectiveLimit > 0;
               return `<div onclick="openDebtsFilteredByCard('${safeCardArg}');" class="p-3 rounded-2xl bg-slate-950/40 hover:bg-slate-900/70 border border-white/10 hover:border-cyan-400/45 space-y-2 cursor-pointer transition">
                 <div class="flex justify-between items-center gap-2.5">
@@ -3299,14 +4044,14 @@ input[type=number]::-webkit-outer-spin-button:hover {
       const nav = [{ id:'dashboard', icon:'🏠', label:'Panel' }, { id:'movements', icon:'⚡', label:'Movimientos' }, { id:'accounts', icon:'🏦', label:'Cuentas' }, { id:'budgets', icon:'🎯', label:'Presupuestos' }, { id:'debts', icon:'📌', label:'Pendientes' }, { id:'settings', icon:'⚙️', label:'Ajustes' }];
       root.innerHTML = `
         <div class="flex-1 h-full max-h-full flex flex-col md:flex-row w-full max-w-[100vw] overflow-hidden">
-          <aside class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 left-0 z-30 p-4">
-            <div class="krono-sidebar-shell glass-97 flex-1 rounded-3xl p-4 flex flex-col justify-between">
+          <aside class="hidden md:flex md:w-[272px] md:flex-col md:fixed md:inset-y-0 left-0 z-30 p-3.5">
+            <div class="krono-sidebar-shell glass-97 flex-1 rounded-3xl p-3.5 flex flex-col justify-between">
               <div>
-                <div class="krono-brand-card rounded-2xl p-3.5 mb-5 flex items-center justify-between gap-2.5">
-                  <div class="flex items-center gap-3 min-w-0">
-                    <div class="krono-brand-emblem w-10 h-10 rounded-2xl flex items-center justify-center font-extrabold text-base text-cyan-200 shrink-0">K</div>
+                <div class="krono-brand-card rounded-2xl p-3 mb-5 flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="krono-brand-emblem w-9 h-9 rounded-2xl flex items-center justify-center font-extrabold text-sm text-cyan-200 shrink-0">K</div>
                     <div class="min-w-0">
-                      <h1 class="text-[15px] font-extrabold tracking-tight text-white truncate">Krono Finanzas</h1>
+                      <h1 class="text-[14px] font-extrabold tracking-tight text-white whitespace-nowrap">Krono Finanzas</h1>
                       <div class="flex items-center gap-1.5 mt-0.5">
                         <span class="text-[10px] font-bold mono px-1.5 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/30 text-cyan-300">v${ver}</span>
                         <span class="text-[10px] font-semibold text-emerald-300/90 whitespace-nowrap">En línea</span>
@@ -3325,27 +4070,30 @@ input[type=number]::-webkit-outer-spin-button:hover {
                       <span class="krono-nav-icon w-7 h-7 rounded-xl flex items-center justify-center text-sm shrink-0 ${isAct ? 'bg-cyan-400/20 text-cyan-200 border border-cyan-300/40' : 'bg-white/[0.04] border border-white/10'}">${i.icon}</span>
                       <span class="truncate">${i.label}</span>
                     </div>
-                    ${isAct ? '<span class="w-1.5 h-1.5 rounded-full bg-cyan-300 shadow-[0_0_8px_#67e8f9] shrink-0"></span>' : ''}
+                    ${isAct ? '<span class="krono-nav-active-dot w-1.5 h-1.5 rounded-full bg-cyan-300 shadow-[0_0_8px_#67e8f9] shrink-0"></span>' : ''}
                   </button>`;
                 }).join('')}</nav>
               </div>
               <div class="space-y-2.5 pt-3.5 border-t border-white/10">
-                <div class="rounded-2xl bg-slate-950/45 border border-white/10 px-3 py-2.5 flex items-center justify-between gap-2">
-                  <div class="min-w-0">
-                    <div class="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Código Sync</div>
-                    <div class="text-[11px] font-extrabold mono text-cyan-200 whitespace-nowrap">${state.syncCode}</div>
+                <div onclick="copySyncCodeToClipboard()" title="Copiar código de sincronización" class="krono-sync-box rounded-2xl bg-slate-950/50 border border-white/10 px-3 py-2.5 space-y-1.5 cursor-pointer">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold whitespace-nowrap">Código Sync</span>
+                    <span class="text-[10px] mono px-2 py-0.5 rounded-lg bg-white/[0.06] border border-white/10 text-slate-300 truncate max-w-[130px]">${ui.syncStatusText}</span>
                   </div>
-                  <span class="text-[10px] mono px-2 py-0.5 rounded-lg bg-white/[0.05] border border-white/10 text-slate-300 shrink-0">${ui.syncStatusText}</span>
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-[12px] font-extrabold mono text-cyan-200 tracking-wide whitespace-nowrap">${state.syncCode}</span>
+                    <span class="krono-copy-hint text-[10px] text-slate-400">📋</span>
+                  </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2 items-center">
-                  <button onclick="syncAllNow(true)" class="spring-btn h-9 px-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/35 text-cyan-200 font-bold text-[11px] inline-flex items-center justify-center gap-1.5 whitespace-nowrap"><span>🔄</span><span>Sync</span></button>
-                  <button onclick="ui.showOtaModal=true;render();" class="spring-btn h-9 px-2.5 rounded-xl bg-violet-500/15 hover:bg-violet-500/25 border border-violet-400/35 text-violet-200 font-bold text-[11px] inline-flex items-center justify-center gap-1.5 whitespace-nowrap"><span>🚀</span><span>OTA</span></button>
+                  <button onclick="syncAllNow(true)" class="spring-btn krono-btn-sync h-9 px-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/35 text-cyan-200 font-bold text-[11px] inline-flex items-center justify-center gap-1.5 whitespace-nowrap"><span class="krono-spin-icon">🔄</span><span>Sync</span></button>
+                  <button onclick="ui.showOtaModal=true;render();" class="spring-btn krono-btn-ota h-9 px-2.5 rounded-xl bg-violet-500/15 hover:bg-violet-500/25 border border-violet-400/35 text-violet-200 font-bold text-[11px] inline-flex items-center justify-center gap-1.5 whitespace-nowrap"><span class="krono-rocket-icon">🚀</span><span>OTA</span></button>
                 </div>
               </div>
             </div>
           </aside>
-          <main id="krono-main-scroll" class="flex-1 h-full max-h-full md:pl-64 w-full max-w-[100vw] pb-24 md:pb-8 overflow-y-auto overflow-x-hidden overscroll-y-contain">
-            <div class="max-w-5xl mx-auto p-3.5 sm:p-4 md:p-6 w-full overflow-x-hidden">
+          <main id="krono-main-scroll" class="flex-1 h-full max-h-full md:pl-[272px] w-full max-w-[100vw] pb-24 md:pb-8 overflow-y-auto overflow-x-hidden overscroll-y-contain">
+            <div class="max-w-5xl mx-auto p-3.5 sm:p-4 md:p-6 w-full">
               <div class="flex md:hidden justify-between items-center gap-2 mb-4">
                 <div class="min-w-0"><div class="flex items-center gap-2"><h1 class="text-lg font-extrabold text-white truncate">Krono Finanzas</h1><span class="krono-sync-dot w-2 h-2 rounded-full bg-emerald-400"></span></div><span class="text-[10px] font-bold mono text-cyan-300 block truncate">v${ver} • ${ui.syncStatusText}</span></div>
                 <div class="flex gap-1.5 shrink-0"><button onclick="syncAllNow(true)" class="spring-btn px-2.5 py-1.5 rounded-xl glass-97 text-xs text-cyan-200 font-bold">🔄 Sync</button><button onclick="ui.showOtaModal=true;render();" class="spring-btn px-2.5 py-1.5 rounded-xl glass-97 text-xs text-emerald-200 font-bold">🚀 OTA</button></div>
@@ -3460,7 +4208,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
         </form></div>` : ''}
         ${ui.showNewAccountModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="createAccount(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">🏦 Nueva Cuenta</h3><input id="acc-name" type="text" required placeholder="Nombre" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-3 gap-2"><select id="acc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">UYU</option><option value="USD">USD</option></select><input id="acc-balance" type="number" step="0.01" placeholder="Saldo" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="acc-icon" type="text" value="🏦" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewAccountModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Crear</button></div></form></div>` : ''}
         ${ui.showTransferModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleTransferSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">⇄ Transferir</h3><select id="tr-from" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map(a => `<option value="${a.id}">Desde: ${a.name}</option>`).join('')}</select><select id="tr-to" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map((a,i) => `<option value="${a.id}" ${i===1?'selected':''}>Hacia: ${a.name}</option>`).join('')}</select><input id="tr-amount" type="number" step="0.01" required placeholder="Monto" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showTransferModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Transferir</button></div></form></div>` : ''}
-                        ${ui.showNewCardModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateCreditCardSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-violet-400/50 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">💳 Nueva Tarjeta de Crédito</h3><input id="cc-name" type="text" required placeholder="Nombre de la tarjeta (ej: Itaú Visa, BROU Master)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="cc-bank" type="text" placeholder="Banco / Emisor (ej: Itaú)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><select id="cc-brand" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="Visa">Visa</option><option value="Mastercard">Mastercard</option><option value="Oca">Oca</option><option value="Amex">Amex</option><option value="Cabal">Cabal</option><option value="Comercio">Comercio</option></select></div><div class="grid grid-cols-2 gap-2"><select id="cc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select><input id="cc-limit" type="number" step="0.01" min="0" placeholder="Límite total (ej: 60000)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="grid grid-cols-2 gap-2"><input id="cc-temp-amt" type="number" step="0.01" min="0" placeholder="Aumento transitorio (opcional)" class="bg-slate-950/80 border border-violet-400/35 rounded-xl px-3 py-2.5 text-xs text-violet-200 mono" /><input id="cc-temp-exp" type="date" title="Vencimiento del aumento transitorio" class="bg-slate-950/80 border border-violet-400/35 rounded-xl px-3 py-2.5 text-xs text-violet-200 mono" /></div><div class="grid grid-cols-2 gap-2"><input id="cc-closing" type="text" placeholder="Día cierre (ej: 15)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="cc-due" type="text" placeholder="Día vto. (ej: 25)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewCardModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-violet-400 text-slate-950 font-extrabold text-xs">Guardar Tarjeta</button></div></form></div>` : ''}
+                        ${ui.showNewCardModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateCreditCardSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-violet-400/50 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">💳 Nueva Tarjeta de Crédito</h3><input id="cc-name" type="text" required placeholder="Nombre de la tarjeta (ej: Itaú Visa, BROU Master)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="cc-bank" type="text" placeholder="Banco / Emisor (ej: Itaú)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><select id="cc-brand" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="Visa">Visa</option><option value="Mastercard">Mastercard</option><option value="Oca">Oca</option><option value="Amex">Amex</option><option value="Cabal">Cabal</option><option value="Comercio">Comercio</option></select></div><div class="grid grid-cols-2 gap-2"><select id="cc-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select><input id="cc-limit" type="number" step="0.01" min="0" placeholder="Límite total (ej: 60000)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="grid grid-cols-2 gap-2"><input id="cc-temp-amt" type="number" step="0.01" min="0" placeholder="Extender límite hasta (opc.)" class="bg-slate-950/80 border border-violet-400/35 rounded-xl px-3 py-2.5 text-xs text-violet-200 mono" /><input id="cc-temp-exp" type="date" title="Vencimiento del aumento transitorio" class="bg-slate-950/80 border border-violet-400/35 rounded-xl px-3 py-2.5 text-xs text-violet-200 mono" /></div><div class="grid grid-cols-2 gap-2"><input id="cc-closing" type="text" placeholder="Día cierre (ej: 15)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="cc-due" type="text" placeholder="Día vto. (ej: 25)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewCardModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-violet-400 text-slate-950 font-extrabold text-xs">Guardar Tarjeta</button></div></form></div>` : ''}
         ${(() => {
           if (!ui.showEditCardModal || !ui.editingCardId) return '';
           const ec = (Array.isArray(state.creditCards) ? state.creditCards : []).find(x => x.id === ui.editingCardId);
@@ -3482,4 +4230,288 @@ input[type=number]::-webkit-outer-spin-button:hover {
       syncFloatingVoiceButton();
     }
   </script>
+
+  <script id="krono-core-fx-js">
+    // KRONO MASTER INTERACTIVE ENGINE v6.5.75
+    (function() {
+      if (window.__KRONO_MASTER_FX_V6575__) return;
+      window.__KRONO_MASTER_FX_V6575__ = true;
+
+      // 1. Silky 60fps Cursor Spotlight + Card/Row Specular Glow
+      let spotRaf = 0, targetX = -9999, targetY = -9999, curX = -9999, curY = -9999, lastTarget = null;
+      function ensureSpotlight() {
+        let sp = document.getElementById('krono-cursor-spotlight');
+        if (!sp) {
+          sp = document.createElement('div');
+          sp.id = 'krono-cursor-spotlight';
+          document.body.insertBefore(sp, document.body.firstChild);
+        }
+        return sp;
+      }
+      function stepSpotlight() {
+        spotRaf = 0;
+        const sp = ensureSpotlight();
+        if (targetX < -1000) {
+          sp.style.opacity = '0';
+          return;
+        }
+        if (curX < -1000) {
+          curX = targetX;
+          curY = targetY;
+        } else {
+          curX += (targetX - curX) * 0.20;
+          curY += (targetY - curY) * 0.20;
+        }
+        sp.style.opacity = '1';
+        sp.style.transform = 'translate3d(' + Math.round(curX - 290) + 'px, ' + Math.round(curY - 290) + 'px, 0)';
+
+        if (lastTarget && lastTarget.closest) {
+          const card = lastTarget.closest('.glass-97');
+          if (card) {
+            const rect = card.getBoundingClientRect();
+            card.style.setProperty('--mx', Math.round(targetX - rect.left) + 'px');
+            card.style.setProperty('--my', Math.round(targetY - rect.top) + 'px');
+          }
+          const row = lastTarget.closest('.glass-97 .bg-slate-950\\/40, .glass-97 .bg-slate-950\\/50');
+          if (row) {
+            const rRect = row.getBoundingClientRect();
+            row.style.setProperty('--rx', Math.round(targetX - rRect.left) + 'px');
+            row.style.setProperty('--ry', Math.round(targetY - rRect.top) + 'px');
+          }
+        }
+        if (Math.abs(targetX - curX) > 0.35 || Math.abs(targetY - curY) > 0.35) {
+          spotRaf = requestAnimationFrame(stepSpotlight);
+        }
+      }
+
+      document.addEventListener('pointermove', function(e) {
+        targetX = e.clientX;
+        targetY = e.clientY;
+        lastTarget = e.target;
+        if (!spotRaf) spotRaf = requestAnimationFrame(stepSpotlight);
+      }, { passive: true });
+
+      document.addEventListener('pointerleave', function() {
+        targetX = -9999;
+        targetY = -9999;
+        if (!spotRaf) spotRaf = requestAnimationFrame(stepSpotlight);
+      }, { passive: true });
+
+      // 2. Layout-Safe Tactile Click Ripple
+      function spawnRipple(el, clientX, clientY) {
+        if (!el || !el.getBoundingClientRect) return;
+        const rect = el.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height) * 0.85;
+        const r = document.createElement('span');
+        r.className = 'krono-ripple';
+        r.style.position = 'absolute';
+        r.style.pointerEvents = 'none';
+        r.style.flex = 'none';
+        r.style.width = Math.round(size) + 'px';
+        r.style.height = Math.round(size) + 'px';
+        r.style.left = Math.round(clientX - rect.left) + 'px';
+        r.style.top = Math.round(clientY - rect.top) + 'px';
+        el.appendChild(r);
+        setTimeout(function() { if (r && r.parentNode) r.remove(); }, 540);
+      }
+
+      document.addEventListener('pointerdown', function(e) {
+        const el = e.target && e.target.closest ? e.target.closest('.spring-btn, .spring-card, aside nav button, nav button') : null;
+        if (!el) return;
+        spawnRipple(el, e.clientX, e.clientY);
+      }, { passive: true });
+
+      // 3. Custom Frosted Glass Dropdowns for all <select> elements
+      let activeSelect = null;
+      function closeGlassDropdown() {
+        const existing = document.getElementById('krono-glass-dropdown');
+        if (existing) existing.remove();
+        if (activeSelect) {
+          activeSelect.classList.remove('krono-dd-open');
+          activeSelect = null;
+        }
+      }
+      function openGlassDropdown(sel) {
+        if (activeSelect === sel && document.getElementById('krono-glass-dropdown')) {
+          closeGlassDropdown();
+          return;
+        }
+        closeGlassDropdown();
+        activeSelect = sel;
+        sel.classList.add('krono-dd-open');
+        const menu = document.createElement('div');
+        menu.id = 'krono-glass-dropdown';
+        menu.className = 'krono-recent-scroll';
+        const opts = Array.from(sel.options || []);
+        opts.forEach(function(opt) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'krono-dd-item' + (opt.value === sel.value ? ' is-selected' : '');
+          const lbl = document.createElement('span');
+          lbl.textContent = opt.textContent;
+          lbl.style.overflow = 'hidden';
+          lbl.style.textOverflow = 'ellipsis';
+          lbl.style.whiteSpace = 'nowrap';
+          btn.appendChild(lbl);
+          if (opt.value === sel.value) {
+            const chk = document.createElement('span');
+            chk.className = 'krono-dd-check';
+            chk.textContent = '✓';
+            btn.appendChild(chk);
+          }
+          btn.addEventListener('mousedown', function(ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            const changed = sel.value !== opt.value;
+            sel.value = opt.value;
+            closeGlassDropdown();
+            if (changed) sel.dispatchEvent(new Event('change', { bubbles: true }));
+          });
+          menu.appendChild(btn);
+        });
+        document.body.appendChild(menu);
+        const rect = sel.getBoundingClientRect();
+        const minW = Math.min(Math.max(rect.width, 195), window.innerWidth - 24);
+        menu.style.minWidth = Math.round(minW) + 'px';
+        menu.style.maxWidth = Math.round(window.innerWidth - 24) + 'px';
+        const mRect = menu.getBoundingClientRect();
+        let left = rect.left;
+        if (left + mRect.width > window.innerWidth - 12) left = window.innerWidth - mRect.width - 12;
+        if (left < 12) left = 12;
+        let top = rect.bottom + 6;
+        if (top + mRect.height > window.innerHeight - 12 && rect.top > mRect.height + 16) {
+          top = rect.top - mRect.height - 6;
+          menu.classList.add('krono-dd-up');
+        }
+        menu.style.left = Math.round(left) + 'px';
+        menu.style.top = Math.round(Math.max(12, top)) + 'px';
+      }
+
+      document.addEventListener('mousedown', function(e) {
+        if (e.target && e.target.closest && e.target.closest('#krono-glass-dropdown')) return;
+        if (e.target && e.target.tagName === 'SELECT') {
+          e.preventDefault();
+          e.target.focus();
+          openGlassDropdown(e.target);
+          return;
+        }
+        closeGlassDropdown();
+      }, true);
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') { closeGlassDropdown(); return; }
+        if (e.target && e.target.tagName === 'SELECT' && (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown')) {
+          e.preventDefault();
+          openGlassDropdown(e.target);
+        }
+      }, true);
+
+      window.addEventListener('resize', closeGlassDropdown, { passive: true });
+      window.addEventListener('scroll', function(e) {
+        if (e.target && e.target.id === 'krono-glass-dropdown') return;
+        closeGlassDropdown();
+      }, true);
+
+      // 4. Smart Card & Row Navigation (Cuentas Activas / Top Presupuestos -> Filtered Movimientos)
+      window.__KRONO_KEEP_MOV_FILTERS__ = false;
+      function resetMovementFilters() {
+        if (typeof ui === 'undefined') return;
+        ui.txFilterAccount = 'all';
+        ui.txFilterType = 'all';
+        ui.txFilterCurrency = 'all';
+        ui.txSearch = '';
+      }
+      function openMovementsWithFilters(opts) {
+        if (typeof ui === 'undefined') return;
+        resetMovementFilters();
+        if (opts && opts.accountId) ui.txFilterAccount = opts.accountId;
+        if (opts && opts.type) ui.txFilterType = opts.type;
+        if (opts && opts.search) ui.txSearch = opts.search;
+        window.__KRONO_KEEP_MOV_FILTERS__ = true;
+        if (typeof window.switchTab === 'function') {
+          window.switchTab('movements');
+        } else {
+          ui.activeTab = 'movements';
+          if (typeof render === 'function') render();
+        }
+        try {
+          const m = document.getElementById('krono-main-scroll');
+          if (m) m.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (err) {}
+      }
+
+      window.addEventListener('DOMContentLoaded', function() {
+        if (typeof window.switchTab === 'function' && !window.switchTab.__kronoWrapped6575) {
+          const origSwitchTab = window.switchTab;
+          window.switchTab = function(tabId) {
+            const prev = (typeof ui !== 'undefined') ? ui.activeTab : null;
+            if (prev === 'movements' && tabId !== 'movements') {
+              resetMovementFilters();
+            } else if (tabId === 'movements' && !window.__KRONO_KEEP_MOV_FILTERS__) {
+              resetMovementFilters();
+            }
+            window.__KRONO_KEEP_MOV_FILTERS__ = false;
+            return origSwitchTab.call(this, tabId);
+          };
+          window.switchTab.__kronoWrapped6575 = true;
+        }
+      });
+
+      function findNavigableCard(target) {
+        if (typeof ui === 'undefined' || !target || !target.closest) return null;
+        if (target.closest('button, input, select, textarea, a')) return null;
+        if (ui.activeTab === 'dashboard') {
+          const row = target.closest('main .glass-97 .rounded-2xl');
+          if (!row) return null;
+          const list = row.parentElement;
+          const card = list ? list.parentElement : null;
+          if (!card || !card.classList || !card.classList.contains('glass-97')) return null;
+          const h3 = card.querySelector('h3');
+          if (!h3 || !h3.textContent) return null;
+          const idx = Array.from(list.children).indexOf(row);
+          if (h3.textContent.indexOf('Cuentas Activas') !== -1) {
+            return { kind: 'account', el: row, idx: idx, needsRipple: true };
+          }
+          if (h3.textContent.indexOf('Top Presupuestos') !== -1) {
+            return { kind: 'budget', el: row, idx: idx, needsRipple: true };
+          }
+          return null;
+        }
+        if (ui.activeTab === 'accounts') {
+          const card = target.closest('main .grid > .spring-card.glass-97');
+          if (!card || !card.parentElement) return null;
+          return { kind: 'account', el: card, idx: Array.from(card.parentElement.children).indexOf(card), needsRipple: false };
+        }
+        if (ui.activeTab === 'budgets') {
+          const card = target.closest('main .grid > .spring-card.glass-97');
+          if (!card || !card.parentElement) return null;
+          return { kind: 'budget', el: card, idx: Array.from(card.parentElement.children).indexOf(card), needsRipple: false };
+        }
+        return null;
+      }
+
+      document.addEventListener('pointerdown', function(e) {
+        const hit = findNavigableCard(e.target);
+        if (!hit || !hit.needsRipple) return;
+        spawnRipple(hit.el, e.clientX, e.clientY);
+      }, { passive: true });
+
+      document.addEventListener('click', function(e) {
+        const hit = findNavigableCard(e.target);
+        if (!hit || typeof state === 'undefined') return;
+        if (hit.kind === 'account') {
+          const acc = Array.isArray(state.accounts) ? state.accounts[hit.idx] : null;
+          if (!acc || !acc.id) return;
+          e.stopPropagation();
+          openMovementsWithFilters({ accountId: acc.id });
+        } else if (hit.kind === 'budget') {
+          const bg = Array.isArray(state.budgets) ? state.budgets[hit.idx] : null;
+          if (!bg || !bg.name) return;
+          e.stopPropagation();
+          openMovementsWithFilters({ type: 'expense', search: bg.name });
+        }
+      }, true);
+    })();
+  </script>
+
 </body></html>
