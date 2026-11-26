@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.78
+    // KRONO OTA BOOTLOADER v6.5.77
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -947,7 +947,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.78';
+    const APP_BASE_VERSION = '6.5.77';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -960,8 +960,8 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.78',
-      lastReleaseNotes: 'v6.5.78: Autocompletado automático de fecha de cierre y vencimiento al seleccionar una tarjeta en Nuevo Movimiento.',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.77',
+      lastReleaseNotes: 'v6.5.77: Diferenciación automática entre Cierre Actual y Próximo Cierre según fecha de cierre de cada tarjeta y estado de pago, mostrado en positivo.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
       accounts: [
@@ -2129,81 +2129,6 @@ input[type=number]::-webkit-outer-spin-button:hover {
     function formatShortDayMonth(dateObj) {
       if (!dateObj || isNaN(dateObj.getTime())) return '';
       return `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
-    }
-    function formatCardClosingAndDueDates(cardObj, now = new Date()) {
-      if (!cardObj) return '';
-      const rawClose = String(cardObj.closingDay || '').trim();
-      const rawDue = String(cardObj.dueDay || '').trim();
-      const closeDay = parseClosingDayNumber(rawClose);
-      const dueDay = parseClosingDayNumber(rawDue);
-      const y = now.getFullYear(), m = now.getMonth();
-      const parts = [];
-      let closeDateObj = null;
-
-      if (rawClose) {
-        if (/^\d{1,2}\/\d{1,2}/.test(rawClose)) {
-          parts.push('Cierre ' + rawClose);
-        } else if (closeDay) {
-          const thisMonthClose = makeClampedMonthDate(y, m, closeDay, true);
-          closeDateObj = (now.getTime() <= thisMonthClose.getTime())
-            ? thisMonthClose
-            : makeClampedMonthDate(y, m + 1, closeDay, true);
-          parts.push('Cierre ' + formatShortDayMonth(closeDateObj));
-        } else {
-          parts.push('Cierre ' + rawClose);
-        }
-      }
-
-      if (rawDue) {
-        if (/^\d{1,2}\/\d{1,2}/.test(rawDue)) {
-          parts.push('Vto. ' + rawDue);
-        } else if (dueDay) {
-          let dueDateObj = null;
-          if (closeDateObj && closeDay) {
-            const dueMonthOffset = (dueDay > closeDay) ? 0 : 1;
-            dueDateObj = makeClampedMonthDate(closeDateObj.getFullYear(), closeDateObj.getMonth() + dueMonthOffset, dueDay, true);
-          } else {
-            const thisMonthDue = makeClampedMonthDate(y, m, dueDay, true);
-            dueDateObj = (now.getTime() <= thisMonthDue.getTime())
-              ? thisMonthDue
-              : makeClampedMonthDate(y, m + 1, dueDay, true);
-          }
-          parts.push('Vto. ' + formatShortDayMonth(dueDateObj));
-        } else {
-          parts.push('Vto. ' + rawDue);
-        }
-      }
-
-      return parts.join(' • ');
-    }
-    function autoFillNewTxCardDates(cardNameValue) {
-      const dueInput = document.getElementById('tx-due');
-      if (!dueInput) return;
-      const cleanName = String(cardNameValue || '').trim().toLowerCase();
-      if (!cleanName) {
-        if (dueInput.dataset.autofilled === '1') {
-          dueInput.value = '';
-          delete dueInput.dataset.autofilled;
-        }
-        return;
-      }
-      const cards = Array.isArray(state.creditCards) ? state.creditCards : [];
-      const card = cards.find(c => String(c.name || '').trim().toLowerCase() === cleanName);
-      if (!card) {
-        if (dueInput.dataset.autofilled === '1') {
-          dueInput.value = '';
-          delete dueInput.dataset.autofilled;
-        }
-        return;
-      }
-      const formatted = formatCardClosingAndDueDates(card, new Date());
-      if (formatted) {
-        dueInput.value = formatted;
-        dueInput.dataset.autofilled = '1';
-      } else if (dueInput.dataset.autofilled === '1') {
-        dueInput.value = '';
-        delete dueInput.dataset.autofilled;
-      }
     }
     function getSavedCardMetaForDebt(d) {
       const cards = Array.isArray(state.creditCards) ? state.creditCards : [];
@@ -3837,7 +3762,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       }
       if (params.get('voice') === '1') setTimeout(() => startVoiceCapture(), 350);
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
-        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.78: Autocompletado automático de fecha de cierre y vencimiento al seleccionar una tarjeta en Nuevo Movimiento.'), 1200);
+        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.77: Diferenciación automática entre Cierre Actual y Próximo Cierre según fecha de cierre de cada tarjeta y estado de pago, mostrado en positivo.'), 1200);
       } else if (state.autoCheckOta && cleanRepoSlug()) {
         setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
       }
@@ -4161,7 +4086,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
             <div class="flex justify-between items-start gap-2 mb-2">
               <div class="min-w-0">
                 <div class="text-base font-extrabold text-white truncate">${isCard ? '💳' : (isCredit ? '📈' : '📉')} ${escapeAttr(d.title)}</div>
-                <div class="text-xs text-slate-300 truncate">${escapeAttr(d.counterparty)}${cardLabel ? ' • <span class="text-violet-300 font-semibold">' + escapeAttr(cardLabel) + '</span>' : ''} • <span class="mono text-cyan-300">${d.currency}</span>${d.dueDate ? ' • ' + (/cierre|vto/i.test(d.dueDate) ? '' : 'Vence: ') + '<span class="mono text-amber-200">' + escapeAttr(d.dueDate) + '</span>' : ''}</div>
+                <div class="text-xs text-slate-300 truncate">${escapeAttr(d.counterparty)}${cardLabel ? ' • <span class="text-violet-300 font-semibold">' + escapeAttr(cardLabel) + '</span>' : ''} • <span class="mono text-cyan-300">${d.currency}</span>${d.dueDate ? ' • Vence: <span class="mono text-amber-200">' + escapeAttr(d.dueDate) + '</span>' : ''}</div>
               </div>
               <span class="text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${isSettled ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/30' : (isCard ? 'bg-violet-500/20 text-violet-200 border border-violet-400/30' : (isCredit ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/30' : 'bg-rose-500/20 text-rose-200 border border-rose-400/30'))}">${isSettled ? 'Saldado' : (isCard ? 'Tarjeta' : (isCredit ? 'Prestado' : 'Deuda'))}</span>
             </div>
@@ -4387,12 +4312,6 @@ input[type=number]::-webkit-outer-spin-button:hover {
               if (cardBox) cardBox.classList.toggle('hidden', m !== 'credit_card');
               if (loanBox) loanBox.classList.toggle('hidden', m !== 'loan');
               if (finBox) finBox.classList.toggle('hidden', m === 'cash');
-              if (m === 'credit_card') {
-                const cName = (document.getElementById('tx-card-name')?.value || document.getElementById('tx-card-pick')?.value || '');
-                autoFillNewTxCardDates(cName);
-              } else {
-                autoFillNewTxCardDates('');
-              }
             " class="bg-slate-950/80 border border-cyan-400/35 rounded-xl px-3 py-2.5 text-xs text-cyan-200 font-bold">
               <option value="cash">💵 Contado (Cuenta)</option>
               <option value="credit_card">💳 Tarjeta de Crédito</option>
@@ -4417,11 +4336,11 @@ input[type=number]::-webkit-outer-spin-button:hover {
           <div id="tx-box-card" class="hidden space-y-2">
             <label class="text-[10px] text-violet-300 block">Seleccioná o escribí la tarjeta de crédito</label>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <select id="tx-card-pick" onchange="const c=document.getElementById('tx-card-name');if(c && this.value) c.value=this.value;autoFillNewTxCardDates(this.value);" class="bg-slate-950/80 border border-violet-400/35 rounded-xl px-3 py-2.5 text-xs text-violet-200">
+              <select id="tx-card-pick" onchange="const c=document.getElementById('tx-card-name');if(c && this.value) c.value=this.value;" class="bg-slate-950/80 border border-violet-400/35 rounded-xl px-3 py-2.5 text-xs text-violet-200">
                 <option value="">Elegir tarjeta guardada...</option>
                 ${(Array.isArray(state.creditCards)?state.creditCards:[]).map(cc => `<option value="${escapeAttr(cc.name)}">💳 ${escapeAttr(cc.name)}</option>`).join('')}
               </select>
-              <input id="tx-card-name" type="text" oninput="autoFillNewTxCardDates(this.value);" placeholder="Ej: Itaú Visa, Zodimac" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" />
+              <input id="tx-card-name" type="text" placeholder="Ej: Itaú Visa, Zodimac" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" />
             </div>
           </div>
           <div id="tx-box-loan" class="hidden space-y-2">
@@ -4429,14 +4348,14 @@ input[type=number]::-webkit-outer-spin-button:hover {
             <input id="tx-loan-party" type="text" placeholder="Ej: Banco, familiar, comercio" class="w-full bg-slate-950/80 border border-amber-400/35 rounded-xl px-3 py-2.5 text-xs text-white" />
           </div>
           <div id="tx-box-financed" class="hidden space-y-2">
-            <div class="grid grid-cols-1 sm:grid-cols-[145px_1fr] gap-2">
+            <div class="grid grid-cols-2 gap-2">
               <div>
                 <label class="text-[10px] text-slate-400 block mb-1">Cuotas (1 = pago único)</label>
                 <input id="tx-installments" type="number" min="1" max="120" value="1" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" />
               </div>
               <div>
                 <label class="text-[10px] text-slate-400 block mb-1">Vencimiento / Cierre</label>
-                <input id="tx-due" type="text" oninput="delete this.dataset.autofilled;" placeholder="Ej: Cierre 15/12 • Vto. 25/12" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" />
+                <input id="tx-due" type="text" placeholder="Ej: 25/11 o Día 15" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" />
               </div>
             </div>
             <input id="tx-notes" type="text" placeholder="Notas adicionales (opcional)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" />
