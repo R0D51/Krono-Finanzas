@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795645310994,
+  "updatedAt": 1795720336505,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -73,9 +73,15 @@
     "gtask_QUhYYXBVUDRsUnpuT3o2LQ",
     "gtask_V3JKYThVUHJXa1JfNVV0cA",
     "gtask_SGt3TzhSSmR3Y0RIRVhlaQ",
-    "gtask_ZGNDeUpwbE9UdnhSTmhOWg"
+    "gtask_ZGNDeUpwbE9UdnhSTmhOWg",
+    "gtask_OGw1RlpwWHBQX3EzNURiag"
   ],
   "externalCommandHistory": [
+    {
+      "id": "gtask_OGw1RlpwWHBQX3EzNURiag",
+      "command": "Pagué la cuota de este mes en efectivo",
+      "date": "04:12 p. m."
+    },
     {
       "id": "gtask_ZGNDeUpwbE9UdnhSTmhOWg",
       "command": "Pagué la cuota de este mes de la tarjeta de crédito con efectivo",
@@ -120,11 +126,6 @@
       "id": "gtask_XzVpajFvdlhtdl9OMU5kMg",
       "command": "Gasté 3500 pesos en tres cuotas",
       "date": "12:55 a. m."
-    },
-    {
-      "id": "gtask_Z3JaN1Z5WmdERm1BWWp6SQ",
-      "command": "Gasté 1500 pesos en tres cuotas",
-      "date": "12:47 a. m."
     }
   ],
   "accounts": [
@@ -148,7 +149,7 @@
       "id": "acc_cash",
       "name": "Efectivo / Billetera",
       "currency": "UYU",
-      "balance": 8000,
+      "balance": 7500,
       "color": "from-violet-400 to-purple-500",
       "icon": "👛"
     }
@@ -198,14 +199,15 @@
       "paymentMethod": "credit_card",
       "cardName": "Itaú Visa",
       "installmentsCount": 3,
-      "paidInstallments": 0,
+      "paidInstallments": 1,
       "amount": 1500,
       "currency": "UYU",
       "kind": "debt",
       "dueDate": "",
       "status": "pending",
       "notes": "",
-      "createdAt": 1795637550371
+      "createdAt": 1795637550371,
+      "lastPaidAt": 1795720336496
     },
     {
       "id": "debt_sync_tx_1795483635646_280_929",
@@ -437,6 +439,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795720336496_742",
+      "title": "🤖 Cuotas del mes con Efectivo / Billetera",
+      "amount": 500,
+      "currency": "UYU",
+      "type": "expense",
+      "category": "Tarjeta / Crédito",
+      "accountId": "acc_cash",
+      "accountName": "Efectivo / Billetera",
+      "date": "26/11 16:12",
+      "timestamp": 1795720336498
+    },
     {
       "id": "tx_1795637609189_257",
       "title": "🤖 Cuotas del mes (Itaú Visa) con Efectivo / Billetera",
