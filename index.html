@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.78
+    // KRONO OTA BOOTLOADER v6.5.79
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -180,7 +180,7 @@ html, body {
 }
 main .glass-97:hover {
   border-color: rgba(103, 232, 249, 0.44) !important;
-  box-shadow: 0 22px 48px -12px rgba(6, 182, 212, 0.28), 0 0 0 1px rgba(103, 232, 249, 0.16) inset, 0 1px 0 0 rgba(255, 255, 255, 0.36) inset !important;
+  box-shadow: 0 16px 32px -12px rgba(6, 182, 212, 0.28), 0 0 0 1px rgba(103, 232, 249, 0.16) inset, 0 1px 0 0 rgba(255, 255, 255, 0.36) inset !important;
 }
 
 /* === HERO CONSOLIDATED NET WORTH CARD === */
@@ -204,7 +204,7 @@ main .glass-97:hover {
   transform: none !important;
   background-color: rgba(255, 255, 255, 0.065) !important;
   border-color: rgba(34, 211, 238, 0.58) !important;
-  box-shadow: 0 28px 54px -12px rgba(6, 182, 212, 0.36), 0 0 24px -8px rgba(139, 92, 246, 0.26), 0 1px 0 0 rgba(255, 255, 255, 0.42) inset !important;
+  box-shadow: 0 18px 34px -12px rgba(6, 182, 212, 0.38), 0 0 20px -8px rgba(139, 92, 246, 0.24), 0 1px 0 0 rgba(255, 255, 255, 0.42) inset !important;
 }
 .spring-card:active {
   top: -1px !important;
@@ -237,7 +237,7 @@ main .glass-97:hover {
 .spring-btn:hover {
   top: -3px !important;
   transform: none !important;
-  box-shadow: 0 14px 28px -6px rgba(6, 182, 212, 0.42), 0 0 0 1px rgba(255, 255, 255, 0.24) inset !important;
+  box-shadow: 0 7px 16px -5px rgba(6, 182, 212, 0.42), 0 0 12px -4px rgba(34, 211, 238, 0.20), 0 0 0 1px rgba(255, 255, 255, 0.24) inset !important;
 }
 .spring-btn:active {
   top: 1px !important;
@@ -268,17 +268,17 @@ main .glass-97:hover {
 .krono-kpi-emerald:hover {
   border-color: rgba(52, 211, 153, 0.55) !important;
   background-color: rgba(16, 185, 129, 0.10) !important;
-  box-shadow: 0 14px 28px -8px rgba(16, 185, 129, 0.32), 0 1px 0 0 rgba(167, 243, 208, 0.22) inset !important;
+  box-shadow: 0 10px 20px -6px rgba(16, 185, 129, 0.34), 0 1px 0 0 rgba(167, 243, 208, 0.22) inset !important;
 }
 .krono-kpi-rose:hover {
   border-color: rgba(251, 113, 133, 0.55) !important;
   background-color: rgba(244, 63, 94, 0.10) !important;
-  box-shadow: 0 14px 28px -8px rgba(244, 63, 94, 0.32), 0 1px 0 0 rgba(254, 205, 211, 0.22) inset !important;
+  box-shadow: 0 10px 20px -6px rgba(244, 63, 94, 0.34), 0 1px 0 0 rgba(254, 205, 211, 0.22) inset !important;
 }
 .krono-kpi-amber:hover {
   border-color: rgba(251, 191, 36, 0.55) !important;
   background-color: rgba(245, 158, 11, 0.10) !important;
-  box-shadow: 0 14px 28px -8px rgba(245, 158, 11, 0.30), 0 1px 0 0 rgba(253, 230, 138, 0.22) inset !important;
+  box-shadow: 0 10px 20px -6px rgba(245, 158, 11, 0.32), 0 1px 0 0 rgba(253, 230, 138, 0.22) inset !important;
 }
 
 /* === QUICK ACTION CARDS (MOVIMIENTO & TRANSFERIR) === */
@@ -408,7 +408,7 @@ aside nav button.krono-nav-item:hover .krono-nav-icon {
   transform: scale(1.14) rotate(-7deg) !important;
   border-color: rgba(103, 232, 249, 0.48) !important;
   background-color: rgba(34, 211, 238, 0.16) !important;
-  box-shadow: 0 0 14px -2px rgba(34, 211, 238, 0.42);
+  box-shadow: 0 0 10px -2px rgba(34, 211, 238, 0.42);
 }
 
 aside nav button.bg-cyan-400,
@@ -488,8 +488,13 @@ nav.md\:hidden button:active {
   scrollbar-width: thin;
   scrollbar-color: rgba(34, 211, 238, 0.45) transparent;
   overscroll-behavior: contain;
-  padding: 6px 10px 8px 4px !important;
-  margin: -4px -2px;
+}
+.krono-recent-scroll:not(#krono-glass-dropdown) {
+  padding: 12px 20px 24px 18px !important;
+  margin: -12px -18px -18px -18px !important;
+}
+.krono-recent-scroll.max-h-72 {
+  max-height: 20.5rem !important;
 }
 .krono-recent-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
 .krono-recent-scroll::-webkit-scrollbar-button,
@@ -551,7 +556,7 @@ nav.md\:hidden button:active {
   transform: none !important;
   background-color: rgba(15, 23, 42, 0.78) !important;
   border-color: rgba(34, 211, 238, 0.50) !important;
-  box-shadow: 0 12px 26px -10px rgba(6, 182, 212, 0.36), 0 1px 0 0 rgba(255, 255, 255, 0.16) inset !important;
+  box-shadow: 0 6px 16px -6px rgba(6, 182, 212, 0.38), 0 0 14px -4px rgba(34, 211, 238, 0.22), 0 1px 0 0 rgba(255, 255, 255, 0.18) inset !important;
 }
 .glass-97 .bg-slate-950\/40:not(.krono-kpi-tile):active,
 .glass-97 .bg-slate-950\/50:not(.krono-sync-box):active {
@@ -622,12 +627,12 @@ main button[title*="Borrar"] {
 main button[title*="Modificar"]:hover,
 main button[title*="Editar"]:hover {
   top: -2px !important;
-  box-shadow: 0 6px 14px -4px rgba(34, 211, 238, 0.45);
+  box-shadow: 0 4px 10px -3px rgba(34, 211, 238, 0.48);
 }
 main button[title*="Eliminar"]:hover,
 main button[title*="Borrar"]:hover {
   top: -2px !important;
-  box-shadow: 0 6px 14px -4px rgba(244, 63, 94, 0.45);
+  box-shadow: 0 4px 10px -3px rgba(244, 63, 94, 0.48);
 }
 
 /* === FORM INPUTS & CUSTOM GLASS DROPDOWNS === */
@@ -675,7 +680,7 @@ select option { background-color: #0b1326 !important; color: #f8fafc !important;
 #krono-glass-dropdown {
   position: fixed;
   z-index: 99999;
-  padding: 6px;
+  padding: 8px 10px 10px 8px;
   border-radius: 18px;
   background: linear-gradient(155deg, rgba(12, 20, 42, 0.78), rgba(6, 12, 28, 0.88));
   border: 1px solid rgba(103, 232, 249, 0.28);
@@ -718,7 +723,7 @@ select option { background-color: #0b1326 !important; color: #f8fafc !important;
   background: linear-gradient(135deg, rgba(34, 211, 238, 0.24), rgba(139, 92, 246, 0.16));
   border-color: rgba(34, 211, 238, 0.56);
   color: #ecfeff;
-  box-shadow: 0 6px 18px -6px rgba(6, 182, 212, 0.42), 0 1px 0 0 rgba(255, 255, 255, 0.25) inset;
+  box-shadow: 0 4px 10px -4px rgba(6, 182, 212, 0.40), 0 1px 0 0 rgba(255, 255, 255, 0.25) inset;
 }
 .krono-dd-check {
   color: #67e8f9;
@@ -872,7 +877,6 @@ input[type=number]::-webkit-outer-spin-button:hover {
   scrollbar-width: thin;
   scrollbar-color: rgba(34, 211, 238, 0.45) transparent;
   overscroll-behavior: contain;
-  padding-right: 6px !important;
 }
 .krono-recent-scroll::-webkit-scrollbar {
   width: 5px;
@@ -947,7 +951,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.78';
+    const APP_BASE_VERSION = '6.5.79';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -960,8 +964,8 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.78',
-      lastReleaseNotes: 'v6.5.78: Autocompletado automático de fecha de cierre y vencimiento al seleccionar una tarjeta en Nuevo Movimiento.',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.79',
+      lastReleaseNotes: 'v6.5.79: Difuminado limpio sin cortes rectos en los halos de iluminación al pasar el cursor sobre botones, filas y tarjetas.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
       accounts: [
@@ -3837,7 +3841,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       }
       if (params.get('voice') === '1') setTimeout(() => startVoiceCapture(), 350);
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
-        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.78: Autocompletado automático de fecha de cierre y vencimiento al seleccionar una tarjeta en Nuevo Movimiento.'), 1200);
+        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.79: Difuminado limpio sin cortes rectos en los halos de iluminación al pasar el cursor sobre botones, filas y tarjetas.'), 1200);
       } else if (state.autoCheckOta && cleanRepoSlug()) {
         setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
       }
