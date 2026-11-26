@@ -192,6 +192,37 @@
       "color": "#ec4899"
     }
   ],
+  "creditCards": [
+    {
+      "id": "card_itau_visa",
+      "name": "Itaú Visa",
+      "brand": "Visa",
+      "bank": "Itaú",
+      "currency": "UYU",
+      "closingDay": "3",
+      "dueDay": "25",
+      "creditLimit": 20000,
+      "tempLimitIncreases": [
+        {
+          "id": "tlim_1795645310994_7",
+          "amount": 30000,
+          "currency": "UYU",
+          "expiresAt": "2026-11-30",
+          "note": "Aumento transitorio",
+          "createdAt": 1795645310994
+        }
+      ]
+    },
+    {
+      "id": "card_ita%C3%BA%20dolares",
+      "name": "Itaú Dolares",
+      "bank": "",
+      "brand": "Visa",
+      "currency": "UYU",
+      "closingDay": "",
+      "dueDay": ""
+    }
+  ],
   "debts": [
     {
       "id": "debt_1795720446298_542",
@@ -793,5 +824,7 @@
       "date": "22/11 00:37",
       "timestamp": 1795318631934
     }
-  ]
+  ],
+  "recurringExpenses": [],
+  "savingsGoals": []
 }
