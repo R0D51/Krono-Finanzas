@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.76
+    // KRONO OTA BOOTLOADER v6.5.77
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -947,7 +947,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.76';
+    const APP_BASE_VERSION = '6.5.77';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -960,8 +960,8 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.76',
-      lastReleaseNotes: 'v6.5.76: Animaciones ultra nítidas sin desenfoque de texto (transiciones por desplazamiento de pintura sin reescalado GPU en contenedores de texto, ClearType preservado y efectos de íconos fluidos).',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.77',
+      lastReleaseNotes: 'v6.5.77: Diferenciación automática entre Cierre Actual y Próximo Cierre según fecha de cierre de cada tarjeta y estado de pago, mostrado en positivo.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
       accounts: [
@@ -2089,9 +2089,81 @@ input[type=number]::-webkit-outer-spin-button:hover {
         };
       });
     }
+    function parseClosingDayNumber(rawVal) {
+      if (rawVal === null || rawVal === undefined) return null;
+      const m = String(rawVal).match(/(\d{1,2})/);
+      if (!m) return null;
+      const day = parseInt(m[1], 10);
+      return (day >= 1 && day <= 31) ? day : null;
+    }
+    function makeClampedMonthDate(year, monthIdx, day, endOfDay = false) {
+      const lastDay = new Date(year, monthIdx + 1, 0).getDate();
+      const clamped = Math.max(1, Math.min(day, lastDay));
+      return endOfDay
+        ? new Date(year, monthIdx, clamped, 23, 59, 59, 999)
+        : new Date(year, monthIdx, clamped, 0, 0, 0, 0);
+    }
+    function getCardClosingCycleDates(closingDay, now = new Date()) {
+      const y = now.getFullYear(), m = now.getMonth();
+      if (closingDay && closingDay >= 1 && closingDay <= 31) {
+        const thisMonthClose = makeClampedMonthDate(y, m, closingDay, true);
+        if (now.getDate() >= closingDay) {
+          return {
+            hasClosingDay: true,
+            currentClosingDate: thisMonthClose,
+            nextClosingDate: makeClampedMonthDate(y, m + 1, closingDay, true)
+          };
+        }
+        return {
+          hasClosingDay: true,
+          currentClosingDate: makeClampedMonthDate(y, m - 1, closingDay, true),
+          nextClosingDate: thisMonthClose
+        };
+      }
+      return {
+        hasClosingDay: false,
+        currentClosingDate: new Date(y, m, 0, 23, 59, 59, 999),
+        nextClosingDate: new Date(y, m + 1, 0, 23, 59, 59, 999)
+      };
+    }
+    function formatShortDayMonth(dateObj) {
+      if (!dateObj || isNaN(dateObj.getTime())) return '';
+      return `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+    }
+    function getSavedCardMetaForDebt(d) {
+      const cards = Array.isArray(state.creditCards) ? state.creditCards : [];
+      if (!cards.length || !d) return null;
+      const label = normalizeStr(getDebtInstrumentLabel(d) || d.cardName || d.counterparty || '');
+      if (!label) return null;
+      return cards.find(c => {
+        const cn = normalizeStr(c.name || '');
+        return cn && (cn === label || label.includes(cn) || cn.includes(label));
+      }) || null;
+    }
+    function wasDebtPaidAfterTimestamp(d, cardMeta, cutoffMs) {
+      const lastPaid = Number(d && d.lastPaidAt) || 0;
+      if (lastPaid > cutoffMs) return true;
+      const paidInst = Math.max(0, parseInt(d && d.paidInstallments, 10) || 0);
+      if (paidInst <= 0) return false;
+      const txs = Array.isArray(state.transactions) ? state.transactions : [];
+      const dTitleNorm = normalizeStr((d && d.title) || '');
+      const cardNorm = normalizeStr((cardMeta && cardMeta.name) || (d && d.cardName) || '');
+      return txs.some(tx => {
+        if (!tx || tx.type !== 'expense') return false;
+        const ts = Number(tx.timestamp) || 0;
+        if (ts <= cutoffMs) return false;
+        const tNorm = normalizeStr(tx.title || '');
+        if (dTitleNorm && /^(?:🤖\s*)?pago\s*:/.test(tNorm) && tNorm.includes(dTitleNorm)) return true;
+        if (/^(?:🤖\s*)?(?:cuotas del mes|saldo total|pago\s+tarjeta)/.test(tNorm)) {
+          if (!cardNorm || tNorm.includes(cardNorm) || normalizeStr(tx.accountName || '').includes(cardNorm)) return true;
+        }
+        return false;
+      });
+    }
     function getDebtsSummary() {
       const rate = Number(state.exchangeRate) || 41.5;
       const list = Array.isArray(state.debts) ? state.debts : [];
+      const now = new Date();
       let pendingCreditsUYU = 0, pendingDebtsUYU = 0, pendingCount = 0, nextInstallmentsUYU = 0;
       list.forEach(d => {
         if (d.status !== 'settled') {
@@ -2108,24 +2180,65 @@ input[type=number]::-webkit-outer-spin-button:hover {
           }
         }
       });
-      let nextCardClosingUYU = 0;
+      let currentCardClosingUYU = 0, nextCardClosingUYU = 0;
+      let currentClosingDateObj = null, nextClosingDateObj = null;
       list.forEach(d => {
         if (d.status !== 'settled' && d.kind !== 'credit') {
-          const hasCard = d.paymentMethod === 'credit_card' || Boolean((d.cardName || '').trim()) || /tarjeta|visa|master|oca|amex|cabal|zodimac|brou|itau|itaú|santander|bbva|scotia|prex|midinero/i.test(`${d.title || ''} ${d.counterparty || ''}`);
+          const cardMeta = getSavedCardMetaForDebt(d);
+          const hasCard = Boolean(cardMeta) || d.paymentMethod === 'credit_card' || Boolean((d.cardName || '').trim()) || /tarjeta|visa|master|oca|amex|cabal|zodimac|brou|itau|itaú|santander|bbva|scotia|prex|midinero/i.test(`${d.title || ''} ${d.counterparty || ''}`);
           if (hasCard) {
             const rem = getDebtRemainingAmount(d);
             const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+            const paidInst = Math.max(0, Math.min(instCount, parseInt(d.paidInstallments, 10) || 0));
+            const remInst = Math.max(1, instCount - paidInst);
             const instVal = getDebtInstallmentValue(d);
             const payClosing = instCount > 1 ? Math.min(rem, instVal) : rem;
-            nextCardClosingUYU += (d.currency === 'USD' ? payClosing * rate : payClosing);
+            const payClosingUYU = (d.currency === 'USD' ? payClosing * rate : payClosing);
+
+            const closingDay = parseClosingDayNumber(cardMeta ? cardMeta.closingDay : null);
+            const cycle = getCardClosingCycleDates(closingDay, now);
+            const createdMs = Number(d.createdAt) || 0;
+            const inCurrentClosing = cycle.hasClosingDay ? (createdMs <= cycle.currentClosingDate.getTime()) : true;
+            const paidCurrentCycle = wasDebtPaidAfterTimestamp(d, cardMeta, cycle.currentClosingDate.getTime());
+
+            if (inCurrentClosing && !paidCurrentCycle) {
+              currentCardClosingUYU += payClosingUYU;
+              if (cycle.hasClosingDay && (!currentClosingDateObj || cycle.currentClosingDate < currentClosingDateObj)) {
+                currentClosingDateObj = cycle.currentClosingDate;
+              }
+              if (instCount > 1 && remInst > 1) {
+                const remAfterCurrent = Math.max(0, rem - payClosing);
+                const nextPay = Math.min(remAfterCurrent, instVal);
+                nextCardClosingUYU += (d.currency === 'USD' ? nextPay * rate : nextPay);
+                if (cycle.hasClosingDay && (!nextClosingDateObj || cycle.nextClosingDate < nextClosingDateObj)) {
+                  nextClosingDateObj = cycle.nextClosingDate;
+                }
+              }
+            } else {
+              nextCardClosingUYU += payClosingUYU;
+              if (cycle.hasClosingDay && (!nextClosingDateObj || cycle.nextClosingDate < nextClosingDateObj)) {
+                nextClosingDateObj = cycle.nextClosingDate;
+              }
+            }
           }
         }
       });
+      const hasPendingCurrentClosing = currentCardClosingUYU > 0.01;
+      const cardClosingMode = hasPendingCurrentClosing ? 'current' : 'next';
+      const displayCardClosingUYU = Math.abs(hasPendingCurrentClosing ? currentCardClosingUYU : nextCardClosingUYU);
+      const cardClosingLabel = hasPendingCurrentClosing ? 'Cierre Actual' : 'Próximo Cierre';
+      const activeClosingDate = hasPendingCurrentClosing ? currentClosingDateObj : nextClosingDateObj;
+      const cardClosingDateLabel = activeClosingDate ? formatShortDayMonth(activeClosingDate) : '';
       return {
         pendingCreditsUYU,
         pendingDebtsUYU,
         nextInstallmentsUYU,
+        currentCardClosingUYU,
         nextCardClosingUYU,
+        cardClosingMode,
+        displayCardClosingUYU,
+        cardClosingLabel,
+        cardClosingDateLabel,
         netPendingUYU: pendingCreditsUYU - pendingDebtsUYU,
         pendingCount
       };
@@ -2234,6 +2347,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
         danger: false,
         onConfirm: () => {
           d.paidInstallments = nextPaid;
+          d.lastPaidAt = Date.now();
           if (nextPaid >= instCount || getDebtRemainingAmount(d) <= 0.01) {
             d.status = 'settled';
             d.settledAt = Date.now();
@@ -2298,6 +2412,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
           onConfirm: () => {
             d.status = 'settled';
             d.paidInstallments = instCount;
+            d.lastPaidAt = Date.now();
             d.settledAt = Date.now();
             if (settleAndRecordTx && remVal > 0) {
               const cardTag = d.cardName ? ` [${d.cardName}]` : '';
@@ -2326,6 +2441,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
             d.status = 'pending';
             if (d.paidInstallments >= instCount) d.paidInstallments = Math.max(0, instCount - 1);
             delete d.settledAt;
+            delete d.lastPaidAt;
             spawnFloatingBurst('⏳ Vuelto a pendiente', true);
             saveState(true, true);
           }
@@ -2373,8 +2489,11 @@ input[type=number]::-webkit-outer-spin-button:hover {
       d.kind = kind;
       d.paymentMethod = paymentMethod;
       d.cardName = cardName;
+      const prevPaidInst = Math.max(0, parseInt(d.paidInstallments, 10) || 0);
       d.installmentsCount = installmentsCount;
       d.paidInstallments = paidInstallments;
+      if (paidInstallments > prevPaidInst) d.lastPaidAt = Date.now();
+      else if (paidInstallments < prevPaidInst) delete d.lastPaidAt;
       d.dueDate = dueDate;
       d.notes = notes;
 
@@ -2928,6 +3047,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
               const payNow = instCount > 1 ? Math.min(remItem, instVal) : remItem;
               const nextPaid = Math.min(instCount, paidInst + 1);
               d.paidInstallments = nextPaid;
+              d.lastPaidAt = Date.now();
               if (nextPaid >= instCount || getDebtRemainingAmount(d) <= 0.01) {
                 d.status = 'settled';
                 d.settledAt = Date.now();
@@ -2941,6 +3061,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
               if (remItem <= 0.01) continue;
               const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
               d.paidInstallments = instCount;
+              d.lastPaidAt = Date.now();
               d.status = 'settled';
               d.settledAt = Date.now();
               totalPaidUYU += (d.currency === 'USD' ? remItem * rate : remItem);
@@ -2960,6 +3081,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
               const instValUYU = (d.currency === 'USD' ? instVal * rate : instVal);
               if (remPoolUYU >= remItemUYU - 0.01) {
                 d.paidInstallments = instCount;
+                d.lastPaidAt = Date.now();
                 d.status = 'settled';
                 d.settledAt = Date.now();
                 remPoolUYU -= remItemUYU;
@@ -2970,6 +3092,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
                 const nextPaid = Math.min(instCount, paidInst + covered);
                 const appliedVal = Number((instVal * covered).toFixed(2));
                 d.paidInstallments = nextPaid;
+                d.lastPaidAt = Date.now();
                 if (nextPaid >= instCount) {
                   d.status = 'settled';
                   d.settledAt = Date.now();
@@ -3306,6 +3429,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
               const payNow = instCount > 1 ? Math.min(remItem, instVal) : remItem;
               const nextPaid = Math.min(instCount, paidInst + 1);
               d.paidInstallments = nextPaid;
+              d.lastPaidAt = Date.now();
               if (nextPaid >= instCount || getDebtRemainingAmount(d) <= 0.01) {
                 d.status = 'settled';
                 d.settledAt = Date.now();
@@ -3316,6 +3440,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
               remainingCreditToApplyUYU = Math.max(0, remainingCreditToApplyUYU - (d.currency === 'USD' ? payNow * rate : payNow));
             } else if (remainingCreditToApplyUYU >= remItemUYU - 0.01 || (!explicitAmount && instCount === 1)) {
               d.paidInstallments = instCount;
+              d.lastPaidAt = Date.now();
               d.status = 'settled';
               d.settledAt = Date.now();
               remainingCreditToApplyUYU = Math.max(0, remainingCreditToApplyUYU - remItemUYU);
@@ -3325,6 +3450,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
               const newPaid = Math.min(instCount, paidInst + coveredInst);
               const appliedVal = Number((instVal * coveredInst).toFixed(2));
               d.paidInstallments = newPaid;
+              d.lastPaidAt = Date.now();
               if (newPaid >= instCount) {
                 d.status = 'settled';
                 d.settledAt = Date.now();
@@ -3636,7 +3762,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       }
       if (params.get('voice') === '1') setTimeout(() => startVoiceCapture(), 350);
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
-        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.76: Animaciones ultra nítidas sin desenfoque de texto (transiciones por desplazamiento de pintura sin reescalado GPU en contenedores de texto, ClearType preservado y efectos de íconos fluidos).'), 1200);
+        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.77: Diferenciación automática entre Cierre Actual y Próximo Cierre según fecha de cierre de cada tarjeta y estado de pago, mostrado en positivo.'), 1200);
       } else if (state.autoCheckOta && cleanRepoSlug()) {
         setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
       }
@@ -3691,8 +3817,8 @@ input[type=number]::-webkit-outer-spin-button:hover {
                   <div class="text-sm font-extrabold mono text-rose-300 mt-1">-${formatMoney(ds.pendingDebtsUYU, 'UYU')}</div>
                 </div>
                 <div onclick="ui.debtFilterKind='debt';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn krono-kpi-tile krono-kpi-amber p-3.5 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
-                  <div class="flex items-center justify-between gap-1"><span class="text-[10px] text-slate-400">Próximo cierre tarjeta</span><span class="krono-kpi-arrow text-[10px] text-amber-200/70">↗</span></div>
-                  <div class="text-sm font-extrabold mono text-amber-200 mt-1">-${formatMoney(ds.nextCardClosingUYU, 'UYU')}</div>
+                  <div class="flex items-center justify-between gap-1"><span class="text-[10px] text-slate-400">${ds.cardClosingLabel}${ds.cardClosingDateLabel ? ' • ' + ds.cardClosingDateLabel : ''}</span><span class="krono-kpi-arrow text-[10px] text-amber-200/70">↗</span></div>
+                  <div class="text-sm font-extrabold mono text-amber-200 mt-1">${formatMoney(Math.abs(ds.displayCardClosingUYU), 'UYU')}</div>
                 </div>
               </div>
             `;
