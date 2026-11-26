@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.75
+    // KRONO OTA BOOTLOADER v6.5.76
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -72,44 +72,46 @@
     ::-webkit-scrollbar-thumb { background: rgba(6,182,212,0.35); border-radius: 9999px; }
   </style>
   <style id="krono-core-fx-css">
-/* === KRONO FINANZAS v6.5.75 MASTER VISUAL & MOTION ENGINE === */
+/* === KRONO FINANZAS v6.5.76 CRISP-TEXT VISUAL & MOTION ENGINE === */
 html, body {
-  -webkit-font-smoothing: antialiased !important;
+  -webkit-font-smoothing: auto !important;
+  text-rendering: optimizeLegibility;
   height: 100dvh !important;
   max-height: 100dvh !important;
   overflow: hidden !important;
   overscroll-behavior: none !important;
 }
 
+/* Text-containing animations use relative top/margin-top (no transform/scale) so Chromium preserves razor-sharp ClearType text on every frame */
 @keyframes kronoTabIn {
-  0% { opacity: 0; transform: translateY(18px) scale(0.992); }
-  100% { opacity: 1; transform: none; }
+  0% { opacity: 0; top: 16px; }
+  100% { opacity: 1; top: 0; }
 }
 @keyframes kronoModalIn {
-  0% { opacity: 0; transform: translateY(22px) scale(0.965); }
-  100% { opacity: 1; transform: none; }
+  0% { opacity: 0; top: 18px; }
+  100% { opacity: 1; top: 0; }
 }
 @keyframes kronoBackdropIn {
   0% { opacity: 0; }
   100% { opacity: 1; }
 }
 @keyframes kronoDropIn {
-  0% { opacity: 0; transform: translateY(-8px) scale(0.98); }
-  100% { opacity: 1; transform: none; }
+  0% { opacity: 0; margin-top: -6px; }
+  100% { opacity: 1; margin-top: 0; }
 }
 @keyframes kronoDropInUp {
-  0% { opacity: 0; transform: translateY(8px) scale(0.98); }
-  100% { opacity: 1; transform: none; }
+  0% { opacity: 0; margin-top: 6px; }
+  100% { opacity: 1; margin-top: 0; }
 }
 @keyframes kronoBurstIn {
-  0% { opacity: 0; transform: translateY(16px) scale(0.92); }
-  14% { opacity: 1; transform: translateY(0px) scale(1); }
-  84% { opacity: 1; transform: translateY(-22px) scale(1); }
-  100% { opacity: 0; transform: translateY(-40px) scale(0.96); }
+  0% { opacity: 0; top: 14px; }
+  14% { opacity: 1; top: 0px; }
+  84% { opacity: 1; top: -18px; }
+  100% { opacity: 0; top: -34px; }
 }
 @keyframes kronoRipple {
-  0% { opacity: 0.52; transform: translate(-50%, -50%) scale(0); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(2.6); }
+  0% { opacity: 0.46; transform: translate(-50%, -50%) scale(0); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(2.5); }
 }
 @keyframes kronoBarShine {
   0% { transform: translateX(-120%); }
@@ -123,16 +125,12 @@ html, body {
   0%, 100% { opacity: 0.45; transform: scale(1); }
   50% { opacity: 0; transform: scale(1.36); }
 }
-@keyframes kronoHeroSheen {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
 
 .krono-sync-dot {
   animation: kronoDotPulse 2.4s ease-out infinite;
 }
 
-/* === AMBIENT CURSOR SPOTLIGHT === */
+/* === AMBIENT CURSOR SPOTLIGHT (Pure light layer, GPU smooth) === */
 #krono-cursor-spotlight {
   position: fixed;
   left: 0;
@@ -150,15 +148,17 @@ html, body {
   will-change: transform;
 }
 
-/* === LIVING FROSTED GLASS CARDS (.glass-97) === */
+/* === LIVING FROSTED GLASS CARDS (.glass-97) — No mask-composite offscreen blur === */
 .glass-97 {
   position: relative;
+  top: 0;
+  left: 0;
   backdrop-filter: blur(22px) saturate(195%) !important;
   -webkit-backdrop-filter: blur(22px) saturate(195%) !important;
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.048) 0%, rgba(15, 23, 42, 0.26) 100%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.048) 0%, rgba(15, 23, 42, 0.28) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.17) !important;
   box-shadow: 0 18px 42px -12px rgba(0, 0, 0, 0.52), 0 1px 0 0 rgba(255, 255, 255, 0.24) inset, 0 -1px 0 0 rgba(255, 255, 255, 0.06) inset !important;
-  transition: transform 0.38s cubic-bezier(0.22, 1.45, 0.36, 1), box-shadow 0.3s ease, border-color 0.24s ease, background-color 0.24s ease !important;
+  transition: top 0.36s cubic-bezier(0.22, 1.45, 0.36, 1), left 0.32s cubic-bezier(0.22, 1.45, 0.36, 1), box-shadow 0.28s ease, border-color 0.22s ease, background-color 0.22s ease !important;
 }
 .glass-97::before {
   content: "";
@@ -167,27 +167,11 @@ html, body {
   border-radius: inherit;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.28s ease;
+  transition: opacity 0.26s ease;
   background: radial-gradient(400px circle at var(--mx, 50%) var(--my, 50%), rgba(34, 211, 238, 0.16), rgba(139, 92, 246, 0.08) 45%, transparent 72%);
   z-index: 0;
 }
-.glass-97::after {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.28s ease;
-  background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), rgba(103, 232, 249, 0.65), rgba(167, 139, 250, 0.28) 45%, transparent 70%);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  z-index: 2;
-}
-.glass-97:hover::before,
-.glass-97:hover::after {
+.glass-97:hover::before {
   opacity: 1;
 }
 .glass-97 > *:not(.krono-ripple) {
@@ -195,72 +179,84 @@ html, body {
   z-index: 1;
 }
 main .glass-97:hover {
-  border-color: rgba(34, 211, 238, 0.38) !important;
-  box-shadow: 0 22px 48px -12px rgba(6, 182, 212, 0.26), 0 1px 0 0 rgba(255, 255, 255, 0.34) inset !important;
+  border-color: rgba(103, 232, 249, 0.44) !important;
+  box-shadow: 0 22px 48px -12px rgba(6, 182, 212, 0.28), 0 0 0 1px rgba(103, 232, 249, 0.16) inset, 0 1px 0 0 rgba(255, 255, 255, 0.36) inset !important;
 }
 
 /* === HERO CONSOLIDATED NET WORTH CARD === */
 .krono-hero-card {
-  background: linear-gradient(128deg, rgba(34, 211, 238, 0.08) 0%, rgba(15, 23, 42, 0.35) 45%, rgba(139, 92, 246, 0.09) 100%) !important;
-  background-size: 180% 180% !important;
-  animation: kronoHeroSheen 14s ease-in-out infinite;
+  background: linear-gradient(128deg, rgba(34, 211, 238, 0.09) 0%, rgba(15, 23, 42, 0.36) 48%, rgba(139, 92, 246, 0.10) 100%) !important;
 }
 
-/* === SPRING CARDS (.spring-card) === */
+/* === SPRING CARDS (.spring-card) — Crisp relative top lift === */
 .spring-card {
   position: relative !important;
   top: 0 !important;
+  left: 0 !important;
+  transform: none !important;
   overflow: hidden !important;
   filter: none !important;
   cursor: pointer !important;
-  transform-origin: center center !important;
-  transition: transform 0.38s cubic-bezier(0.22, 1.48, 0.36, 1), box-shadow 0.32s ease, border-color 0.24s ease, background-color 0.24s ease !important;
+  transition: top 0.36s cubic-bezier(0.22, 1.48, 0.36, 1), box-shadow 0.3s ease, border-color 0.22s ease, background-color 0.22s ease !important;
 }
 .spring-card:hover {
-  top: 0 !important;
-  transform: translateY(-7px) !important;
+  top: -6px !important;
+  transform: none !important;
   background-color: rgba(255, 255, 255, 0.065) !important;
   border-color: rgba(34, 211, 238, 0.58) !important;
-  box-shadow: 0 28px 54px -12px rgba(6, 182, 212, 0.36), 0 0 24px -8px rgba(139, 92, 246, 0.25), 0 1px 0 0 rgba(255, 255, 255, 0.42) inset !important;
+  box-shadow: 0 28px 54px -12px rgba(6, 182, 212, 0.36), 0 0 24px -8px rgba(139, 92, 246, 0.26), 0 1px 0 0 rgba(255, 255, 255, 0.42) inset !important;
 }
 .spring-card:active {
-  top: 0 !important;
-  transform: translateY(-2px) scale(0.992) !important;
-  border-color: rgba(34, 211, 238, 0.85) !important;
+  top: -1px !important;
+  transform: none !important;
+  border-color: rgba(103, 232, 249, 0.88) !important;
+  box-shadow: 0 10px 26px -8px rgba(6, 182, 212, 0.34), 0 1px 0 0 rgba(255, 255, 255, 0.32) inset !important;
 }
 .spring-card .rounded-full.mono {
-  transition: background-color 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease, transform 0.32s cubic-bezier(0.22, 1.45, 0.36, 1);
+  position: relative;
+  top: 0;
+  transition: top 0.28s cubic-bezier(0.22, 1.45, 0.36, 1), background-color 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
 }
 .spring-card:hover .rounded-full.mono {
-  transform: translateY(-1px) scale(1.03);
+  top: -1px;
   background-color: rgba(34, 211, 238, 0.28);
   border-color: rgba(103, 232, 249, 0.72);
   box-shadow: 0 0 20px rgba(34, 211, 238, 0.42);
 }
 
-/* === SPRING BUTTONS (.spring-btn) === */
+/* === SPRING BUTTONS (.spring-btn) — Crisp relative top lift === */
 .spring-btn {
   position: relative !important;
   top: 0 !important;
+  left: 0 !important;
+  transform: none !important;
   overflow: hidden !important;
   filter: none !important;
-  transform-origin: center center !important;
-  transition: transform 0.3s cubic-bezier(0.22, 1.52, 0.36, 1), box-shadow 0.24s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+  transition: top 0.3s cubic-bezier(0.22, 1.52, 0.36, 1), box-shadow 0.24s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
 }
 .spring-btn:hover {
-  top: 0 !important;
-  transform: translateY(-3px) !important;
+  top: -3px !important;
+  transform: none !important;
   box-shadow: 0 14px 28px -6px rgba(6, 182, 212, 0.42), 0 0 0 1px rgba(255, 255, 255, 0.24) inset !important;
 }
 .spring-btn:active {
-  top: 0 !important;
-  transform: translateY(0px) scale(0.985) !important;
+  top: 1px !important;
+  transform: none !important;
   box-shadow: 0 4px 12px -2px rgba(6, 182, 212, 0.32) !important;
 }
 
 /* === SEMANTIC KPI TILES IN PENDIENTES WIDGET === */
 .krono-kpi-tile {
-  transition: transform 0.32s cubic-bezier(0.22, 1.5, 0.36, 1), box-shadow 0.26s ease, border-color 0.22s ease, background-color 0.22s ease !important;
+  position: relative !important;
+  top: 0 !important;
+  transform: none !important;
+  transition: top 0.32s cubic-bezier(0.22, 1.5, 0.36, 1), box-shadow 0.26s ease, border-color 0.22s ease, background-color 0.22s ease !important;
+}
+.krono-kpi-tile:hover {
+  top: -3px !important;
+}
+.krono-kpi-tile:active {
+  top: 0px !important;
 }
 .krono-kpi-tile .krono-kpi-arrow {
   display: inline-block;
@@ -287,8 +283,13 @@ main .glass-97:hover {
 
 /* === QUICK ACTION CARDS (MOVIMIENTO & TRANSFERIR) === */
 .krono-quick-btn:hover {
-  transform: translateY(-4px) !important;
+  top: -4px !important;
+  transform: none !important;
   border-color: rgba(103, 232, 249, 0.58) !important;
+}
+.krono-quick-btn:active {
+  top: 0px !important;
+  transform: none !important;
 }
 .krono-quick-badge {
   transition: transform 0.36s cubic-bezier(0.34, 1.7, 0.64, 1), background-color 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease !important;
@@ -306,14 +307,16 @@ main .glass-97:hover {
   box-shadow: 0 0 18px rgba(34, 211, 238, 0.45);
 }
 .krono-quick-chevron {
-  transition: transform 0.28s cubic-bezier(0.22, 1.5, 0.36, 1), color 0.2s ease;
+  position: relative;
+  left: 0;
+  transition: left 0.28s cubic-bezier(0.22, 1.5, 0.36, 1), color 0.2s ease;
 }
 .krono-quick-btn:hover .krono-quick-chevron {
-  transform: translateX(4px);
+  left: 4px;
   color: #67e8f9;
 }
 
-/* === ICON MICRO-ANIMATIONS === */
+/* === ICON MICRO-ANIMATIONS (Icons only — text stays razor sharp!) === */
 .spring-btn > span.text-xl:not(.krono-ripple),
 .spring-card span.text-2xl:not(.krono-ripple),
 .spring-card span.text-xl:not(.krono-ripple),
@@ -346,48 +349,57 @@ nav.md\:hidden button > span:first-child:not(.krono-ripple) {
   box-shadow: 0 26px 52px -14px rgba(0, 0, 0, 0.64), 0 1px 0 0 rgba(255, 255, 255, 0.24) inset !important;
 }
 .krono-brand-card {
+  position: relative;
+  top: 0;
   background: linear-gradient(135deg, rgba(34, 211, 238, 0.11), rgba(139, 92, 246, 0.09)) !important;
   border: 1px solid rgba(103, 232, 249, 0.24) !important;
   box-shadow: 0 10px 24px -8px rgba(6, 182, 212, 0.26), 0 1px 0 0 rgba(255, 255, 255, 0.18) inset;
-  transition: border-color 0.25s ease, box-shadow 0.28s ease, transform 0.3s cubic-bezier(0.22, 1.45, 0.36, 1);
+  transition: border-color 0.25s ease, box-shadow 0.28s ease;
 }
 .krono-brand-card:hover {
   border-color: rgba(103, 232, 249, 0.48) !important;
   box-shadow: 0 14px 28px -8px rgba(6, 182, 212, 0.36), 0 1px 0 0 rgba(255, 255, 255, 0.26) inset;
 }
 .krono-brand-emblem {
+  position: relative;
+  top: 0;
   background: linear-gradient(135deg, rgba(34, 211, 238, 0.28), rgba(139, 92, 246, 0.30));
   border: 1px solid rgba(103, 232, 249, 0.50);
   box-shadow: 0 0 20px -4px rgba(34, 211, 238, 0.55), 0 1px 0 0 rgba(255, 255, 255, 0.34) inset;
-  transition: transform 0.35s cubic-bezier(0.34, 1.7, 0.64, 1), box-shadow 0.28s ease;
+  transition: top 0.3s cubic-bezier(0.22, 1.5, 0.36, 1), box-shadow 0.28s ease, border-color 0.24s ease;
 }
 .krono-brand-card:hover .krono-brand-emblem {
-  transform: scale(1.08) rotate(-6deg);
+  top: -2px;
+  border-color: rgba(165, 243, 252, 0.8);
   box-shadow: 0 0 26px -2px rgba(34, 211, 238, 0.72), 0 1px 0 0 rgba(255, 255, 255, 0.45) inset;
 }
 
 aside nav {
   overflow: visible !important;
-  padding: 2px 6px 2px 2px;
-  margin: -2px -6px -2px -2px;
+  padding: 2px 8px 2px 2px;
+  margin: -2px -8px -2px -2px;
 }
 aside nav button.krono-nav-item {
   position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+  transform: none !important;
   overflow: hidden !important;
   flex-shrink: 0 !important;
   min-height: 44px !important;
   border: 1px solid transparent;
-  transform-origin: center center !important;
-  transition: transform 0.3s cubic-bezier(0.22, 1.48, 0.36, 1), background-color 0.22s ease, border-color 0.22s ease, color 0.22s ease, box-shadow 0.26s ease !important;
+  transition: left 0.3s cubic-bezier(0.22, 1.48, 0.36, 1), background-color 0.22s ease, border-color 0.22s ease, color 0.22s ease, box-shadow 0.26s ease !important;
 }
 aside nav button.krono-nav-item:hover {
-  transform: translateX(6px) !important;
+  left: 6px !important;
+  transform: none !important;
   background-color: rgba(255, 255, 255, 0.07) !important;
   border-color: rgba(255, 255, 255, 0.18) !important;
   box-shadow: 0 10px 24px -8px rgba(6, 182, 212, 0.36);
 }
 aside nav button.krono-nav-item:active {
-  transform: translateX(3px) scale(0.988) !important;
+  left: 3px !important;
+  transform: none !important;
 }
 aside nav button.krono-nav-item .krono-nav-icon {
   transition: transform 0.32s cubic-bezier(0.34, 1.75, 0.64, 1), background-color 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease !important;
@@ -426,19 +438,25 @@ aside nav button.bg-cyan-400::after {
 }
 
 .krono-sync-box {
-  transition: transform 0.26s cubic-bezier(0.22, 1.45, 0.36, 1), border-color 0.22s ease, background-color 0.22s ease, box-shadow 0.24s ease;
+  position: relative;
+  top: 0;
+  transition: top 0.26s cubic-bezier(0.22, 1.45, 0.36, 1), border-color 0.22s ease, background-color 0.22s ease, box-shadow 0.24s ease;
 }
 .krono-sync-box:hover {
-  transform: translateY(-2px);
+  top: -2px;
   border-color: rgba(103, 232, 249, 0.42);
   background-color: rgba(15, 23, 42, 0.72);
   box-shadow: 0 10px 22px -8px rgba(6, 182, 212, 0.3);
 }
+.krono-sync-box:active {
+  top: 0px;
+}
 .krono-sync-box .krono-copy-hint {
+  display: inline-block;
   transition: transform 0.26s cubic-bezier(0.34, 1.7, 0.64, 1), color 0.2s ease;
 }
 .krono-sync-box:hover .krono-copy-hint {
-  transform: scale(1.2);
+  transform: scale(1.2) rotate(-6deg);
   color: #67e8f9;
 }
 
@@ -452,15 +470,17 @@ aside .grid-cols-2 > button.spring-btn {
 /* === MOBILE BOTTOM NAV === */
 nav.md\:hidden button {
   position: relative;
+  top: 0;
+  transform: none !important;
   overflow: hidden;
   border: 1px solid transparent;
-  transition: transform 0.28s cubic-bezier(0.22, 1.5, 0.36, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+  transition: top 0.28s cubic-bezier(0.22, 1.5, 0.36, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
 nav.md\:hidden button:hover {
-  transform: translateY(-3px) !important;
+  top: -3px !important;
 }
 nav.md\:hidden button:active {
-  transform: translateY(0px) scale(0.96) !important;
+  top: 0px !important;
 }
 
 /* === INTERACTIVE LIST ROWS (CUENTAS, TARJETAS, MOVIMIENTOS, PRESUPUESTOS) === */
@@ -468,7 +488,7 @@ nav.md\:hidden button:active {
   scrollbar-width: thin;
   scrollbar-color: rgba(34, 211, 238, 0.45) transparent;
   overscroll-behavior: contain;
-  padding: 6px 8px 8px 4px !important;
+  padding: 6px 10px 8px 4px !important;
   margin: -4px -2px;
 }
 .krono-recent-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -497,8 +517,11 @@ nav.md\:hidden button:active {
 .glass-97 .bg-slate-950\/40:not(.krono-kpi-tile),
 .glass-97 .bg-slate-950\/50:not(.krono-sync-box) {
   position: relative;
+  top: 0;
+  left: 0;
+  transform: none !important;
   overflow: hidden;
-  transition: transform 0.32s cubic-bezier(0.22, 1.45, 0.36, 1), background-color 0.22s ease, border-color 0.22s ease, box-shadow 0.26s ease !important;
+  transition: left 0.32s cubic-bezier(0.22, 1.45, 0.36, 1), top 0.32s cubic-bezier(0.22, 1.45, 0.36, 1), background-color 0.22s ease, border-color 0.22s ease, box-shadow 0.26s ease !important;
 }
 .glass-97 .bg-slate-950\/40:not(.krono-kpi-tile)::before,
 .glass-97 .bg-slate-950\/50:not(.krono-sync-box)::before {
@@ -523,14 +546,18 @@ nav.md\:hidden button:active {
 }
 .glass-97 .bg-slate-950\/40:not(.krono-kpi-tile):hover,
 .glass-97 .bg-slate-950\/50:not(.krono-sync-box):hover {
-  transform: translateX(4px) translateY(-1px) !important;
+  left: 4px !important;
+  top: -1px !important;
+  transform: none !important;
   background-color: rgba(15, 23, 42, 0.78) !important;
   border-color: rgba(34, 211, 238, 0.50) !important;
   box-shadow: 0 12px 26px -10px rgba(6, 182, 212, 0.36), 0 1px 0 0 rgba(255, 255, 255, 0.16) inset !important;
 }
 .glass-97 .bg-slate-950\/40:not(.krono-kpi-tile):active,
 .glass-97 .bg-slate-950\/50:not(.krono-sync-box):active {
-  transform: translateX(2px) scale(0.992) !important;
+  left: 2px !important;
+  top: 0px !important;
+  transform: none !important;
   border-color: rgba(103, 232, 249, 0.78) !important;
 }
 main .glass-97:has(button[onclick*="accounts"]) .bg-slate-950\/40,
@@ -552,22 +579,25 @@ main .glass-97:has(button[onclick*="debts"]) .bg-slate-950\/40 {
 main button.text-cyan-300,
 main button.text-violet-300,
 main button.text-amber-300 {
+  position: relative;
+  top: 0;
+  left: 0;
   display: inline-flex;
   align-items: center;
-  transition: transform 0.26s cubic-bezier(0.22, 1.5, 0.36, 1), color 0.2s ease, text-shadow 0.2s ease !important;
+  transition: left 0.26s cubic-bezier(0.22, 1.5, 0.36, 1), top 0.26s cubic-bezier(0.22, 1.5, 0.36, 1), color 0.2s ease, text-shadow 0.2s ease !important;
 }
 main button.text-cyan-300:hover {
-  transform: translateX(4px) !important;
+  left: 4px !important;
   color: #a5f3fc !important;
   text-shadow: 0 0 12px rgba(34, 211, 238, 0.55);
 }
 main button.text-violet-300:hover {
-  transform: translateY(-1px) scale(1.04) !important;
+  top: -2px !important;
   color: #ddd6fe !important;
   text-shadow: 0 0 12px rgba(139, 92, 246, 0.55);
 }
 main button.text-amber-300:hover {
-  transform: translateY(-1px) scale(1.04) !important;
+  top: -2px !important;
   color: #fde68a !important;
   text-shadow: 0 0 12px rgba(245, 158, 11, 0.55);
 }
@@ -578,23 +608,25 @@ button.text-slate-400 {
   transition: transform 0.28s cubic-bezier(0.34, 1.7, 0.64, 1), color 0.18s ease !important;
 }
 button.text-slate-400:hover {
-  transform: scale(1.24) rotate(90deg) !important;
+  transform: scale(1.22) rotate(90deg) !important;
   color: #fb7185 !important;
 }
 main button[title*="Modificar"],
 main button[title*="Editar"],
 main button[title*="Eliminar"],
 main button[title*="Borrar"] {
-  transition: transform 0.26s cubic-bezier(0.34, 1.7, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.22s ease !important;
+  position: relative;
+  top: 0;
+  transition: top 0.24s cubic-bezier(0.22, 1.5, 0.36, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.22s ease !important;
 }
 main button[title*="Modificar"]:hover,
 main button[title*="Editar"]:hover {
-  transform: translateY(-1px) scale(1.1) !important;
+  top: -2px !important;
   box-shadow: 0 6px 14px -4px rgba(34, 211, 238, 0.45);
 }
 main button[title*="Eliminar"]:hover,
 main button[title*="Borrar"]:hover {
-  transform: translateY(-1px) scale(1.1) !important;
+  top: -2px !important;
   box-shadow: 0 6px 14px -4px rgba(244, 63, 94, 0.45);
 }
 
@@ -625,7 +657,7 @@ select {
   backdrop-filter: blur(18px) saturate(185%) !important;
   -webkit-backdrop-filter: blur(18px) saturate(185%) !important;
   box-shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.32), 0 1px 0 0 rgba(255, 255, 255, 0.22) inset !important;
-  transition: transform 0.26s cubic-bezier(0.22, 1.45, 0.36, 1), border-color 0.22s ease, box-shadow 0.24s ease, background-color 0.22s ease !important;
+  transition: border-color 0.22s ease, box-shadow 0.24s ease, background-color 0.22s ease !important;
 }
 select:hover {
   background-color: rgba(34, 211, 238, 0.1) !important;
@@ -645,19 +677,21 @@ select option { background-color: #0b1326 !important; color: #f8fafc !important;
   z-index: 99999;
   padding: 6px;
   border-radius: 18px;
-  background: linear-gradient(155deg, rgba(12, 20, 42, 0.72), rgba(6, 12, 28, 0.84));
+  background: linear-gradient(155deg, rgba(12, 20, 42, 0.78), rgba(6, 12, 28, 0.88));
   border: 1px solid rgba(103, 232, 249, 0.28);
   backdrop-filter: blur(28px) saturate(220%);
   -webkit-backdrop-filter: blur(28px) saturate(220%);
   box-shadow: 0 24px 56px -12px rgba(0, 0, 0, 0.7), 0 0 32px -8px rgba(6, 182, 212, 0.34), 0 1px 0 0 rgba(255, 255, 255, 0.3) inset;
   max-height: 270px;
   overflow-y: auto;
-  animation: kronoDropIn 0.24s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+  animation: kronoDropIn 0.22s cubic-bezier(0.22, 1.38, 0.36, 1) both;
 }
 #krono-glass-dropdown.krono-dd-up {
-  animation: kronoDropInUp 0.24s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+  animation: kronoDropInUp 0.22s cubic-bezier(0.22, 1.38, 0.36, 1) both;
 }
 .krono-dd-item {
+  position: relative;
+  left: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -672,10 +706,10 @@ select option { background-color: #0b1326 !important; color: #f8fafc !important;
   font-weight: 600;
   text-align: left;
   cursor: pointer;
-  transition: transform 0.22s cubic-bezier(0.22, 1.45, 0.36, 1), background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  transition: left 0.22s cubic-bezier(0.22, 1.45, 0.36, 1), background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 .krono-dd-item:hover {
-  transform: translateX(4px);
+  left: 4px;
   background: rgba(34, 211, 238, 0.15);
   border-color: rgba(34, 211, 238, 0.36);
   color: #ffffff;
@@ -708,27 +742,27 @@ select option { background-color: #0b1326 !important; color: #f8fafc !important;
   animation: kronoBarShine 2.5s ease-in-out infinite;
 }
 
-/* === STAGGERED TAB & MODAL TRANSITIONS === */
+/* === STAGGERED TAB & MODAL TRANSITIONS (Crisp relative top, zero scaling) === */
 main .animate-pop-elastic { animation: none !important; transform: none !important; }
-main .animate-pop-elastic > * { animation: kronoTabIn 0.42s cubic-bezier(0.22, 1.28, 0.36, 1) both !important; }
-main .animate-pop-elastic > *:nth-child(2) { animation-delay: 42ms !important; }
-main .animate-pop-elastic > *:nth-child(3) { animation-delay: 84ms !important; }
-main .animate-pop-elastic > *:nth-child(4) { animation-delay: 126ms !important; }
-main .animate-pop-elastic > *:nth-child(5) { animation-delay: 168ms !important; }
-main .animate-pop-elastic > *:nth-child(6) { animation-delay: 210ms !important; }
-.fixed.inset-0.z-50 { animation: kronoBackdropIn 0.2s ease-out both; }
-.glass-97.animate-pop-elastic { animation: kronoModalIn 0.36s cubic-bezier(0.22, 1.38, 0.36, 1) both !important; }
+main .animate-pop-elastic > * { position: relative; animation: kronoTabIn 0.38s cubic-bezier(0.22, 1.25, 0.36, 1) both !important; }
+main .animate-pop-elastic > *:nth-child(2) { animation-delay: 38ms !important; }
+main .animate-pop-elastic > *:nth-child(3) { animation-delay: 76ms !important; }
+main .animate-pop-elastic > *:nth-child(4) { animation-delay: 114ms !important; }
+main .animate-pop-elastic > *:nth-child(5) { animation-delay: 152ms !important; }
+main .animate-pop-elastic > *:nth-child(6) { animation-delay: 190ms !important; }
+.fixed.inset-0.z-50 { animation: kronoBackdropIn 0.18s ease-out both; }
+.glass-97.animate-pop-elastic { position: relative; animation: kronoModalIn 0.32s cubic-bezier(0.22, 1.32, 0.36, 1) both !important; }
 .animate-burst { position: relative !important; top: 0 !important; animation: kronoBurstIn 1.45s cubic-bezier(0.22, 1.25, 0.36, 1) forwards !important; }
 
-/* === LAYOUT-SAFE CLICK RIPPLE === */
+/* === LAYOUT-SAFE CLICK RIPPLE (Underneath text so text stays crisp) === */
 .krono-ripple {
   position: absolute !important;
   flex: none !important;
   border-radius: 9999px !important;
   pointer-events: none !important;
-  background: radial-gradient(circle, rgba(34, 211, 238, 0.56) 0%, rgba(139, 92, 246, 0.26) 55%, transparent 75%);
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.45) 0%, rgba(139, 92, 246, 0.22) 55%, transparent 75%);
   animation: kronoRipple 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  z-index: 2 !important;
+  z-index: 0 !important;
 }
 
 /* === UPGRADED FLOATING VOICE FAB === */
@@ -913,7 +947,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.75';
+    const APP_BASE_VERSION = '6.5.76';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -926,8 +960,8 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.75',
-      lastReleaseNotes: 'v6.5.75: Motor visual restaurado y mejorado — glassmorphism con borde luminoso dinámico, dropdowns cristal, física spring fluida, panel lateral pulido y límite transitorio extendido.',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.76',
+      lastReleaseNotes: 'v6.5.76: Animaciones ultra nítidas sin desenfoque de texto (transiciones por desplazamiento de pintura sin reescalado GPU en contenedores de texto, ClearType preservado y efectos de íconos fluidos).',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
       accounts: [
@@ -3562,10 +3596,10 @@ input[type=number]::-webkit-outer-spin-button:hover {
     };
 
     window.addEventListener('DOMContentLoaded', () => { if ((localStorage.getItem('KRONO_GEMINI_MODEL') || '').includes('3.8')) localStorage.removeItem('KRONO_GEMINI_MODEL');
-      if (localStorage.getItem('KRONO_FX_MIGRATED_6575') !== '1') {
+      if (localStorage.getItem('KRONO_FX_MIGRATED_6576') !== '1') {
         localStorage.removeItem('KRONO_OTA_LIVE_CSS');
         localStorage.removeItem('KRONO_OTA_LIVE_JS');
-        localStorage.setItem('KRONO_FX_MIGRATED_6575', '1');
+        localStorage.setItem('KRONO_FX_MIGRATED_6576', '1');
       }
       loadLivePatches();
       let upd = false;
@@ -3602,7 +3636,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       }
       if (params.get('voice') === '1') setTimeout(() => startVoiceCapture(), 350);
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
-        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.75: Motor visual restaurado y mejorado — glassmorphism con borde luminoso dinámico, dropdowns cristal, física spring fluida, panel lateral pulido y límite transitorio extendido.'), 1200);
+        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.76: Animaciones ultra nítidas sin desenfoque de texto (transiciones por desplazamiento de pintura sin reescalado GPU en contenedores de texto, ClearType preservado y efectos de íconos fluidos).'), 1200);
       } else if (state.autoCheckOta && cleanRepoSlug()) {
         setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
       }
@@ -4232,10 +4266,10 @@ input[type=number]::-webkit-outer-spin-button:hover {
   </script>
 
   <script id="krono-core-fx-js">
-    // KRONO MASTER INTERACTIVE ENGINE v6.5.75
+    // KRONO MASTER INTERACTIVE ENGINE v6.5.76
     (function() {
-      if (window.__KRONO_MASTER_FX_V6575__) return;
-      window.__KRONO_MASTER_FX_V6575__ = true;
+      if (window.__KRONO_MASTER_FX_V6576__) return;
+      window.__KRONO_MASTER_FX_V6576__ = true;
 
       // 1. Silky 60fps Cursor Spotlight + Card/Row Specular Glow
       let spotRaf = 0, targetX = -9999, targetY = -9999, curX = -9999, curY = -9999, lastTarget = null;
