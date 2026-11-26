@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.80
+    // KRONO OTA BOOTLOADER v6.5.81
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -489,7 +489,7 @@ nav.md\:hidden button:active {
   scrollbar-color: rgba(34, 211, 238, 0.45) transparent;
   overscroll-behavior: contain;
 }
-.krono-recent-scroll:not(#krono-glass-dropdown) {
+.krono-recent-scroll:not(#krono-glass-dropdown):not(.krono-box-scroll) {
   padding: 12px 20px 24px 18px !important;
   margin: -12px -18px -18px -18px !important;
 }
@@ -983,7 +983,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.80';
+    const APP_BASE_VERSION = '6.5.81';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -996,8 +996,8 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.80',
-      lastReleaseNotes: 'v6.5.80: Filtro por mes calendario, Saldo Libre Real, proyección de cuotas 6 meses, pago de cierre en 1 clic, gastos fijos recurrentes, escaneo de tickets con Gemini (📷/Ctrl+V), gráficos SVG nativos, metas de ahorro y análisis mensual inteligente.',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.81',
+      lastReleaseNotes: 'v6.5.81: Corrección de superposición en el modal Pagar Cierre y acceso rápido para pagar cierres/cuotas directamente desde el Panel principal.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
       accounts: [
@@ -2564,9 +2564,21 @@ input[type=number]::-webkit-outer-spin-button:hover {
       };
     }
 
-    function openPayCardClosingModal(cardName) {
-      if (!cardName) return;
-      ui.payCardClosingName = String(cardName).trim();
+    function getPendingCardsForClosingPay() {
+      return getDebtsCardsBreakdown().filter(c => c.pendingItems > 0);
+    }
+    function openPayCardClosingModal(cardName = null) {
+      let target = cardName ? String(cardName).trim() : '';
+      if (!target) {
+        const pendingCards = getPendingCardsForClosingPay();
+        if (!pendingCards.length) {
+          spawnFloatingBurst('✅ No tenés cierres pendientes de tarjetas', true);
+          return;
+        }
+        const withCurrent = pendingCards.find(c => getCardClosingBreakdown(c.name).mode === 'current');
+        target = (withCurrent || pendingCards[0]).name;
+      }
+      ui.payCardClosingName = target;
       ui.showPayCardClosingModal = true;
       render();
     }
@@ -4852,7 +4864,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
       }
       if (params.get('voice') === '1') setTimeout(() => startVoiceCapture(), 350);
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
-        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.80: Filtro por mes calendario, Saldo Libre Real, proyección de cuotas 6 meses, pago de cierre en 1 clic, gastos fijos recurrentes, escaneo de tickets con Gemini (📷/Ctrl+V), gráficos SVG nativos, metas de ahorro y análisis mensual inteligente.'), 1200);
+        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.81: Corrección de superposición en el modal Pagar Cierre y acceso rápido para pagar cierres/cuotas directamente desde el Panel principal.'), 1200);
       } else if (state.autoCheckOta && cleanRepoSlug()) {
         setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
       }
@@ -4973,7 +4985,10 @@ input[type=number]::-webkit-outer-spin-button:hover {
             </div>
             <div onclick="ui.debtFilterKind='debt';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn krono-kpi-tile krono-kpi-amber p-3.5 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
               <div class="flex items-center justify-between gap-1"><span class="text-[10px] text-slate-400">${ds.cardClosingLabel}${ds.cardClosingDateLabel ? ' • ' + ds.cardClosingDateLabel : ''}</span><span class="krono-kpi-arrow text-[10px] text-amber-200/70">↗</span></div>
-              <div class="text-sm font-extrabold mono text-amber-200 mt-1">${formatMoney(Math.abs(ds.displayCardClosingUYU), 'UYU')}</div>
+              <div class="flex items-center justify-between gap-2 mt-1">
+                <div class="text-sm font-extrabold mono text-amber-200">${formatMoney(Math.abs(ds.displayCardClosingUYU), 'UYU')}</div>
+                ${Math.abs(ds.displayCardClosingUYU) > 0.01 ? `<button type="button" onclick="event.stopPropagation(); openPayCardClosingModal();" class="spring-btn px-2.5 py-1 rounded-xl bg-emerald-500/25 hover:bg-emerald-500/35 border border-emerald-400/45 text-emerald-200 font-extrabold text-[10px] shrink-0">💳 Pagar</button>` : ''}
+              </div>
             </div>
           </div>
         </div>
@@ -5053,6 +5068,10 @@ input[type=number]::-webkit-outer-spin-button:hover {
                   <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
                     <div class="h-full rounded-full ${c.usedPct >= 85 ? 'bg-rose-500' : (c.usedPct >= 60 ? 'bg-amber-400' : 'bg-emerald-400')}" style="width:${c.usedPct}%"></div>
                   </div>
+                </div>` : ''}
+                ${c.pendingItems > 0 ? `<div class="pt-1.5 border-t border-white/10 flex items-center justify-between gap-2">
+                  <span class="text-[10px] text-slate-400 truncate">${c.pendingItems} ${c.pendingItems === 1 ? 'ítem pendiente' : 'ítems pendientes'}</span>
+                  <button type="button" onclick="event.stopPropagation(); openPayCardClosingModal('${safeCardArg}');" class="spring-btn px-2.5 py-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-400/40 text-emerald-200 font-extrabold text-[10px] shrink-0">💳 Pagar cierre</button>
                 </div>` : ''}
               </div>`;
             }).join('') : '<div class="text-xs text-slate-400 py-4 text-center">Sin tarjetas asociadas. Tocá "+ Tarjeta" para agregar una.</div>'}</div>
@@ -5686,35 +5705,42 @@ input[type=number]::-webkit-outer-spin-button:hover {
         ${ui.showNewBudgetModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateBudgetSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">🎯 Nueva Categoría</h3><input id="bg-name" type="text" required placeholder="Nombre" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="bg-limit" type="number" required placeholder="Tope ($ UYU)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="bg-icon" type="text" value="🎯" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewBudgetModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Crear</button></div></form></div>` : ''}
         ${(() => {
           if (!ui.showPayCardClosingModal || !ui.payCardClosingName) return '';
+          const pendingCards = getPendingCardsForClosingPay();
           const info = getCardClosingBreakdown(ui.payCardClosingName);
-          return `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handlePayCardClosingSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-emerald-400/45 space-y-3 animate-pop-elastic max-h-[90dvh] overflow-y-auto">
+          return `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handlePayCardClosingSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-emerald-400/45 space-y-3.5 animate-pop-elastic max-h-[90dvh] overflow-y-auto">
             <div class="flex items-center justify-between gap-2">
               <h3 class="text-base font-extrabold text-white">💳 Pagar ${escapeAttr(info.label)}</h3>
               <span class="text-[11px] mono px-2.5 py-0.5 rounded-full bg-violet-500/20 border border-violet-400/35 text-violet-200">${escapeAttr(info.cardName)}${info.dateLabel ? ' • ' + info.dateLabel : ''}</span>
             </div>
+            ${pendingCards.length > 1 ? `<div class="space-y-1.5">
+              <label class="text-[10px] text-slate-400 block">Tarjeta a pagar</label>
+              <select id="pcc-card" onchange="ui.payCardClosingName=this.value;render();" class="w-full bg-slate-950/80 border border-violet-400/35 rounded-xl px-3 py-2.5 text-xs text-violet-200 font-bold">
+                ${pendingCards.map(pc => `<option value="${escapeAttr(pc.name)}" ${pc.name.toLowerCase() === info.cardName.toLowerCase() ? 'selected' : ''}>💳 ${escapeAttr(pc.name)} (${pc.pendingItems} pend.)</option>`).join('')}
+              </select>
+            </div>` : ''}
             <div class="space-y-1.5">
               <label class="text-[10px] text-slate-400 block">¿Qué querés pagar?</label>
               <select id="pcc-scope" onchange="const b=document.getElementById('pcc-total-preview'); if(b) b.textContent = this.value==='full' ? '${escapeAttr(formatMoney(info.fullBalanceUYU, 'UYU'))}' : '${escapeAttr(formatMoney(info.closingTotalUYU, 'UYU'))}';" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white font-bold">
                 <option value="closing">Cuotas de este cierre (${info.items.length} ${info.items.length === 1 ? 'ítem' : 'ítems'} • ${formatMoney(info.closingTotalUYU, 'UYU')})</option>
-                <option value="full">Saldo total restante (${info.allItems.length} ítems • ${formatMoney(info.fullBalanceUYU, 'UYU')})</option>
+                <option value="full">Saldo total restante (${info.allItems.length} ${info.allItems.length === 1 ? 'ítem' : 'ítems'} • ${formatMoney(info.fullBalanceUYU, 'UYU')})</option>
               </select>
             </div>
             <div class="space-y-1.5">
               <label class="text-[10px] text-slate-400 block">Cuenta de origen del pago</label>
               <select id="pcc-account" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map(a => `<option value="${a.id}">${a.icon || '🏦'} ${escapeAttr(a.name)} (${formatMoney(a.balance, a.currency)})</option>`).join('')}</select>
             </div>
-            ${info.items.length ? `<div class="p-3 rounded-2xl bg-slate-950/55 border border-white/10 space-y-1.5 max-h-36 overflow-y-auto krono-recent-scroll">
+            ${info.items.length ? `<div class="p-3.5 rounded-2xl bg-slate-950/55 border border-white/10 space-y-2 max-h-36 overflow-y-auto krono-recent-scroll krono-box-scroll">
               <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Detalle del cierre</div>
               ${info.items.map(it => `<div class="flex justify-between items-center gap-2 text-[11px]">
                 <span class="text-slate-200 truncate">${escapeAttr(it.debt.title)}${it.instCount > 1 ? ` <span class="text-cyan-300 mono">(#${it.nextInstNum}/${it.instCount})</span>` : ''}</span>
                 <span class="mono font-bold text-amber-200 shrink-0">${formatMoney(it.payNow, it.debt.currency)}</span>
               </div>`).join('')}
             </div>` : ''}
-            <div class="flex items-center justify-between px-3 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 text-xs">
+            <div class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 text-xs">
               <span class="text-emerald-200 font-bold">Total a descontar:</span>
               <span id="pcc-total-preview" class="text-base font-extrabold mono text-emerald-300">${formatMoney(info.closingTotalUYU, 'UYU')}</span>
             </div>
-            <div class="flex justify-end gap-2 pt-2">
+            <div class="flex justify-end gap-2 pt-1">
               <button type="button" onclick="ui.showPayCardClosingModal=false;ui.payCardClosingName=null;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button>
               <button type="submit" class="spring-btn px-5 py-2 rounded-xl bg-emerald-400 text-slate-950 font-extrabold text-xs">✓ Confirmar Pago</button>
             </div>
