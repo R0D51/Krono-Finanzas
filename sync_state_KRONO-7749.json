@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795720336505,
+  "updatedAt": 1795720396214,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -199,15 +199,16 @@
       "paymentMethod": "credit_card",
       "cardName": "Itaú Visa",
       "installmentsCount": 3,
-      "paidInstallments": 1,
+      "paidInstallments": 3,
       "amount": 1500,
       "currency": "UYU",
       "kind": "debt",
       "dueDate": "",
-      "status": "pending",
+      "status": "settled",
       "notes": "",
       "createdAt": 1795637550371,
-      "lastPaidAt": 1795720336496
+      "lastPaidAt": 1795720396214,
+      "settledAt": 1795720396214
     },
     {
       "id": "debt_sync_tx_1795483635646_280_929",
