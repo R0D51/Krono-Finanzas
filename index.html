@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Krono Finanzas</title>
   <script>
-    // KRONO OTA BOOTLOADER v6.5.79
+    // KRONO OTA BOOTLOADER v6.5.80
     (function() {
       if (window.__KRONO_OTA_BOOTED__) return;
       const params = new URLSearchParams(window.location.search);
@@ -798,6 +798,38 @@ main .animate-pop-elastic > *:nth-child(6) { animation-delay: 190ms !important; 
   transform: translateY(0px) scale(0.95) !important;
 }
 
+/* === v6.5.80 NEW COMPONENTS (Month Pill, SVG Charts, Timeline, Ticket Scan) === */
+.krono-month-pill {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.72), rgba(10, 18, 36, 0.62));
+  border: 1px solid rgba(103, 232, 249, 0.28);
+  box-shadow: 0 8px 20px -8px rgba(6, 182, 212, 0.25), 0 1px 0 0 rgba(255, 255, 255, 0.16) inset;
+}
+.krono-month-arrow {
+  position: relative;
+  top: 0;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.krono-month-arrow:hover {
+  background-color: rgba(34, 211, 238, 0.18);
+  color: #ecfeff;
+}
+.krono-svg-bar {
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+.krono-svg-bar:hover {
+  opacity: 1 !important;
+  filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.55));
+}
+.krono-scan-bar {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.14), rgba(34, 211, 238, 0.10));
+  border: 1px dashed rgba(167, 139, 250, 0.45);
+  transition: border-color 0.22s ease, background-color 0.22s ease, box-shadow 0.22s ease;
+}
+.krono-scan-bar:hover {
+  border-color: rgba(103, 232, 249, 0.75);
+  box-shadow: 0 6px 16px -6px rgba(139, 92, 246, 0.35);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -951,7 +983,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
   <div id="app-root" class="relative z-10 h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex flex-col overflow-hidden"></div>
 
   <script>
-    const APP_BASE_VERSION = '6.5.79';
+    const APP_BASE_VERSION = '6.5.80';
     const STORAGE_KEY = 'krono_finanzas_v4_state';
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('krono_finanzas_realtime_v4') : null;
 
@@ -964,8 +996,8 @@ input[type=number]::-webkit-outer-spin-button:hover {
       cloudWebhookUrl: DEFAULT_CLOUD_WEBHOOK_URL, otaUpdateServerUrl: '',
       githubRepo: DEFAULT_GH_REPO, githubBranch: 'main', githubFilePath: 'ota.json',
       githubToken: DEFAULT_GH_TOKEN, githubUseReleases: true, githubIncludePrereleases: false,
-      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.79',
-      lastReleaseNotes: 'v6.5.79: Difuminado limpio sin cortes rectos en los halos de iluminación al pasar el cursor sobre botones, filas y tarjetas.',
+      githubAutoPublishRelease: true, lastReleaseTag: 'v6.5.80',
+      lastReleaseNotes: 'v6.5.80: Filtro por mes calendario, Saldo Libre Real, proyección de cuotas 6 meses, pago de cierre en 1 clic, gastos fijos recurrentes, escaneo de tickets con Gemini (📷/Ctrl+V), gráficos SVG nativos, metas de ahorro y análisis mensual inteligente.',
       lastGithubSync: '', autoCheckOta: true, processedCommandIds: [], externalCommandHistory: [],
       exchangeRate: 41.5, defaultCurrency: 'UYU', ttsEnabled: true, voiceLang: 'es-UY',
       accounts: [
@@ -988,7 +1020,9 @@ input[type=number]::-webkit-outer-spin-button:hover {
       ],
       transactions: [
         { id: 'tx_demo_1', title: 'Supermercado', amount: 2450, currency: 'UYU', type: 'expense', category: 'Comida y Súper', accountId: 'acc_uyu', accountName: 'Cuenta Brou / Débito', date: '18/11 10:40', timestamp: 1763470000000 }
-      ]
+      ],
+      recurringExpenses: [],
+      savingsGoals: []
     };
 
     let state = loadState();
@@ -1000,6 +1034,13 @@ input[type=number]::-webkit-outer-spin-button:hover {
       showVoiceWidgetOverlay: false, showOtaModal: false, inputModal: null, confirmModal: null, otaStatusMsg: '', otaChecking: false,
       githubPushing: false, releaseNotesInput: '', txSearch: '', txFilterType: 'all', txFilterAccount: 'all',
       txFilterCurrency: 'all', isListening: false, voiceTranscript: '', voiceHintMsg: '',
+      selectedMonth: (function(){ const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); })(),
+      showNewRecurringModal: false, editingRecurringId: null,
+      showPayCardClosingModal: false, payCardClosingName: null,
+      showNewGoalModal: false, editingGoalId: null,
+      showGoalContribModal: false, contribGoalId: null, contribGoalMode: 'deposit',
+      aiMonthlyAnalysis: null, aiMonthlyLoading: false, aiMonthlyError: '',
+      ticketScanLoading: false, ticketScanStatus: '',
       geminiResponse: null, lastInterpreterMode: '', syncStatusText: 'Listo', bridgeDiagnostic: '✅ Puente Activo'
     };
 
@@ -1078,7 +1119,9 @@ input[type=number]::-webkit-outer-spin-button:hover {
             budgets: Array.isArray(parsed.budgets) ? parsed.budgets : DEMO_STATE.budgets,
             creditCards: Array.isArray(parsed.creditCards) ? parsed.creditCards : DEMO_STATE.creditCards,
             debts: Array.isArray(parsed.debts) ? parsed.debts : DEMO_STATE.debts,
-            transactions: Array.isArray(parsed.transactions) ? parsed.transactions : DEMO_STATE.transactions
+            transactions: Array.isArray(parsed.transactions) ? parsed.transactions : DEMO_STATE.transactions,
+            recurringExpenses: Array.isArray(parsed.recurringExpenses) ? parsed.recurringExpenses : [],
+            savingsGoals: Array.isArray(parsed.savingsGoals) ? parsed.savingsGoals : []
           };
         }
       } catch (e) {}
@@ -1267,7 +1310,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
           syncCode: state.syncCode, updatedAt: state.updatedAt, cloudWebhookUrl: state.cloudWebhookUrl || DEFAULT_CLOUD_WEBHOOK_URL,
           exchangeRate: state.exchangeRate, defaultCurrency: state.defaultCurrency,
           processedCommandIds: state.processedCommandIds || [], externalCommandHistory: state.externalCommandHistory || [],
-          accounts: state.accounts, budgets: state.budgets, debts: state.debts || [], transactions: state.transactions
+          accounts: state.accounts, budgets: state.budgets, creditCards: state.creditCards || [], debts: state.debts || [], transactions: state.transactions, recurringExpenses: state.recurringExpenses || [], savingsGoals: state.savingsGoals || []
         };
         await pushSingleFileToGitHub(repo, branch, path, JSON.stringify(payload, null, 2), `🔄 Sync ${state.syncCode}`, token);
         ui.syncStatusText = 'Sync ' + new Date().toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
@@ -1295,6 +1338,8 @@ input[type=number]::-webkit-outer-spin-button:hover {
           state.budgets = Array.isArray(remote.budgets) ? remote.budgets : state.budgets;
           if (Array.isArray(remote.debts)) state.debts = remote.debts;
           if (Array.isArray(remote.creditCards)) state.creditCards = remote.creditCards;
+          if (Array.isArray(remote.recurringExpenses)) state.recurringExpenses = remote.recurringExpenses;
+          if (Array.isArray(remote.savingsGoals)) state.savingsGoals = remote.savingsGoals;
           state.transactions = Array.isArray(remote.transactions) ? remote.transactions : state.transactions;
           if (remote.exchangeRate) state.exchangeRate = remote.exchangeRate;
           if (remote.cloudWebhookUrl) state.cloudWebhookUrl = remote.cloudWebhookUrl;
@@ -1520,12 +1565,101 @@ input[type=number]::-webkit-outer-spin-button:hover {
       if (el && el.value.trim()) applyOtaUpdatePayload(el.value.trim(), null, true, Boolean(state.githubAutoPublishRelease && cleanRepoSlug() && getActiveGitHubToken()), n ? n.value.trim() : '');
     }
 
-    function getTotals() {
+    const KRONO_MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const KRONO_MONTH_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+    function getCurrentMonthKey() {
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    }
+    function parseMonthKey(mk) {
+      const m = String(mk || '').match(/^(\d{4})-(\d{2})$/);
+      if (m) {
+        const y = parseInt(m[1], 10), mo = parseInt(m[2], 10) - 1;
+        if (y >= 2000 && y <= 2100 && mo >= 0 && mo <= 11) return { year: y, monthIdx: mo };
+      }
+      const d = new Date();
+      return { year: d.getFullYear(), monthIdx: d.getMonth() };
+    }
+    function shiftMonthKey(mk, delta) {
+      const { year, monthIdx } = parseMonthKey(mk);
+      const d = new Date(year, monthIdx + delta, 1);
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    }
+    function formatMonthKeyLabel(mk) {
+      const { year, monthIdx } = parseMonthKey(mk);
+      return `${KRONO_MONTH_NAMES[monthIdx]} ${year}`;
+    }
+    function formatMonthKeyShort(mk) {
+      const { monthIdx } = parseMonthKey(mk);
+      return KRONO_MONTH_SHORT[monthIdx];
+    }
+    function shiftSelectedMonth(delta) {
+      ui.selectedMonth = shiftMonthKey(ui.selectedMonth || getCurrentMonthKey(), delta);
+      ui.aiMonthlyError = '';
+      render();
+    }
+    function setSelectedMonth(mk) {
+      ui.selectedMonth = mk || getCurrentMonthKey();
+      ui.aiMonthlyError = '';
+      render();
+    }
+    function getTxMonthKey(tx) {
+      if (!tx) return getCurrentMonthKey();
+      const ts = Number(tx.timestamp) || 0;
+      if (ts > 1000000000) {
+        const d = new Date(ts);
+        if (!isNaN(d.getTime())) {
+          return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+        }
+      }
+      const dm = String(tx.date || '').match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+      if (dm) {
+        const mo = Math.max(1, Math.min(12, parseInt(dm[2], 10) || 1));
+        const yr = dm[3] ? (dm[3].length === 2 ? 2000 + parseInt(dm[3], 10) : parseInt(dm[3], 10)) : new Date().getFullYear();
+        return yr + '-' + String(mo).padStart(2, '0');
+      }
+      return getCurrentMonthKey();
+    }
+    function getTransactionsForMonth(mk = ui.selectedMonth) {
+      const target = mk || getCurrentMonthKey();
+      return (Array.isArray(state.transactions) ? state.transactions : []).filter(t => getTxMonthKey(t) === target);
+    }
+    function renderMonthSelectorPill() {
+      const activeMk = ui.selectedMonth || getCurrentMonthKey();
+      const isCurrent = activeMk === getCurrentMonthKey();
+      return `<div class="krono-month-pill inline-flex items-center gap-1 rounded-2xl p-1 text-xs">
+        <button type="button" onclick="shiftSelectedMonth(-1)" title="Mes anterior" class="krono-month-arrow w-7 h-7 rounded-xl inline-flex items-center justify-center text-cyan-200 font-extrabold">‹</button>
+        <button type="button" onclick="setSelectedMonth(getCurrentMonthKey())" title="${isCurrent ? 'Mes actual' : 'Volver al mes actual'}" class="px-2.5 py-1 rounded-xl font-extrabold text-white text-xs whitespace-nowrap inline-flex items-center gap-1.5 hover:bg-white/5">
+          <span>📅</span>
+          <span>${formatMonthKeyLabel(activeMk)}</span>
+          ${!isCurrent ? '<span class="text-[9px] px-1.5 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-400/35 text-cyan-200 mono">Hoy</span>' : ''}
+        </button>
+        <button type="button" onclick="shiftSelectedMonth(1)" title="Mes siguiente" class="krono-month-arrow w-7 h-7 rounded-xl inline-flex items-center justify-center text-cyan-200 font-extrabold">›</button>
+      </div>`;
+    }
+    function getTotals(monthKey = null) {
       const rate = Number(state.exchangeRate) || 41.5;
+      const targetMk = monthKey || ui.selectedMonth || getCurrentMonthKey();
       let totalUYU = 0, monthIncomeUYU = 0, monthExpenseUYU = 0;
-      state.accounts.forEach(a => { totalUYU += a.currency === 'USD' ? a.balance * rate : a.balance; });
-      state.transactions.forEach(t => { const v = t.currency === 'USD' ? t.amount * rate : t.amount; if (t.type === 'income') monthIncomeUYU += v; else monthExpenseUYU += v; });
-      return { totalUYU, totalUSD: totalUYU / rate, monthIncomeUYU, monthExpenseUYU, savingsRate: monthIncomeUYU > 0 ? Math.max(0, Math.round(((monthIncomeUYU - monthExpenseUYU) / monthIncomeUYU) * 100)) : 0 };
+      (Array.isArray(state.accounts) ? state.accounts : []).forEach(a => {
+        totalUYU += a.currency === 'USD' ? a.balance * rate : a.balance;
+      });
+      const monthTxs = getTransactionsForMonth(targetMk);
+      monthTxs.forEach(t => {
+        const v = t.currency === 'USD' ? t.amount * rate : t.amount;
+        if (t.type === 'income') monthIncomeUYU += v;
+        else monthExpenseUYU += v;
+      });
+      return {
+        monthKey: targetMk,
+        monthTxCount: monthTxs.length,
+        totalUYU,
+        totalUSD: totalUYU / rate,
+        monthIncomeUYU,
+        monthExpenseUYU,
+        savingsRate: monthIncomeUYU > 0 ? Math.max(0, Math.round(((monthIncomeUYU - monthExpenseUYU) / monthIncomeUYU) * 100)) : 0
+      };
     }
     function formatMoney(amount, currency = 'UYU') { return (currency === 'USD' ? 'US$ ' : '$ ') + Number(amount || 0).toLocaleString('es-UY', { maximumFractionDigits: currency === 'USD' ? 2 : 0 }); }
     function addTransaction({ title, amount, currency = 'UYU', type = 'expense', category = 'Comida y Súper', accountId = null, fromExternal = false }) {
@@ -2322,6 +2456,883 @@ input[type=number]::-webkit-outer-spin-button:hover {
         pendingCount
       };
     }
+    function isDebtCardInstrument(d) {
+      if (!d) return false;
+      const cardMeta = getSavedCardMetaForDebt(d);
+      return Boolean(cardMeta) || d.paymentMethod === 'credit_card' || Boolean((d.cardName || '').trim()) || /tarjeta|visa|master|oca|amex|cabal|zodimac|brou|itau|itaú|santander|bbva|scotia|prex|midinero/i.test(`${d.title || ''} ${d.counterparty || ''}`);
+    }
+
+    function getRealAvailableBreakdown(totals, ds, monthKey = ui.selectedMonth) {
+      const rate = Number(state.exchangeRate) || 41.5;
+      const targetMk = monthKey || getCurrentMonthKey();
+      const cardCurrentClosingUYU = (ds && ds.currentCardClosingUYU > 0.01) ? ds.currentCardClosingUYU : 0;
+      let otherPendingDebtsUYU = 0;
+      (Array.isArray(state.debts) ? state.debts : []).forEach(d => {
+        if (d.status !== 'settled' && d.kind !== 'credit' && !isDebtCardInstrument(d)) {
+          const rem = getDebtRemainingAmount(d);
+          const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+          const instVal = getDebtInstallmentValue(d);
+          const dueNow = instCount > 1 ? Math.min(rem, instVal) : rem;
+          otherPendingDebtsUYU += (d.currency === 'USD' ? dueNow * rate : dueNow);
+        }
+      });
+      let unpaidRecurringUYU = 0;
+      (Array.isArray(state.recurringExpenses) ? state.recurringExpenses : []).forEach(rec => {
+        const paidArr = Array.isArray(rec.paidMonths) ? rec.paidMonths : [];
+        if (!paidArr.includes(targetMk)) {
+          const amt = Math.abs(Number(rec.amount) || 0);
+          unpaidRecurringUYU += (rec.currency === 'USD' ? amt * rate : amt);
+        }
+      });
+      const committedUYU = Number((cardCurrentClosingUYU + otherPendingDebtsUYU + unpaidRecurringUYU).toFixed(2));
+      const freeUYU = Number(((totals ? totals.totalUYU : 0) - committedUYU).toFixed(2));
+      return {
+        committedUYU,
+        committedUSD: committedUYU / rate,
+        freeUYU,
+        freeUSD: freeUYU / rate,
+        cardCurrentClosingUYU,
+        otherPendingDebtsUYU,
+        unpaidRecurringUYU
+      };
+    }
+
+    function getCardClosingBreakdown(cardName) {
+      const rate = Number(state.exchangeRate) || 41.5;
+      const now = new Date();
+      const targetNorm = normalizeStr(cardName || '');
+      const cards = Array.isArray(state.creditCards) ? state.creditCards : [];
+      const cardMeta = cards.find(c => normalizeStr(c.name || '') === targetNorm) || null;
+      const closingDay = parseClosingDayNumber(cardMeta ? cardMeta.closingDay : null);
+      const cycle = getCardClosingCycleDates(closingDay, now);
+
+      const cardDebts = (Array.isArray(state.debts) ? state.debts : []).filter(d => {
+        if (d.status === 'settled' || d.kind === 'credit') return false;
+        const lbl = normalizeStr(getDebtInstrumentLabel(d) || d.cardName || d.counterparty || '');
+        return lbl && (lbl === targetNorm || lbl.includes(targetNorm) || targetNorm.includes(lbl));
+      });
+
+      const currentItems = [], nextItems = [];
+      let currentUYU = 0, nextUYU = 0, fullBalanceUYU = 0;
+
+      cardDebts.forEach(d => {
+        const rem = getDebtRemainingAmount(d);
+        if (rem <= 0.01) return;
+        const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+        const paidInst = Math.max(0, Math.min(instCount, parseInt(d.paidInstallments, 10) || 0));
+        const instVal = getDebtInstallmentValue(d);
+        const payNow = instCount > 1 ? Math.min(rem, instVal) : rem;
+        const payNowUYU = (d.currency === 'USD' ? payNow * rate : payNow);
+        const remUYU = (d.currency === 'USD' ? rem * rate : rem);
+        fullBalanceUYU += remUYU;
+
+        const createdMs = Number(d.createdAt) || 0;
+        const inCurrentClosing = cycle.hasClosingDay ? (createdMs <= cycle.currentClosingDate.getTime()) : true;
+        const paidCurrentCycle = wasDebtPaidAfterTimestamp(d, cardMeta, cycle.currentClosingDate.getTime());
+
+        const itemObj = {
+          debt: d,
+          payNow,
+          payNowUYU,
+          rem,
+          remUYU,
+          instCount,
+          nextInstNum: Math.min(instCount, paidInst + 1)
+        };
+        if (inCurrentClosing && !paidCurrentCycle) {
+          currentItems.push(itemObj);
+          currentUYU += payNowUYU;
+        } else {
+          nextItems.push(itemObj);
+          nextUYU += payNowUYU;
+        }
+      });
+
+      const useCurrent = currentItems.length > 0;
+      const activeItems = useCurrent ? currentItems : nextItems;
+      const activeUYU = useCurrent ? currentUYU : nextUYU;
+      const activeDate = useCurrent ? cycle.currentClosingDate : cycle.nextClosingDate;
+      return {
+        cardName: cardMeta ? cardMeta.name : cardName,
+        mode: useCurrent ? 'current' : 'next',
+        label: useCurrent ? 'Cierre Actual' : 'Próximo Cierre',
+        dateLabel: cycle.hasClosingDay ? formatShortDayMonth(activeDate) : '',
+        closingTotalUYU: Number(activeUYU.toFixed(2)),
+        fullBalanceUYU: Number(fullBalanceUYU.toFixed(2)),
+        items: activeItems,
+        allItems: cardDebts
+      };
+    }
+
+    function openPayCardClosingModal(cardName) {
+      if (!cardName) return;
+      ui.payCardClosingName = String(cardName).trim();
+      ui.showPayCardClosingModal = true;
+      render();
+    }
+
+    function handlePayCardClosingSubmit(e) {
+      if (e) e.preventDefault();
+      const cardName = ui.payCardClosingName;
+      if (!cardName) return;
+      const accId = document.getElementById('pcc-account') ? document.getElementById('pcc-account').value : '';
+      const scope = document.getElementById('pcc-scope') ? document.getElementById('pcc-scope').value : 'closing';
+      const sourceAcc = (state.accounts || []).find(a => a.id === accId) || (state.accounts && state.accounts[0]);
+      const info = getCardClosingBreakdown(cardName);
+      const rate = Number(state.exchangeRate) || 41.5;
+
+      let totalPaidUYU = 0;
+      let countTouched = 0;
+
+      if (scope === 'full') {
+        info.allItems.forEach(d => {
+          const rem = getDebtRemainingAmount(d);
+          if (rem <= 0.01) return;
+          const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+          d.paidInstallments = instCount;
+          d.lastPaidAt = Date.now();
+          d.status = 'settled';
+          d.settledAt = Date.now();
+          totalPaidUYU += (d.currency === 'USD' ? rem * rate : rem);
+          countTouched++;
+        });
+      } else {
+        info.items.forEach(it => {
+          const d = it.debt;
+          const rem = getDebtRemainingAmount(d);
+          if (rem <= 0.01) return;
+          const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+          const paidInst = Math.max(0, Math.min(instCount, parseInt(d.paidInstallments, 10) || 0));
+          const nextPaid = Math.min(instCount, paidInst + 1);
+          d.paidInstallments = nextPaid;
+          d.lastPaidAt = Date.now();
+          if (nextPaid >= instCount || getDebtRemainingAmount(d) <= 0.01) {
+            d.status = 'settled';
+            d.settledAt = Date.now();
+          }
+          totalPaidUYU += it.payNowUYU;
+          countTouched++;
+        });
+      }
+
+      if (countTouched <= 0 || totalPaidUYU <= 0) {
+        ui.showPayCardClosingModal = false;
+        ui.payCardClosingName = null;
+        render();
+        return;
+      }
+
+      const accCur = sourceAcc ? sourceAcc.currency : 'UYU';
+      const deductAmt = accCur === 'USD' ? Number((totalPaidUYU / rate).toFixed(2)) : Math.round(totalPaidUYU);
+      if (sourceAcc) {
+        sourceAcc.balance = Number((sourceAcc.balance - deductAmt).toFixed(2));
+      }
+      const now = new Date();
+      const labelTitle = scope === 'full'
+        ? `💳 Saldo total ${info.cardName} (${countTouched} ítems)`
+        : `💳 Pago ${info.label} ${info.cardName} (${countTouched} ${countTouched === 1 ? 'cuota' : 'cuotas'})`;
+      state.transactions.unshift({
+        id: 'tx_pcc_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        title: labelTitle,
+        amount: deductAmt,
+        currency: accCur,
+        type: 'expense',
+        category: 'Tarjeta / Crédito',
+        accountId: sourceAcc ? sourceAcc.id : 'acc_uyu',
+        accountName: sourceAcc ? sourceAcc.name : 'Cuenta Principal',
+        date: `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
+        timestamp: Date.now()
+      });
+
+      ui.showPayCardClosingModal = false;
+      ui.payCardClosingName = null;
+      spawnFloatingBurst(`✅ ${info.label} ${info.cardName} pagado (-${formatMoney(deductAmt, accCur)})`, true);
+      saveState(true, true);
+    }
+
+    function getInstallmentsTimeline6Months() {
+      const rate = Number(state.exchangeRate) || 41.5;
+      const now = new Date();
+      const baseMk = getCurrentMonthKey();
+      const buckets = [];
+      for (let i = 0; i < 6; i++) {
+        const mk = shiftMonthKey(baseMk, i);
+        buckets.push({
+          offset: i,
+          monthKey: mk,
+          shortLabel: formatMonthKeyShort(mk),
+          fullLabel: formatMonthKeyLabel(mk),
+          totalUYU: 0,
+          count: 0
+        });
+      }
+      let maxFinishOffset = -1;
+      let totalPendingPlans = 0;
+
+      (Array.isArray(state.debts) ? state.debts : []).forEach(d => {
+        if (d.status === 'settled' || d.kind === 'credit') return;
+        const rem = getDebtRemainingAmount(d);
+        if (rem <= 0.01) return;
+        totalPendingPlans++;
+        const instCount = Math.max(1, parseInt(d.installmentsCount, 10) || 1);
+        const paidInst = Math.max(0, Math.min(instCount, parseInt(d.paidInstallments, 10) || 0));
+        const remInst = Math.max(1, instCount - paidInst);
+        const instVal = getDebtInstallmentValue(d);
+
+        let startOffset = 0;
+        if (isDebtCardInstrument(d)) {
+          const cardMeta = getSavedCardMetaForDebt(d);
+          const closingDay = parseClosingDayNumber(cardMeta ? cardMeta.closingDay : null);
+          const cycle = getCardClosingCycleDates(closingDay, now);
+          const createdMs = Number(d.createdAt) || 0;
+          const inCurrentClosing = cycle.hasClosingDay ? (createdMs <= cycle.currentClosingDate.getTime()) : true;
+          const paidCurrentCycle = wasDebtPaidAfterTimestamp(d, cardMeta, cycle.currentClosingDate.getTime());
+          if (!inCurrentClosing || paidCurrentCycle) startOffset = 1;
+        }
+
+        const finishOffset = startOffset + remInst;
+        if (finishOffset > maxFinishOffset) maxFinishOffset = finishOffset;
+
+        let remTracker = rem;
+        for (let k = 0; k < remInst; k++) {
+          const idx = startOffset + k;
+          const piece = (k === remInst - 1) ? remTracker : Math.min(remTracker, instVal);
+          remTracker = Math.max(0, remTracker - piece);
+          if (idx >= 0 && idx < 6) {
+            const valUYU = d.currency === 'USD' ? piece * rate : piece;
+            buckets[idx].totalUYU += valUYU;
+            buckets[idx].count++;
+          }
+        }
+      });
+
+      const maxVal = Math.max(1, ...buckets.map(b => b.totalUYU));
+      const freeMonthLabel = maxFinishOffset > 0 ? formatMonthKeyLabel(shiftMonthKey(baseMk, maxFinishOffset)) : '';
+      return { buckets, maxVal, totalPendingPlans, freeMonthLabel };
+    }
+
+    // === RECURRING EXPENSES (GASTOS FIJOS Y SUSCRIPCIONES) ===
+    function openNewRecurringModal() {
+      ui.editingRecurringId = null;
+      ui.showNewRecurringModal = true;
+      render();
+    }
+    function openEditRecurringModal(id) {
+      ui.editingRecurringId = id;
+      ui.showNewRecurringModal = true;
+      render();
+    }
+    function handleSaveRecurringSubmit(e) {
+      if (e) e.preventDefault();
+      if (!Array.isArray(state.recurringExpenses)) state.recurringExpenses = [];
+      const title = (document.getElementById('rec-title').value || '').trim();
+      const amount = Math.abs(parseFloat(document.getElementById('rec-amount').value) || 0);
+      if (!title || amount <= 0) return;
+      const currency = document.getElementById('rec-currency').value || 'UYU';
+      const dayOfMonth = Math.max(1, Math.min(31, parseInt(document.getElementById('rec-day').value, 10) || 10));
+      const category = document.getElementById('rec-category').value || 'Servicios y Luz';
+      const accountId = document.getElementById('rec-account').value || (state.accounts[0] ? state.accounts[0].id : 'acc_uyu');
+      const icon = (document.getElementById('rec-icon').value || '').trim() || '🔁';
+
+      if (ui.editingRecurringId) {
+        const existing = state.recurringExpenses.find(r => r.id === ui.editingRecurringId);
+        if (existing) {
+          existing.title = title;
+          existing.amount = amount;
+          existing.currency = currency;
+          existing.dayOfMonth = dayOfMonth;
+          existing.category = category;
+          existing.accountId = accountId;
+          existing.icon = icon;
+        }
+        spawnFloatingBurst(`✅ Gasto fijo actualizado`, true);
+      } else {
+        state.recurringExpenses.push({
+          id: 'rec_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+          title, amount, currency, dayOfMonth, category, accountId, icon,
+          paidMonths: []
+        });
+        spawnFloatingBurst(`🔁 ${title} agregado a gastos fijos`, true);
+      }
+      ui.showNewRecurringModal = false;
+      ui.editingRecurringId = null;
+      saveState(true, true);
+    }
+    function deleteRecurringExpense(id) {
+      openConfirmModal({
+        title: '🗑️ Eliminar Gasto Fijo',
+        message: '¿Querés eliminar este gasto fijo / suscripción? Los pagos anteriores ya asentados no se borran.',
+        confirmText: 'Eliminar',
+        danger: true,
+        onConfirm: () => {
+          state.recurringExpenses = (Array.isArray(state.recurringExpenses) ? state.recurringExpenses : []).filter(r => r.id !== id);
+          ui.showNewRecurringModal = false;
+          ui.editingRecurringId = null;
+          saveState(true, true);
+          spawnFloatingBurst('🗑️ Gasto fijo eliminado', false);
+        }
+      });
+    }
+    function payRecurringExpenseForMonth(id, monthKey = ui.selectedMonth) {
+      const list = Array.isArray(state.recurringExpenses) ? state.recurringExpenses : [];
+      const rec = list.find(r => r.id === id);
+      if (!rec) return;
+      const targetMk = monthKey || getCurrentMonthKey();
+      const acc = (state.accounts || []).find(a => a.id === rec.accountId) || (state.accounts && state.accounts[0]);
+      openConfirmModal({
+        title: `✓ Pagar ${escapeAttr(rec.title)}`,
+        message: `¿Asentar el pago de "${escapeAttr(rec.title)}" (${formatMoney(rec.amount, rec.currency)}) para ${formatMonthKeyLabel(targetMk)} saliendo de "${escapeAttr(acc ? acc.name : 'cuenta principal')}"?`,
+        confirmText: 'Pagar y Asentar',
+        danger: false,
+        onConfirm: () => {
+          if (!Array.isArray(rec.paidMonths)) rec.paidMonths = [];
+          if (!rec.paidMonths.includes(targetMk)) rec.paidMonths.push(targetMk);
+          const tx = addTransaction({
+            title: `${rec.icon || '🔁'} ${rec.title}`,
+            amount: rec.amount,
+            currency: rec.currency || 'UYU',
+            type: 'expense',
+            category: rec.category || 'Servicios y Luz',
+            accountId: acc ? acc.id : null
+          });
+          if (tx && targetMk !== getCurrentMonthKey()) {
+            const { year, monthIdx } = parseMonthKey(targetMk);
+            const dt = makeClampedMonthDate(year, monthIdx, rec.dayOfMonth || 10, false);
+            tx.timestamp = dt.getTime();
+            tx.date = `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')} 12:00`;
+            saveState(true, true);
+          }
+        }
+      });
+    }
+    function undoRecurringPaidForMonth(id, monthKey = ui.selectedMonth) {
+      const list = Array.isArray(state.recurringExpenses) ? state.recurringExpenses : [];
+      const rec = list.find(r => r.id === id);
+      if (!rec || !Array.isArray(rec.paidMonths)) return;
+      const targetMk = monthKey || getCurrentMonthKey();
+      openConfirmModal({
+        title: '⏳ Marcar como Pendiente',
+        message: `¿Querés volver a marcar "${escapeAttr(rec.title)}" como impago en ${formatMonthKeyLabel(targetMk)}? (El movimiento en historial no se borra automáticamente.)`,
+        confirmText: 'Marcar Impago',
+        danger: false,
+        onConfirm: () => {
+          rec.paidMonths = rec.paidMonths.filter(m => m !== targetMk);
+          saveState(true, true);
+          spawnFloatingBurst('⏳ Marcado como pendiente', true);
+        }
+      });
+    }
+
+    // === SAVINGS GOALS (METAS DE AHORRO / ALCANCÍAS) ===
+    function openNewGoalModal() {
+      ui.editingGoalId = null;
+      ui.showNewGoalModal = true;
+      render();
+    }
+    function openEditGoalModal(id) {
+      ui.editingGoalId = id;
+      ui.showNewGoalModal = true;
+      render();
+    }
+    function handleSaveGoalSubmit(e) {
+      if (e) e.preventDefault();
+      if (!Array.isArray(state.savingsGoals)) state.savingsGoals = [];
+      const name = (document.getElementById('goal-name').value || '').trim();
+      const targetAmount = Math.abs(parseFloat(document.getElementById('goal-target').value) || 0);
+      const currentAmount = Math.max(0, parseFloat(document.getElementById('goal-current').value) || 0);
+      if (!name || targetAmount <= 0) return;
+      const currency = document.getElementById('goal-currency').value || 'UYU';
+      const icon = (document.getElementById('goal-icon').value || '').trim() || '🐷';
+      const deadline = (document.getElementById('goal-deadline').value || '').trim();
+
+      if (ui.editingGoalId) {
+        const g = state.savingsGoals.find(x => x.id === ui.editingGoalId);
+        if (g) {
+          g.name = name;
+          g.targetAmount = targetAmount;
+          g.currentAmount = currentAmount;
+          g.currency = currency;
+          g.icon = icon;
+          g.deadline = deadline;
+        }
+        spawnFloatingBurst(`✅ Meta "${name}" actualizada`, true);
+      } else {
+        state.savingsGoals.push({
+          id: 'goal_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+          name, icon, targetAmount, currentAmount, currency, deadline, createdAt: Date.now()
+        });
+        spawnFloatingBurst(`🐷 Meta "${name}" creada`, true);
+      }
+      ui.showNewGoalModal = false;
+      ui.editingGoalId = null;
+      saveState(true, true);
+    }
+    function deleteSavingsGoal(id) {
+      openConfirmModal({
+        title: '🗑️ Eliminar Meta de Ahorro',
+        message: '¿Querés eliminar esta meta de ahorro? Tus saldos de cuentas no se modifican.',
+        confirmText: 'Eliminar Meta',
+        danger: true,
+        onConfirm: () => {
+          state.savingsGoals = (Array.isArray(state.savingsGoals) ? state.savingsGoals : []).filter(g => g.id !== id);
+          ui.showNewGoalModal = false;
+          ui.editingGoalId = null;
+          saveState(true, true);
+          spawnFloatingBurst('🗑️ Meta eliminada', false);
+        }
+      });
+    }
+    function openGoalContribModal(id, mode = 'deposit') {
+      ui.contribGoalId = id;
+      ui.contribGoalMode = mode === 'withdraw' ? 'withdraw' : 'deposit';
+      ui.showGoalContribModal = true;
+      render();
+    }
+    function handleGoalContribSubmit(e) {
+      if (e) e.preventDefault();
+      const goal = (Array.isArray(state.savingsGoals) ? state.savingsGoals : []).find(g => g.id === ui.contribGoalId);
+      if (!goal) return;
+      const amt = Math.abs(parseFloat(document.getElementById('gc-amount').value) || 0);
+      if (amt <= 0) return;
+      const accId = document.getElementById('gc-account').value;
+      const acc = (state.accounts || []).find(a => a.id === accId) || (state.accounts && state.accounts[0]);
+      const rate = Number(state.exchangeRate) || 41.5;
+      const isWithdraw = ui.contribGoalMode === 'withdraw';
+
+      const goalCur = goal.currency || 'UYU';
+      const accCur = acc ? acc.currency : 'UYU';
+      const deltaInAcc = (accCur === goalCur)
+        ? amt
+        : (goalCur === 'USD' && accCur === 'UYU' ? amt * rate : amt / rate);
+
+      if (isWithdraw) {
+        const actualAmt = Math.min(amt, Math.max(0, Number(goal.currentAmount) || 0));
+        if (actualAmt <= 0) return;
+        const creditInAcc = (accCur === goalCur) ? actualAmt : (goalCur === 'USD' && accCur === 'UYU' ? actualAmt * rate : actualAmt / rate);
+        goal.currentAmount = Number(Math.max(0, (Number(goal.currentAmount) || 0) - actualAmt).toFixed(2));
+        if (acc) acc.balance = Number((acc.balance + creditInAcc).toFixed(2));
+        const now = new Date();
+        state.transactions.unshift({
+          id: 'tx_goal_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+          title: `${goal.icon || '🐷'} Retiro meta: ${goal.name}`,
+          amount: actualAmt,
+          currency: goalCur,
+          type: 'income',
+          category: 'Ahorro',
+          accountId: acc ? acc.id : 'acc_uyu',
+          accountName: acc ? acc.name : 'Cuenta Principal',
+          date: `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
+          timestamp: Date.now()
+        });
+        spawnFloatingBurst(`+${formatMoney(actualAmt, goalCur)} devuelto desde ${goal.name}`, true);
+      } else {
+        goal.currentAmount = Number(((Number(goal.currentAmount) || 0) + amt).toFixed(2));
+        if (acc) acc.balance = Number((acc.balance - deltaInAcc).toFixed(2));
+        const now = new Date();
+        state.transactions.unshift({
+          id: 'tx_goal_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+          title: `${goal.icon || '🐷'} Aporte meta: ${goal.name}`,
+          amount: amt,
+          currency: goalCur,
+          type: 'expense',
+          category: 'Ahorro',
+          accountId: acc ? acc.id : 'acc_uyu',
+          accountName: acc ? acc.name : 'Cuenta Principal',
+          date: `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
+          timestamp: Date.now()
+        });
+        spawnFloatingBurst(`🐷 +${formatMoney(amt, goalCur)} a ${goal.name}`, true);
+      }
+      ui.showGoalContribModal = false;
+      ui.contribGoalId = null;
+      saveState(true, true);
+    }
+
+    // === PURE SVG VISUAL SUMMARY (DONUT + 6-MONTH BAR CHART) ===
+    function openCategoryInMovements(catName) {
+      ui.txFilterAccount = 'all';
+      ui.txFilterType = 'expense';
+      ui.txFilterCurrency = 'all';
+      ui.txSearch = catName || '';
+      window.__KRONO_KEEP_MOV_FILTERS__ = true;
+      switchTab('movements');
+    }
+
+    function renderDashboardVisualCharts(monthKey = ui.selectedMonth) {
+      const rate = Number(state.exchangeRate) || 41.5;
+      const targetMk = monthKey || getCurrentMonthKey();
+      const monthTxs = getTransactionsForMonth(targetMk);
+      const palette = ['#22d3ee', '#a78bfa', '#34d399', '#fbbf24', '#fb7185', '#60a5fa'];
+
+      // 1. Donut data: expenses by category for targetMk
+      const catMap = new Map();
+      let totalExp = 0;
+      monthTxs.forEach(t => {
+        if (t.type !== 'expense') return;
+        const val = t.currency === 'USD' ? t.amount * rate : t.amount;
+        if (val <= 0) return;
+        const cat = (t.category || 'General').trim();
+        catMap.set(cat, (catMap.get(cat) || 0) + val);
+        totalExp += val;
+      });
+      const sortedCats = Array.from(catMap.entries()).sort((a, b) => b[1] - a[1]);
+      let slices = sortedCats.slice(0, 5).map(([name, val], idx) => ({
+        name, val, pct: totalExp > 0 ? Math.round((val / totalExp) * 100) : 0, color: palette[idx % palette.length]
+      }));
+      if (sortedCats.length > 5) {
+        const othersVal = sortedCats.slice(5).reduce((s, x) => s + x[1], 0);
+        slices.push({ name: 'Otros', val: othersVal, pct: totalExp > 0 ? Math.max(1, Math.round((othersVal / totalExp) * 100)) : 0, color: palette[5] });
+      }
+
+      const radius = 46, circ = 2 * Math.PI * radius;
+      let accOffset = 0;
+      const donutArcs = totalExp > 0 ? slices.map(sl => {
+        const dash = (sl.val / totalExp) * circ;
+        const gap = slices.length > 1 ? 2.4 : 0;
+        const segLen = Math.max(1.5, dash - gap);
+        const strokeDashoffset = -accOffset;
+        accOffset += dash;
+        return `<circle cx="66" cy="66" r="${radius}" fill="none" stroke="${sl.color}" stroke-width="15" stroke-dasharray="${segLen.toFixed(2)} ${(circ - segLen).toFixed(2)}" stroke-dashoffset="${strokeDashoffset.toFixed(2)}" class="krono-svg-bar"><title>${escapeAttr(sl.name)}: ${formatMoney(sl.val, 'UYU')} (${sl.pct}%)</title></circle>`;
+      }).join('') : '';
+
+      // 2. 6-month grouped bar chart ending at targetMk
+      const bars = [];
+      for (let i = -5; i <= 0; i++) {
+        const mk = shiftMonthKey(targetMk, i);
+        const txs = getTransactionsForMonth(mk);
+        let inc = 0, exp = 0;
+        txs.forEach(t => {
+          const v = t.currency === 'USD' ? t.amount * rate : t.amount;
+          if (t.type === 'income') inc += v;
+          else exp += v;
+        });
+        bars.push({ mk, shortLabel: formatMonthKeyShort(mk), fullLabel: formatMonthKeyLabel(mk), inc, exp, isActive: i === 0 });
+      }
+      const maxBar = Math.max(1, ...bars.map(b => Math.max(b.inc, b.exp)));
+      const chartH = 92, topPad = 14, colW = 52;
+      const svgBars = bars.map((b, i) => {
+        const xBase = 10 + i * colW;
+        const incH = b.inc > 0 ? Math.max(4, Math.round((b.inc / maxBar) * chartH)) : 0;
+        const expH = b.exp > 0 ? Math.max(4, Math.round((b.exp / maxBar) * chartH)) : 0;
+        const yInc = topPad + (chartH - incH);
+        const yExp = topPad + (chartH - expH);
+        return `<g onclick="setSelectedMonth('${b.mk}')" style="cursor:pointer;">
+          ${b.isActive ? `<rect x="${xBase - 3}" y="${topPad - 4}" width="40" height="${chartH + 26}" rx="10" fill="rgba(34,211,238,0.09)" stroke="rgba(103,232,249,0.28)" stroke-width="1" />` : ''}
+          <rect x="${xBase + 3}" y="${yInc}" width="12" height="${incH}" rx="4" fill="#34d399" opacity="${b.isActive ? '0.96' : '0.68'}" class="krono-svg-bar"><title>${b.fullLabel} • Ingresos: +${formatMoney(b.inc, 'UYU')}</title></rect>
+          <rect x="${xBase + 18}" y="${yExp}" width="12" height="${expH}" rx="4" fill="#fb7185" opacity="${b.isActive ? '0.96' : '0.68'}" class="krono-svg-bar"><title>${b.fullLabel} • Gastos: -${formatMoney(b.exp, 'UYU')}</title></rect>
+          <text x="${xBase + 17}" y="${topPad + chartH + 15}" text-anchor="middle" fill="${b.isActive ? '#a5f3fc' : '#94a3b8'}" font-size="10" font-weight="${b.isActive ? '700' : '600'}">${b.shortLabel}</text>
+        </g>`;
+      }).join('');
+
+      return `<div class="glass-97 rounded-3xl p-5">
+        <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+          <h3 class="text-sm font-extrabold text-white">📊 Resumen Visual • <span class="text-cyan-300">${formatMonthKeyLabel(targetMk)}</span></h3>
+          <div class="flex items-center gap-3 text-[10px] text-slate-400">
+            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>Ingresos</span>
+            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-400"></span>Gastos</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+          <div class="p-3.5 rounded-2xl bg-slate-950/40 border border-white/10 flex flex-col sm:flex-row items-center gap-4">
+            <div class="relative w-[132px] h-[132px] shrink-0">
+              <svg viewBox="0 0 132 132" class="w-full h-full -rotate-90">
+                <circle cx="66" cy="66" r="${radius}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="15" />
+                ${donutArcs}
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-2">
+                <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Gastos</span>
+                <span class="text-xs font-extrabold mono text-white mt-0.5 truncate max-w-[82px]">${formatMoney(totalExp, 'UYU')}</span>
+              </div>
+            </div>
+            <div class="flex-1 w-full space-y-1.5 min-w-0">
+              ${slices.length ? slices.map(sl => `<button type="button" onclick="openCategoryInMovements('${escapeAttr(sl.name === 'Otros' ? '' : sl.name).replace(/'/g, "\\'")}')" class="w-full flex items-center justify-between gap-2 text-[11px] px-2 py-1 rounded-xl hover:bg-white/5 transition-colors text-left">
+                <span class="flex items-center gap-2 min-w-0">
+                  <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${sl.color};"></span>
+                  <span class="text-slate-200 font-semibold truncate">${escapeAttr(sl.name)}</span>
+                </span>
+                <span class="mono text-slate-300 shrink-0"><strong class="text-white">${sl.pct}%</strong> · ${formatMoney(sl.val, 'UYU')}</span>
+              </button>`).join('') : '<div class="text-xs text-slate-400 text-center py-4">Sin gastos registrados en este mes.</div>'}
+            </div>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-slate-950/40 border border-white/10">
+            <div class="flex justify-between items-center mb-1.5 text-[10px] text-slate-400">
+              <span class="font-bold text-slate-300">Evolución 6 meses (Ingresos vs. Gastos)</span>
+              <span>Tocá un mes</span>
+            </div>
+            <svg viewBox="0 0 326 132" class="w-full h-[132px] overflow-visible">
+              <line x1="6" y1="${topPad}" x2="320" y2="${topPad}" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3" />
+              <line x1="6" y1="${topPad + Math.round(chartH / 2)}" x2="320" y2="${topPad + Math.round(chartH / 2)}" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3" />
+              <line x1="6" y1="${topPad + chartH}" x2="320" y2="${topPad + chartH}" stroke="rgba(255,255,255,0.12)" />
+              ${svgBars}
+            </svg>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // === GEMINI MULTIMODAL TICKET SCANNER (📷 / Ctrl+V) ===
+    function compressImageToBase64(fileOrBlob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+        reader.onload = () => {
+          const dataUrl = String(reader.result || '');
+          const img = new Image();
+          img.onload = () => {
+            try {
+              const maxDim = 1280;
+              let w = img.width, h = img.height;
+              if (w > maxDim || h > maxDim) {
+                const ratio = Math.min(maxDim / w, maxDim / h);
+                w = Math.round(w * ratio);
+                h = Math.round(h * ratio);
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              const outUrl = canvas.toDataURL('image/jpeg', 0.82);
+              const base64 = outUrl.split(',')[1] || '';
+              resolve({ base64, mimeType: 'image/jpeg' });
+            } catch (err) {
+              const rawB64 = dataUrl.split(',')[1] || '';
+              resolve({ base64: rawB64, mimeType: fileOrBlob.type || 'image/jpeg' });
+            }
+          };
+          img.onerror = () => {
+            const rawB64 = dataUrl.split(',')[1] || '';
+            resolve({ base64: rawB64, mimeType: fileOrBlob.type || 'image/jpeg' });
+          };
+          img.src = dataUrl;
+        };
+        reader.readAsDataURL(fileOrBlob);
+      });
+    }
+
+    async function callGeminiJSONRaw(partsArray, cleanKey, maxTokens = 512) {
+      const discovered = await discoverGeminiModelsForKey(cleanKey);
+      const preferred = resolveBestGeminiModelFast();
+      const orderedModels = [
+        ...(discovered.includes(preferred) ? [preferred] : []),
+        ...discovered.filter(m => m !== preferred)
+      ];
+      let lastError = null;
+      for (const modelName of orderedModels) {
+        const controller = ('AbortController' in window) ? new AbortController() : null;
+        const timer = controller ? setTimeout(() => controller.abort(), 18000) : null;
+        try {
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(cleanKey)}`;
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller ? controller.signal : undefined,
+            body: JSON.stringify({
+              contents: [{ role: 'user', parts: partsArray }],
+              generationConfig: {
+                temperature: 0.1,
+                maxOutputTokens: maxTokens,
+                responseMimeType: 'application/json'
+              }
+            })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            const apiErr = (data && data.error && data.error.message) ? data.error.message : `HTTP ${res.status}`;
+            throw new Error(`${modelName}: ${apiErr}`);
+          }
+          const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          if (!rawText.trim()) throw new Error(`${modelName}: respuesta vacía`);
+          const cleaned = rawText.replace(/^```json\s*|\s*```$/gi, '').trim();
+          const parsed = JSON.parse(cleaned);
+          localStorage.setItem('KRONO_GEMINI_MODEL', modelName);
+          return { parsed, modelName };
+        } catch (err) {
+          lastError = err;
+        } finally {
+          if (timer) clearTimeout(timer);
+        }
+      }
+      throw lastError || new Error('No se pudo conectar con Gemini.');
+    }
+
+    function setTicketScanBanner(msg, tone = 'info') {
+      const box = document.getElementById('tx-scan-status');
+      if (!box) return;
+      if (!msg) {
+        box.classList.add('hidden');
+        box.textContent = '';
+        return;
+      }
+      box.classList.remove('hidden', 'text-cyan-200', 'border-cyan-400/35', 'bg-cyan-500/10', 'text-emerald-200', 'border-emerald-400/35', 'bg-emerald-500/10', 'text-rose-200', 'border-rose-400/35', 'bg-rose-500/10');
+      if (tone === 'ok') box.classList.add('text-emerald-200', 'border-emerald-400/35', 'bg-emerald-500/10');
+      else if (tone === 'err') box.classList.add('text-rose-200', 'border-rose-400/35', 'bg-rose-500/10');
+      else box.classList.add('text-cyan-200', 'border-cyan-400/35', 'bg-cyan-500/10');
+      box.textContent = msg;
+    }
+
+    function handleTicketFileSelected(ev) {
+      const file = ev && ev.target && ev.target.files ? ev.target.files[0] : null;
+      if (!file) return;
+      scanTicketImageWithGemini(file);
+      ev.target.value = '';
+    }
+
+    async function scanTicketImageWithGemini(fileOrBlob) {
+      const activeKey = (state.geminiApiKey && String(state.geminiApiKey).trim()) || (localStorage.getItem('KRONO_GEMINI_API_KEY') || '').trim();
+      if (!activeKey) {
+        setTicketScanBanner('⚠️ Configurá tu Gemini API Key en ⚙️ Ajustes para escanear tickets o capturas.', 'err');
+        return;
+      }
+      setTicketScanBanner('🔍 Leyendo ticket / captura con Gemini...', 'info');
+      try {
+        const { base64, mimeType } = await compressImageToBase64(fileOrBlob);
+        if (!base64) throw new Error('Imagen vacía o no compatible.');
+        const budgetNames = (state.budgets || []).map(b => b.name);
+        const cardNames = (state.creditCards || []).map(c => c.name);
+        const promptText = [
+          'Analizá esta imagen (boleta, ticket, comprobante o captura bancaria de Uruguay/LATAM) y devolvé SOLO un JSON válido con estos campos:',
+          '{"title":"Nombre comercio o concepto corto","amount":1234.5,"currency":"UYU|USD","type":"expense|income","category":"una de las categorías válidas","payMode":"cash|credit_card|loan","cardName":"nombre tarjeta si se ve o vacío","installmentsCount":1,"notes":"detalle breve o vacío"}',
+          'Reglas:',
+          '- amount debe ser el monto TOTAL numérico positivo (sin símbolos ni separadores de miles).',
+          '- Si el comprobante dice USD, US$, U$S o dólares -> currency="USD"; si dice $, $U, UYU o pesos -> currency="UYU".',
+          '- Categorías válidas: ' + JSON.stringify([...budgetNames, 'General', 'Ingreso']),
+          '- Tarjetas del usuario (si coincide usá exactamente ese nombre): ' + JSON.stringify(cardNames),
+          '- Si se menciona Visa/Mastercard/Oca/Amex/cuotas/crédito -> payMode="credit_card". Si es transferencia recibida/depósito -> type="income", payMode="cash".'
+        ].join('\n');
+
+        const { parsed, modelName } = await callGeminiJSONRaw(
+          [{ text: promptText }, { inline_data: { mime_type: mimeType, data: base64 } }],
+          activeKey,
+          400
+        );
+
+        const titleEl = document.getElementById('tx-title');
+        const amtEl = document.getElementById('tx-amount');
+        const curEl = document.getElementById('tx-currency');
+        const typeEl = document.getElementById('tx-type');
+        const modeEl = document.getElementById('tx-pay-mode');
+        const catEl = document.getElementById('tx-category');
+        const instEl = document.getElementById('tx-installments');
+        const notesEl = document.getElementById('tx-notes');
+        const cardPickEl = document.getElementById('tx-card-pick');
+        const cardNameEl = document.getElementById('tx-card-name');
+
+        if (titleEl && parsed.title) titleEl.value = String(parsed.title).trim();
+        if (amtEl && Number(parsed.amount) > 0) amtEl.value = String(Number(parsed.amount));
+        if (curEl && (parsed.currency === 'USD' || parsed.currency === 'UYU')) curEl.value = parsed.currency;
+        if (typeEl && (parsed.type === 'income' || parsed.type === 'expense')) typeEl.value = parsed.type;
+        if (catEl && parsed.category) {
+          const matchOpt = Array.from(catEl.options).find(o => normalizeStr(o.value) === normalizeStr(parsed.category));
+          if (matchOpt) catEl.value = matchOpt.value;
+        }
+        if (modeEl && ['cash', 'credit_card', 'loan'].includes(parsed.payMode)) {
+          modeEl.value = parsed.payMode;
+          modeEl.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        if (parsed.payMode === 'credit_card') {
+          const detectedCard = String(parsed.cardName || '').trim();
+          if (detectedCard && cardNameEl) cardNameEl.value = detectedCard;
+          if (detectedCard && cardPickEl) {
+            const cOpt = Array.from(cardPickEl.options).find(o => o.value && (normalizeStr(o.value) === normalizeStr(detectedCard) || normalizeStr(o.value).includes(normalizeStr(detectedCard)) || normalizeStr(detectedCard).includes(normalizeStr(o.value))));
+            if (cOpt) {
+              cardPickEl.value = cOpt.value;
+              if (cardNameEl) cardNameEl.value = cOpt.value;
+            }
+          }
+          autoFillNewTxCardDates(cardNameEl ? cardNameEl.value : detectedCard);
+        }
+        if (instEl && parseInt(parsed.installmentsCount, 10) > 1) {
+          instEl.value = String(Math.min(120, parseInt(parsed.installmentsCount, 10)));
+        }
+        if (notesEl && parsed.notes) notesEl.value = String(parsed.notes).trim();
+
+        setTicketScanBanner(`✅ Ticket leído con ${modelName} — revisá los datos y tocá Guardar.`, 'ok');
+        spawnFloatingBurst('📷 Ticket escaneado', true);
+      } catch (err) {
+        const msg = err && err.message ? err.message : 'No se pudo interpretar la imagen.';
+        setTicketScanBanner(`❌ Error al escanear: ${msg}`, 'err');
+      }
+    }
+
+    // === GEMINI ON-DEMAND MONTHLY ANALYSIS ("ANALIZAR MI MES") ===
+    async function analyzeSelectedMonthWithGemini() {
+      const activeKey = (state.geminiApiKey && String(state.geminiApiKey).trim()) || (localStorage.getItem('KRONO_GEMINI_API_KEY') || '').trim();
+      if (!activeKey) {
+        ui.aiMonthlyError = '⚠️ Configurá tu Gemini API Key en ⚙️ Ajustes para usar el análisis mensual inteligente.';
+        render();
+        return;
+      }
+      const mk = ui.selectedMonth || getCurrentMonthKey();
+      const rate = Number(state.exchangeRate) || 41.5;
+      const totals = getTotals(mk);
+      const ds = getDebtsSummary();
+      const realBal = getRealAvailableBreakdown(totals, ds, mk);
+      const timeline = getInstallmentsTimeline6Months();
+      const monthTxs = getTransactionsForMonth(mk);
+
+      const budgetSummary = (state.budgets || []).map(bg => {
+        const sp = monthTxs.filter(t => t.type === 'expense' && t.category === bg.name)
+          .reduce((s, t) => s + (t.currency === 'USD' ? t.amount * rate : t.amount), 0);
+        return { category: bg.name, spentUYU: Math.round(sp), limitUYU: Math.round(bg.limit), pct: bg.limit > 0 ? Math.round((sp / bg.limit) * 100) : 0 };
+      });
+      const goalsSummary = (state.savingsGoals || []).map(g => ({
+        name: g.name,
+        pct: g.targetAmount > 0 ? Math.round(((g.currentAmount || 0) / g.targetAmount) * 100) : 0,
+        remaining: Math.max(0, Math.round((g.targetAmount || 0) - (g.currentAmount || 0))),
+        currency: g.currency || 'UYU'
+      }));
+
+      const numericDigest = {
+        month: formatMonthKeyLabel(mk),
+        monthIncomeUYU: Math.round(totals.monthIncomeUYU),
+        monthExpenseUYU: Math.round(totals.monthExpenseUYU),
+        savingsRatePct: totals.savingsRate,
+        liquidTotalUYU: Math.round(totals.totalUYU),
+        committedThisMonthUYU: Math.round(realBal.committedUYU),
+        freeBalanceUYU: Math.round(realBal.freeUYU),
+        cardClosingLabel: ds.cardClosingLabel,
+        cardClosingUYU: Math.round(ds.displayCardClosingUYU),
+        totalPendingDebtsUYU: Math.round(ds.pendingDebtsUYU),
+        next3MonthsInstallmentsUYU: timeline.buckets.slice(0, 3).map(b => ({ month: b.shortLabel, uyu: Math.round(b.totalUYU) })),
+        freeOfInstallmentsIn: timeline.freeMonthLabel || 'Sin cuotas',
+        budgets: budgetSummary,
+        savingsGoals: goalsSummary
+      };
+
+      const promptText = [
+        'Sos un asesor financiero personal claro y directo (español rioplatense/uruguayo). Analizá este resumen numérico del mes y devolvé SOLO un JSON válido:',
+        '{"headline":"Resumen en 1 frase corta y concreta","insights":[{"icon":"🎯","title":"Foco de gasto / Presupuestos","detail":"Observación concreta con números"},{"icon":"💳","title":"Peso de cuotas y tarjetas","detail":"Observación concreta con números"},{"icon":"📈","title":"Proyección de ahorro y saldo libre","detail":"Acción o proyección concreta con números"}]}',
+        'Reglas: exactamente 3 insights cortos (máximo 22 palabras cada detail), directos, útiles, sin rodeos ni inventar datos.',
+        'Datos: ' + JSON.stringify(numericDigest)
+      ].join('\n');
+
+      ui.aiMonthlyLoading = true;
+      ui.aiMonthlyError = '';
+      render();
+
+      try {
+        const { parsed, modelName } = await callGeminiJSONRaw([{ text: promptText }], activeKey, 600);
+        const insights = Array.isArray(parsed.insights) ? parsed.insights.slice(0, 3) : [];
+        if (!insights.length) throw new Error('Gemini no devolvió observaciones válidas.');
+        ui.aiMonthlyAnalysis = {
+          monthKey: mk,
+          monthLabel: formatMonthKeyLabel(mk),
+          headline: String(parsed.headline || 'Resumen del mes listo'),
+          insights,
+          modelName,
+          createdAt: new Date().toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' })
+        };
+        ui.aiMonthlyLoading = false;
+        spawnFloatingBurst('✨ Análisis mensual listo', true);
+        render();
+      } catch (err) {
+        ui.aiMonthlyLoading = false;
+        ui.aiMonthlyError = `❌ No se pudo analizar el mes: ${err && err.message ? err.message : 'error de conexión'}`;
+        render();
+      }
+    }
+
     function handleCreateDebtSubmit(e) {
       if (e) e.preventDefault();
       if (!Array.isArray(state.debts)) state.debts = [];
@@ -3841,13 +4852,26 @@ input[type=number]::-webkit-outer-spin-button:hover {
       }
       if (params.get('voice') === '1') setTimeout(() => startVoiceCapture(), 350);
       if (localStorage.getItem('KRONO_AUTO_DEPLOYED_VER') !== APP_BASE_VERSION && cleanRepoSlug() && getActiveGitHubToken()) {
-        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.79: Difuminado limpio sin cortes rectos en los halos de iluminación al pasar el cursor sobre botones, filas y tarjetas.'), 1200);
+        setTimeout(() => publishGitHubRelease(null, APP_BASE_VERSION, 'v6.5.80: Filtro por mes calendario, Saldo Libre Real, proyección de cuotas 6 meses, pago de cierre en 1 clic, gastos fijos recurrentes, escaneo de tickets con Gemini (📷/Ctrl+V), gráficos SVG nativos, metas de ahorro y análisis mensual inteligente.'), 1200);
       } else if (state.autoCheckOta && cleanRepoSlug()) {
         setTimeout(() => checkGitHubReleaseOtaUpdate(false), 2000);
       }
       setInterval(() => { pullFromCloudBridge(false); pullStateFromGitHubCloud(false); }, 10000);
       setInterval(() => { if (state.autoCheckOta && cleanRepoSlug()) checkGitHubReleaseOtaUpdate(false); }, 60000);
       if (window.KronoAppFunctions && typeof window.KronoAppFunctions.flushQueuedCalls === 'function') { window.KronoAppFunctions.flushQueuedCalls(); }
+      if (!window.__KRONO_PASTE_SCAN_V6580__) {
+        window.__KRONO_PASTE_SCAN_V6580__ = true;
+        document.addEventListener('paste', function(ev) {
+          if (typeof ui === 'undefined' || !ui.showNewTxModal) return;
+          const items = ev.clipboardData && ev.clipboardData.items ? Array.from(ev.clipboardData.items) : [];
+          const imgItem = items.find(it => it.type && it.type.indexOf('image/') === 0);
+          if (!imgItem) return;
+          const blob = imgItem.getAsFile();
+          if (!blob) return;
+          ev.preventDefault();
+          scanTicketImageWithGemini(blob);
+        });
+      }
       render();
     });
 
@@ -3860,7 +4884,52 @@ input[type=number]::-webkit-outer-spin-button:hover {
 
     function renderDashboardTab(totals, displayTotal, anim) {
       const rate = Number(state.exchangeRate) || 41.5;
+      const activeMk = ui.selectedMonth || getCurrentMonthKey();
+      const ds = getDebtsSummary();
+      const realBal = getRealAvailableBreakdown(totals, ds, activeMk);
+      const dispCur = ui.displayCurrency === 'USD' ? 'USD' : 'UYU';
+      const dispFree = formatMoney(dispCur === 'USD' ? realBal.freeUSD : realBal.freeUYU, dispCur);
+      const dispCommitted = formatMoney(dispCur === 'USD' ? realBal.committedUSD : realBal.committedUYU, dispCur);
+      const monthTxs = getTransactionsForMonth(activeMk);
+      const recList = Array.isArray(state.recurringExpenses) ? state.recurringExpenses.slice().sort((a, b) => {
+        const aPaid = Array.isArray(a.paidMonths) && a.paidMonths.includes(activeMk) ? 1 : 0;
+        const bPaid = Array.isArray(b.paidMonths) && b.paidMonths.includes(activeMk) ? 1 : 0;
+        if (aPaid !== bPaid) return aPaid - bPaid;
+        return (Number(a.dayOfMonth) || 1) - (Number(b.dayOfMonth) || 1);
+      }) : [];
+      const unpaidRecCount = recList.filter(r => !(Array.isArray(r.paidMonths) && r.paidMonths.includes(activeMk))).length;
+      const goalsList = Array.isArray(state.savingsGoals) ? state.savingsGoals : [];
+
       return `<div class="space-y-4 sm:space-y-5 ${anim}">
+        <div class="flex flex-wrap items-center justify-between gap-2.5">
+          ${renderMonthSelectorPill()}
+          <button type="button" onclick="analyzeSelectedMonthWithGemini()" ${ui.aiMonthlyLoading ? 'disabled' : ''} class="spring-btn px-3.5 py-2 rounded-2xl bg-violet-500/20 hover:bg-violet-500/30 border border-violet-400/40 text-violet-200 font-bold text-xs inline-flex items-center gap-1.5">
+            <span>${ui.aiMonthlyLoading ? '⏳' : '✨'}</span>
+            <span>${ui.aiMonthlyLoading ? 'Analizando mes...' : 'Analizar mi mes'}</span>
+          </button>
+        </div>
+        ${ui.aiMonthlyError ? `<div class="glass-97 px-4 py-3 rounded-2xl border border-rose-400/40 text-xs text-rose-200 flex items-center justify-between gap-2"><span class="break-words flex-1">${escapeAttr(ui.aiMonthlyError)}</span><button onclick="ui.aiMonthlyError='';render();" class="text-slate-400">✕</button></div>` : ''}
+        ${ui.aiMonthlyAnalysis && ui.aiMonthlyAnalysis.monthKey === activeMk ? `<div class="glass-97 rounded-3xl p-5 border border-violet-400/45 space-y-3">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-violet-300">✨ Diagnóstico IA • ${escapeAttr(ui.aiMonthlyAnalysis.monthLabel)}</span>
+                <span class="text-[10px] mono px-2 py-0.5 rounded-md bg-violet-500/15 border border-violet-400/30 text-violet-200">${escapeAttr(ui.aiMonthlyAnalysis.modelName)} • ${escapeAttr(ui.aiMonthlyAnalysis.createdAt)}</span>
+              </div>
+              <div class="text-sm font-extrabold text-white mt-1">${escapeAttr(ui.aiMonthlyAnalysis.headline)}</div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" onclick="analyzeSelectedMonthWithGemini()" title="Actualizar análisis" class="px-2 py-1 rounded-lg bg-white/10 hover:bg-violet-500/25 text-xs text-violet-200 font-bold">🔄</button>
+              <button type="button" onclick="ui.aiMonthlyAnalysis=null;render();" class="text-slate-400">✕</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+            ${ui.aiMonthlyAnalysis.insights.map(ins => `<div class="p-3 rounded-2xl bg-slate-950/50 border border-white/10 space-y-1">
+              <div class="text-xs font-extrabold text-cyan-200 flex items-center gap-1.5"><span>${escapeAttr(ins.icon || '💡')}</span><span class="truncate">${escapeAttr(ins.title || 'Observación')}</span></div>
+              <p class="text-[11px] text-slate-300 leading-relaxed">${escapeAttr(ins.detail || '')}</p>
+            </div>`).join('')}
+          </div>
+        </div>` : ''}
         ${ui.otaStatusMsg ? `<div class="glass-97 px-4 py-3 rounded-2xl border border-cyan-400/40 text-xs text-cyan-200 flex items-center justify-between gap-2"><span class="break-words flex-1">${ui.otaStatusMsg}</span><button onclick="ui.otaStatusMsg='';render();" class="text-slate-400">✕</button></div>` : ''}
         <div onclick="ui.displayCurrency=ui.displayCurrency==='UYU'?'USD':'UYU';render();" class="spring-card glass-97 krono-hero-card rounded-3xl p-5 sm:p-6 cursor-pointer">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -3868,10 +4937,20 @@ input[type=number]::-webkit-outer-spin-button:hover {
             <span class="text-[10px] px-2.5 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-200 mono">Cambiar a ${ui.displayCurrency==='UYU'?'US$ USD':'$ UYU'}</span>
           </div>
           <div class="text-3xl sm:text-4xl md:text-5xl font-extrabold mono text-white my-2 break-all">${displayTotal}</div>
+          <div class="flex flex-wrap items-center gap-2 mt-2.5">
+            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold mono px-2.5 py-1 rounded-xl ${realBal.freeUYU >= 0 ? 'bg-emerald-500/15 border border-emerald-400/30 text-emerald-200' : 'bg-rose-500/15 border border-rose-400/35 text-rose-200'}">
+              <span>${realBal.freeUYU >= 0 ? '🟢' : '🔴'}</span>
+              <span>Libre real: ${dispFree}</span>
+            </span>
+            <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold mono px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-400/25 text-amber-200/95" title="Cierre actual de tarjetas + deudas por pagar + gastos fijos impagos del mes">
+              <span>📌</span>
+              <span>Comprometido: ${dispCommitted}</span>
+            </span>
+          </div>
           <div class="grid grid-cols-3 gap-2 mt-4 pt-3.5 border-t border-white/10 text-[11px] sm:text-xs">
-            <div class="krono-hero-stat min-w-0 rounded-xl px-2 py-1.5 -mx-2 transition-colors hover:bg-emerald-500/10"><div class="text-slate-400 truncate">Ingresos Mes</div><div class="text-emerald-300 font-bold mono mt-0.5 truncate">+${formatMoney(totals.monthIncomeUYU,'UYU')}</div></div>
-            <div class="krono-hero-stat min-w-0 rounded-xl px-2 py-1.5 -mx-1 transition-colors hover:bg-rose-500/10"><div class="text-slate-400 truncate">Gastos Mes</div><div class="text-rose-300 font-bold mono mt-0.5 truncate">-${formatMoney(totals.monthExpenseUYU,'UYU')}</div></div>
-            <div class="krono-hero-stat min-w-0 rounded-xl px-2 py-1.5 -mx-1 transition-colors hover:bg-cyan-500/10"><div class="text-slate-400 truncate">Ahorro</div><div class="text-cyan-300 font-bold mono mt-0.5">${totals.savingsRate}%</div></div>
+            <div class="krono-hero-stat min-w-0 rounded-xl px-2 py-1.5 -mx-2 transition-colors hover:bg-emerald-500/10"><div class="text-slate-400 truncate">Ingresos (${formatMonthKeyShort(activeMk)})</div><div class="text-emerald-300 font-bold mono mt-0.5 truncate">+${formatMoney(totals.monthIncomeUYU,'UYU')}</div></div>
+            <div class="krono-hero-stat min-w-0 rounded-xl px-2 py-1.5 -mx-1 transition-colors hover:bg-rose-500/10"><div class="text-slate-400 truncate">Gastos (${formatMonthKeyShort(activeMk)})</div><div class="text-rose-300 font-bold mono mt-0.5 truncate">-${formatMoney(totals.monthExpenseUYU,'UYU')}</div></div>
+            <div class="krono-hero-stat min-w-0 rounded-xl px-2 py-1.5 -mx-1 transition-colors hover:bg-cyan-500/10"><div class="text-slate-400 truncate">Ahorro (${formatMonthKeyShort(activeMk)})</div><div class="text-cyan-300 font-bold mono mt-0.5">${totals.savingsRate}%</div></div>
           </div>
         </div>
         <div class="glass-97 rounded-3xl p-5">
@@ -3883,25 +4962,20 @@ input[type=number]::-webkit-outer-spin-button:hover {
               <button onclick="switchTab('debts');" class="text-xs text-cyan-300">Ver todas →</button>
             </div>
           </div>
-          ${(() => {
-            const ds = getDebtsSummary();
-            return `
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-                <div onclick="ui.debtFilterKind='credit';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn krono-kpi-tile krono-kpi-emerald p-3.5 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
-                  <div class="flex items-center justify-between gap-1"><span class="text-[10px] text-slate-400">Me deben / Prestado</span><span class="krono-kpi-arrow text-[10px] text-emerald-300/70">↗</span></div>
-                  <div class="text-sm font-extrabold mono text-emerald-300 mt-1">+${formatMoney(ds.pendingCreditsUYU, 'UYU')}</div>
-                </div>
-                <div onclick="ui.debtFilterKind='debt';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn krono-kpi-tile krono-kpi-rose p-3.5 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
-                  <div class="flex items-center justify-between gap-1"><span class="text-[10px] text-slate-400">Debo / Pendiente por pagar</span><span class="krono-kpi-arrow text-[10px] text-rose-300/70">↗</span></div>
-                  <div class="text-sm font-extrabold mono text-rose-300 mt-1">-${formatMoney(ds.pendingDebtsUYU, 'UYU')}</div>
-                </div>
-                <div onclick="ui.debtFilterKind='debt';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn krono-kpi-tile krono-kpi-amber p-3.5 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
-                  <div class="flex items-center justify-between gap-1"><span class="text-[10px] text-slate-400">${ds.cardClosingLabel}${ds.cardClosingDateLabel ? ' • ' + ds.cardClosingDateLabel : ''}</span><span class="krono-kpi-arrow text-[10px] text-amber-200/70">↗</span></div>
-                  <div class="text-sm font-extrabold mono text-amber-200 mt-1">${formatMoney(Math.abs(ds.displayCardClosingUYU), 'UYU')}</div>
-                </div>
-              </div>
-            `;
-          })()}
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+            <div onclick="ui.debtFilterKind='credit';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn krono-kpi-tile krono-kpi-emerald p-3.5 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
+              <div class="flex items-center justify-between gap-1"><span class="text-[10px] text-slate-400">Me deben / Prestado</span><span class="krono-kpi-arrow text-[10px] text-emerald-300/70">↗</span></div>
+              <div class="text-sm font-extrabold mono text-emerald-300 mt-1">+${formatMoney(ds.pendingCreditsUYU, 'UYU')}</div>
+            </div>
+            <div onclick="ui.debtFilterKind='debt';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn krono-kpi-tile krono-kpi-rose p-3.5 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
+              <div class="flex items-center justify-between gap-1"><span class="text-[10px] text-slate-400">Debo / Pendiente por pagar</span><span class="krono-kpi-arrow text-[10px] text-rose-300/70">↗</span></div>
+              <div class="text-sm font-extrabold mono text-rose-300 mt-1">-${formatMoney(ds.pendingDebtsUYU, 'UYU')}</div>
+            </div>
+            <div onclick="ui.debtFilterKind='debt';ui.debtFilterStatus='pending';ui.debtFilterCard='all';switchTab('debts');" class="spring-btn krono-kpi-tile krono-kpi-amber p-3.5 rounded-2xl bg-slate-950/40 border border-white/10 cursor-pointer">
+              <div class="flex items-center justify-between gap-1"><span class="text-[10px] text-slate-400">${ds.cardClosingLabel}${ds.cardClosingDateLabel ? ' • ' + ds.cardClosingDateLabel : ''}</span><span class="krono-kpi-arrow text-[10px] text-amber-200/70">↗</span></div>
+              <div class="text-sm font-extrabold mono text-amber-200 mt-1">${formatMoney(Math.abs(ds.displayCardClosingUYU), 'UYU')}</div>
+            </div>
+          </div>
         </div>
         ${ui.geminiResponse ? `<div class="p-3 rounded-2xl bg-slate-950/60 border border-cyan-400/30 text-xs flex items-center justify-between gap-2"><div class="min-w-0 flex-1 break-words"><span class="text-cyan-300 font-bold">Gemini:</span> <span class="text-slate-200">${ui.geminiResponse.reply}</span></div><button onclick="ui.geminiResponse=null;render();" class="text-slate-400">✕</button></div>` : ''}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -3910,7 +4984,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
               <span class="krono-quick-badge w-10 h-10 rounded-xl bg-violet-500/15 border border-violet-400/35 flex items-center justify-center text-lg shrink-0">➕</span>
               <div class="min-w-0">
                 <div class="text-xs font-extrabold text-white truncate">Movimiento</div>
-                <div class="text-[10px] text-slate-400 truncate mt-0.5">Contado, tarjeta o préstamo</div>
+                <div class="text-[10px] text-slate-400 truncate mt-0.5">Contado, tarjeta, préstamo o ticket 📷</div>
               </div>
             </div>
             <span class="krono-quick-chevron text-slate-400 text-sm font-bold shrink-0">›</span>
@@ -3984,16 +5058,67 @@ input[type=number]::-webkit-outer-spin-button:hover {
             }).join('') : '<div class="text-xs text-slate-400 py-4 text-center">Sin tarjetas asociadas. Tocá "+ Tarjeta" para agregar una.</div>'}</div>
           </div>
         </div>
+        ${renderDashboardVisualCharts(activeMk)}
         <div class="glass-97 rounded-3xl p-5 flex flex-col">
-          <div class="flex justify-between items-center mb-3 shrink-0"><h3 class="text-sm font-extrabold text-white">⚡ Últimos Movimientos</h3><button onclick="switchTab('movements');" class="text-xs text-cyan-300">Historial →</button></div>
-          <div class="krono-recent-scroll space-y-2.5 max-h-72 overflow-y-auto pr-1.5">${state.transactions.length ? state.transactions.map(t => `<div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="min-w-0"><div class="text-xs font-bold text-white truncate">${t.title}</div><div class="text-[10px] text-slate-400 truncate">${t.category} • <span class="text-cyan-300">${t.accountName}</span> • ${t.date}</div></div><div class="text-xs font-extrabold mono shrink-0 ${t.type==='income'?'text-emerald-300':'text-rose-300'}">${t.type==='income'?'+':'-'}${formatMoney(t.amount,t.currency)}</div></div>`).join('') : '<div class="text-xs text-slate-400 py-4 text-center">Sin movimientos.</div>'}</div>
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-3 shrink-0">
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-extrabold text-white">🔁 Gastos Fijos y Suscripciones</h3>
+              ${recList.length ? `<span class="text-[10px] mono px-2 py-0.5 rounded-full ${unpaidRecCount > 0 ? 'bg-amber-500/15 border border-amber-400/35 text-amber-200' : 'bg-emerald-500/15 border border-emerald-400/35 text-emerald-200'}">${unpaidRecCount > 0 ? unpaidRecCount + ' pend.' : 'Todo pago'}</span>` : ''}
+            </div>
+            <button type="button" onclick="openNewRecurringModal()" class="text-xs font-bold text-violet-300 hover:text-violet-200">+ Nuevo fijo</button>
+          </div>
+          ${recList.length ? `<div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">${recList.map(rec => {
+            const isPaid = Array.isArray(rec.paidMonths) && rec.paidMonths.includes(activeMk);
+            const acc = (state.accounts || []).find(a => a.id === rec.accountId);
+            return `<div class="p-3 rounded-2xl bg-slate-950/40 border ${isPaid ? 'border-emerald-400/25 opacity-75' : 'border-white/10'} flex items-center justify-between gap-2.5">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="text-xl shrink-0">${escapeAttr(rec.icon || '🔁')}</span>
+                <div class="min-w-0">
+                  <div class="text-xs font-bold text-white truncate">${escapeAttr(rec.title)}</div>
+                  <div class="text-[10px] text-slate-400 truncate">Día ${rec.dayOfMonth || 10} • ${escapeAttr(rec.category || 'Servicios')}${acc ? ' • ' + escapeAttr(acc.name.split(' ')[0]) : ''}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <span class="text-xs font-extrabold mono ${isPaid ? 'text-emerald-300' : 'text-amber-200'}">${formatMoney(rec.amount, rec.currency || 'UYU')}</span>
+                ${isPaid
+                  ? `<button type="button" onclick="undoRecurringPaidForMonth('${rec.id}', '${activeMk}')" title="Pagado en ${formatMonthKeyLabel(activeMk)} (clic para desmarcar)" class="px-2 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/35 text-[10px] font-bold text-emerald-200">✓ Pago</button>`
+                  : `<button type="button" onclick="payRecurringExpenseForMonth('${rec.id}', '${activeMk}')" class="spring-btn px-2.5 py-1 rounded-lg bg-cyan-400 text-slate-950 text-[10px] font-extrabold">✓ Pagar</button>`
+                }
+                <button type="button" onclick="openEditRecurringModal('${rec.id}')" title="Editar gasto fijo" class="px-1.5 py-1 rounded-lg bg-white/10 hover:bg-cyan-500/20 text-[10px] text-slate-200">✏️</button>
+              </div>
+            </div>`;
+          }).join('')}</div>` : '<div class="text-xs text-slate-400 py-3 text-center">Agregá UTE, Antel, alquiler, gimnasio o streaming con "+ Nuevo fijo" para pagarlos en 1 clic cada mes.</div>'}
+        </div>
+        <div class="glass-97 rounded-3xl p-5 flex flex-col">
+          <div class="flex justify-between items-center mb-3 shrink-0"><h3 class="text-sm font-extrabold text-white">⚡ Movimientos • <span class="text-cyan-300">${formatMonthKeyLabel(activeMk)}</span></h3><button onclick="switchTab('movements');" class="text-xs text-cyan-300">Historial completo →</button></div>
+          <div class="krono-recent-scroll space-y-2.5 max-h-72 overflow-y-auto pr-1.5">${monthTxs.length ? monthTxs.map(t => `<div class="p-3 rounded-2xl bg-slate-950/40 border border-white/10 flex justify-between items-center gap-2"><div class="min-w-0"><div class="text-xs font-bold text-white truncate">${t.title}</div><div class="text-[10px] text-slate-400 truncate">${t.category} • <span class="text-cyan-300">${t.accountName}</span> • ${t.date}</div></div><div class="text-xs font-extrabold mono shrink-0 ${t.type==='income'?'text-emerald-300':'text-rose-300'}">${t.type==='income'?'+':'-'}${formatMoney(t.amount,t.currency)}</div></div>`).join('') : `<div class="text-xs text-slate-400 py-4 text-center">Sin movimientos en ${formatMonthKeyLabel(activeMk)}.</div>`}</div>
         </div>
           `;
         })()}
         <div class="glass-97 rounded-3xl p-5">
-          <div class="flex justify-between mb-3"><h3 class="text-sm font-extrabold text-white">🎯 Top Presupuestos</h3><button onclick="switchTab('budgets');" class="text-xs text-cyan-300">Administrar →</button></div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${state.budgets.slice(0,4).map(bg => { const sp = state.transactions.filter(t => t.type==='expense' && t.category===bg.name).reduce((s,t) => s + (t.currency==='USD'?t.amount*rate:t.amount), 0); const pct = bg.limit>0?Math.min(100,Math.round((sp/bg.limit)*100)):0; return `<div class="p-3.5 rounded-2xl bg-slate-950/40 border border-white/10"><div class="flex justify-between gap-2 text-xs mb-1.5"><span class="font-bold text-white truncate">${bg.icon||'🎯'} ${bg.name}</span><span class="mono text-slate-300 shrink-0">${formatMoney(sp,'UYU')} / ${formatMoney(bg.limit,'UYU')} (${pct}%)</span></div><div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full ${pct>=90?'bg-rose-500':'bg-cyan-400'}" style="width:${pct}%"></div></div></div>`; }).join('')}</div>
+          <div class="flex justify-between mb-3"><h3 class="text-sm font-extrabold text-white">🎯 Top Presupuestos • <span class="text-cyan-300">${formatMonthKeyShort(activeMk)}</span></h3><button onclick="switchTab('budgets');" class="text-xs text-cyan-300">Administrar →</button></div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${state.budgets.slice(0,4).map(bg => { const sp = monthTxs.filter(t => t.type==='expense' && t.category===bg.name).reduce((s,t) => s + (t.currency==='USD'?t.amount*rate:t.amount), 0); const pct = bg.limit>0?Math.min(100,Math.round((sp/bg.limit)*100)):0; return `<div class="p-3.5 rounded-2xl bg-slate-950/40 border border-white/10"><div class="flex justify-between gap-2 text-xs mb-1.5"><span class="font-bold text-white truncate">${bg.icon||'🎯'} ${bg.name}</span><span class="mono text-slate-300 shrink-0">${formatMoney(sp,'UYU')} / ${formatMoney(bg.limit,'UYU')} (${pct}%)</span></div><div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full ${pct>=90?'bg-rose-500':'bg-cyan-400'}" style="width:${pct}%"></div></div></div>`; }).join('')}</div>
         </div>
+        ${goalsList.length ? `<div class="glass-97 rounded-3xl p-5">
+          <div class="flex justify-between items-center mb-3"><h3 class="text-sm font-extrabold text-white">🐷 Metas de Ahorro</h3><button onclick="switchTab('accounts');" class="text-xs text-cyan-300">Administrar →</button></div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${goalsList.slice(0,4).map(g => {
+            const pct = g.targetAmount > 0 ? Math.min(100, Math.round(((g.currentAmount || 0) / g.targetAmount) * 100)) : 0;
+            return `<div class="p-3.5 rounded-2xl bg-slate-950/40 border border-white/10 space-y-2">
+              <div class="flex justify-between items-center gap-2 text-xs">
+                <span class="font-bold text-white truncate">${escapeAttr(g.icon || '🐷')} ${escapeAttr(g.name)}</span>
+                <div class="flex items-center gap-2 shrink-0">
+                  <span class="mono text-emerald-300 font-bold">${pct}%</span>
+                  <button type="button" onclick="openGoalContribModal('${g.id}', 'deposit')" class="px-2 py-0.5 rounded-lg bg-emerald-500/20 border border-emerald-400/35 text-[10px] font-bold text-emerald-200">+ Aportar</button>
+                </div>
+              </div>
+              <div class="flex justify-between text-[10px] mono text-slate-400">
+                <span>${formatMoney(g.currentAmount || 0, g.currency || 'UYU')}</span>
+                <span>Meta: ${formatMoney(g.targetAmount, g.currency || 'UYU')}</span>
+              </div>
+              <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full ${pct >= 100 ? 'bg-emerald-400' : 'bg-violet-400'}" style="width:${pct}%"></div></div>
+            </div>`;
+          }).join('')}</div>
+        </div>` : ''}
       </div>`;
     }
 
@@ -4014,20 +5139,67 @@ input[type=number]::-webkit-outer-spin-button:hover {
     }
 
     function renderAccountsTab(anim) {
+      const goals = Array.isArray(state.savingsGoals) ? state.savingsGoals : [];
       return `<div class="space-y-4 ${anim}">
         <div class="glass-97 rounded-3xl p-5 flex flex-wrap justify-between gap-3"><h2 class="text-lg font-extrabold text-white">🏦 Cuentas y Saldos</h2><div class="flex flex-wrap gap-2"><button onclick="ui.showNewAccountModal=true;render();" class="spring-btn px-3.5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">+ Nueva</button><button onclick="ui.showTransferModal=true;render();" class="spring-btn px-3.5 py-2 rounded-xl bg-violet-500/30 border border-violet-400/40 text-violet-200 font-bold text-xs">⇄ Transferir</button><button onclick="resetAllAccountsToZero()" class="spring-btn px-3.5 py-2 rounded-xl bg-rose-500/20 text-rose-200 font-bold text-xs">Resetear $ 0</button></div></div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${state.accounts.map(a => `<div class="spring-card glass-97 rounded-3xl p-5"><div class="flex justify-between items-center gap-2 mb-3"><div class="flex items-center gap-3 min-w-0"><span class="text-2xl">${a.icon||'🏦'}</span><div class="min-w-0"><div class="text-base font-extrabold text-white truncate">${a.name}</div><div class="text-xs text-cyan-300 mono">${a.currency}</div></div></div><div class="text-xl font-extrabold mono text-white shrink-0">${formatMoney(a.balance,a.currency)}</div></div><div class="flex flex-wrap gap-2 pt-3 border-t border-white/10 text-xs"><button onclick="editAccountBalance('${a.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">Ajustar</button><button onclick="renameAccount('${a.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">Renombrar</button><button onclick="resetSingleAccount('${a.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-200">$ 0</button><button onclick="deleteAccount('${a.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-200">Eliminar</button></div></div>`).join('')}</div>
+        <div class="glass-97 rounded-3xl p-5 space-y-4" data-no-nav="1">
+          <div class="flex flex-wrap justify-between items-center gap-3">
+            <div>
+              <h3 class="text-base font-extrabold text-white">🐷 Metas de Ahorro (Alcancías)</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Objetivos concretos en UYU o USD con aportes rápidos desde tus cuentas</p>
+            </div>
+            <button type="button" onclick="openNewGoalModal()" class="spring-btn px-3.5 py-2 rounded-xl bg-violet-500/25 border border-violet-400/45 text-violet-200 font-bold text-xs">+ Nueva Meta</button>
+          </div>
+          ${goals.length ? `<div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">${goals.map(g => {
+            const curAmt = Math.max(0, Number(g.currentAmount) || 0);
+            const tgtAmt = Math.max(1, Number(g.targetAmount) || 1);
+            const pct = Math.min(100, Math.round((curAmt / tgtAmt) * 100));
+            const remAmt = Math.max(0, tgtAmt - curAmt);
+            const cur = g.currency || 'UYU';
+            return `<div data-no-nav="1" class="spring-card p-4 rounded-2xl bg-slate-950/50 border ${pct >= 100 ? 'border-emerald-400/45' : 'border-white/10'} space-y-2.5">
+              <div class="flex justify-between items-start gap-2">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="text-2xl shrink-0">${escapeAttr(g.icon || '🐷')}</span>
+                  <div class="min-w-0">
+                    <div class="text-sm font-extrabold text-white truncate">${escapeAttr(g.name)}</div>
+                    <div class="text-[10px] text-slate-400 mono">${cur}${g.deadline ? ' • Objetivo: ' + escapeAttr(g.deadline) : ''}</div>
+                  </div>
+                </div>
+                <span class="text-xs font-extrabold mono px-2.5 py-0.5 rounded-full ${pct >= 100 ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/35' : 'bg-violet-500/20 text-violet-200 border border-violet-400/35'}">${pct}%</span>
+              </div>
+              <div class="flex justify-between items-baseline text-xs mono">
+                <span class="text-white font-extrabold">${formatMoney(curAmt, cur)} <span class="text-slate-400 font-normal">/ ${formatMoney(tgtAmt, cur)}</span></span>
+                <span class="${remAmt <= 0 ? 'text-emerald-300' : 'text-cyan-300'} text-[11px] font-bold">${remAmt <= 0 ? '¡Meta alcanzada!' : 'Faltan ' + formatMoney(remAmt, cur)}</span>
+              </div>
+              <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full ${pct >= 100 ? 'bg-emerald-400' : 'bg-violet-400'}" style="width:${pct}%"></div></div>
+              <div class="flex flex-wrap gap-2 pt-2 border-t border-white/10 text-xs">
+                <button type="button" onclick="openGoalContribModal('${g.id}', 'deposit')" class="spring-btn px-3 py-1.5 rounded-xl bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 font-bold">+ Aportar</button>
+                ${curAmt > 0 ? `<button type="button" onclick="openGoalContribModal('${g.id}', 'withdraw')" class="spring-btn px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-200 font-bold">− Retirar</button>` : ''}
+                <button type="button" onclick="openEditGoalModal('${g.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">✏️ Editar</button>
+                <button type="button" onclick="deleteSavingsGoal('${g.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-200">🗑️</button>
+              </div>
+            </div>`;
+          }).join('')}</div>` : '<div class="text-xs text-slate-400 py-5 text-center rounded-2xl bg-slate-950/35 border border-white/10">Todavía no creaste alcancías. Tocá "+ Nueva Meta" para definir un objetivo (ej. Fondo de emergencia, Vacaciones o Cambio de PC).</div>'}
+        </div>
       </div>`;
     }
 
     function renderBudgetsTab(anim) {
       const rate = Number(state.exchangeRate) || 41.5;
+      const activeMk = ui.selectedMonth || getCurrentMonthKey();
+      const monthTxs = getTransactionsForMonth(activeMk);
       return `<div class="space-y-4 ${anim}">
-        <div class="glass-97 rounded-3xl p-5 flex justify-between items-center"><h2 class="text-lg font-extrabold text-white">🎯 Presupuestos</h2><button onclick="ui.showNewBudgetModal=true;render();" class="spring-btn px-4 py-2 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">+ Nueva</button></div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${state.budgets.map(bg => { const sp = state.transactions.filter(t => t.type==='expense' && t.category===bg.name).reduce((s,t) => s + (t.currency==='USD'?t.amount*rate:t.amount), 0); const pct = bg.limit>0?Math.min(100,Math.round((sp/bg.limit)*100)):0; return `<div class="spring-card glass-97 rounded-3xl p-5"><div class="flex justify-between mb-2"><div class="text-base font-extrabold text-white truncate">${bg.icon||'🎯'} ${bg.name}</div><span class="text-xs font-bold mono ${pct>=90?'text-rose-300':'text-cyan-300'}">${pct}%</span></div><div class="text-xs text-slate-300 mono mb-3">${formatMoney(sp,'UYU')} / ${formatMoney(bg.limit,'UYU')}</div><div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden mb-4"><div class="h-full rounded-full ${pct>=90?'bg-rose-500':'bg-cyan-400'}" style="width:${pct}%"></div></div><div class="flex gap-2 text-xs"><button onclick="editBudgetLimit('${bg.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">Editar Tope</button><button onclick="deleteBudgetCategory('${bg.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-200">Eliminar</button></div></div>`; }).join('')}</div>
+        <div class="glass-97 rounded-3xl p-5 flex flex-wrap justify-between items-center gap-3">
+          <div class="flex flex-wrap items-center gap-3">
+            <h2 class="text-lg font-extrabold text-white">🎯 Presupuestos</h2>
+            ${renderMonthSelectorPill()}
+          </div>
+          <button onclick="ui.showNewBudgetModal=true;render();" class="spring-btn px-4 py-2 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">+ Nueva</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${state.budgets.map(bg => { const sp = monthTxs.filter(t => t.type==='expense' && t.category===bg.name).reduce((s,t) => s + (t.currency==='USD'?t.amount*rate:t.amount), 0); const pct = bg.limit>0?Math.min(100,Math.round((sp/bg.limit)*100)):0; return `<div class="spring-card glass-97 rounded-3xl p-5"><div class="flex justify-between mb-2"><div class="text-base font-extrabold text-white truncate">${bg.icon||'🎯'} ${bg.name}</div><span class="text-xs font-bold mono ${pct>=90?'text-rose-300':'text-cyan-300'}">${pct}%</span></div><div class="text-xs text-slate-300 mono mb-3">${formatMoney(sp,'UYU')} / ${formatMoney(bg.limit,'UYU')} <span class="text-[10px] text-slate-400">(${formatMonthKeyShort(activeMk)})</span></div><div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden mb-4"><div class="h-full rounded-full ${pct>=90?'bg-rose-500':'bg-cyan-400'}" style="width:${pct}%"></div></div><div class="flex gap-2 text-xs"><button onclick="editBudgetLimit('${bg.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white">Editar Tope</button><button onclick="deleteBudgetCategory('${bg.id}')" class="spring-btn px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-200">Eliminar</button></div></div>`; }).join('')}</div>
       </div>`;
     }
-
 
     function renderDebtsTab(anim) {
       reconcileFinancedTransactionsWithDebts();
@@ -4069,6 +5241,33 @@ input[type=number]::-webkit-outer-spin-button:hover {
             <div class="text-xl font-extrabold mono text-cyan-300 mt-1">${formatMoney(ds.nextInstallmentsUYU, 'UYU')}</div>
           </div>
         </div>
+        ${(() => {
+          const tl = getInstallmentsTimeline6Months();
+          return `<div class="glass-97 rounded-3xl p-5 space-y-3">
+            <div class="flex flex-wrap justify-between items-center gap-2">
+              <div>
+                <h3 class="text-sm font-extrabold text-white">📅 Proyección de Cuotas (Próximos 6 Meses)</h3>
+                <p class="text-[11px] text-slate-400 mt-0.5">Estimación mensual de vencimientos según tus planes y cierres activos</p>
+              </div>
+              <span class="text-[11px] font-bold mono px-3 py-1 rounded-full ${tl.freeMonthLabel ? 'bg-emerald-500/15 border border-emerald-400/35 text-emerald-200' : 'bg-white/10 text-slate-300'}">${tl.freeMonthLabel ? '🎉 Libre de cuotas en ' + tl.freeMonthLabel : 'Sin cuotas pendientes'}</span>
+            </div>
+            <div class="grid grid-cols-6 gap-2 sm:gap-3 items-end pt-2">
+              ${tl.buckets.map((b, idx) => {
+                const hPct = b.totalUYU > 0 ? Math.max(12, Math.round((b.totalUYU / tl.maxVal) * 100)) : 4;
+                return `<div class="flex flex-col items-center gap-1.5 min-w-0">
+                  <span class="text-[10px] font-extrabold mono ${b.totalUYU > 0 ? (idx === 0 ? 'text-amber-200' : 'text-cyan-200') : 'text-slate-500'} truncate max-w-full">${b.totalUYU > 0 ? formatMoney(Math.round(b.totalUYU), 'UYU') : '$ 0'}</span>
+                  <div class="w-full h-24 rounded-2xl bg-slate-950/55 border border-white/10 p-1.5 flex items-end justify-center">
+                    <div class="w-full rounded-xl transition-all duration-500 ${b.totalUYU > 0 ? (idx === 0 ? 'bg-gradient-to-t from-amber-500/80 to-amber-300' : 'bg-gradient-to-t from-violet-500/80 to-cyan-400') : 'bg-white/5'}" style="height:${hPct}%"></div>
+                  </div>
+                  <div class="text-center leading-tight">
+                    <div class="text-[11px] font-bold ${idx === 0 ? 'text-white' : 'text-slate-300'}">${b.shortLabel}</div>
+                    <div class="text-[9px] text-slate-400 mono">${b.count} ${b.count === 1 ? 'cuota' : 'cuotas'}</div>
+                  </div>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+        })()}
         ${cardsBreakdown.length ? `<div class="glass-97 rounded-3xl p-5 space-y-3">
           <div class="flex flex-wrap justify-between items-center gap-2">
             <h3 class="text-sm font-extrabold text-white">💳 Control Individual por Tarjeta / Instrumento</h3>
@@ -4126,9 +5325,12 @@ input[type=number]::-webkit-outer-spin-button:hover {
                   <div class="h-full rounded-full ${c.usedPct >= 85 ? 'bg-rose-500' : (c.usedPct >= 60 ? 'bg-amber-400' : 'bg-emerald-400')}" style="width:${c.usedPct}%"></div>
                 </div>
               </div>` : ''}
-              <div class="flex flex-wrap justify-between items-center gap-2 pt-1.5 border-t border-white/10 text-[11px] text-slate-300">
-                <span>Cuotas restantes: <strong class="mono text-cyan-200">${c.remainingInstallmentsTotal}</strong> (${c.activeInstallmentPlans} planes)</span>
-                ${c.dueDates.length ? `<span class="mono text-amber-200">Vence: ${escapeAttr(c.dueDates.join(', '))}</span>` : ''}
+              <div class="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-white/10 text-[11px] text-slate-300">
+                <div class="min-w-0">
+                  <span>Cuotas rest.: <strong class="mono text-cyan-200">${c.remainingInstallmentsTotal}</strong> (${c.activeInstallmentPlans} planes)</span>
+                  ${c.dueDates.length ? `<span class="mono text-amber-200 ml-2">Vto: ${escapeAttr(c.dueDates.join(', '))}</span>` : ''}
+                </div>
+                ${c.pendingItems > 0 ? `<button type="button" onclick="event.stopPropagation(); openPayCardClosingModal('${escapeAttr(c.name).replace(/'/g, "\\'")}');" class="spring-btn px-2.5 py-1 rounded-xl bg-emerald-500/25 hover:bg-emerald-500/35 border border-emerald-400/45 text-emerald-200 font-extrabold text-[11px] shrink-0">💳 Pagar Cierre</button>` : ''}
               </div>
             </div>`;
           }).join('')}</div>
@@ -4253,7 +5455,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
 
     function syncFloatingVoiceButton() {
       const existing = document.getElementById('krono-voice-fab');
-      const shouldShow = (typeof ui !== 'undefined' && ui.activeTab === 'dashboard' && !ui.showOtaModal && !ui.showNewTxModal && !ui.showNewAccountModal && !ui.showTransferModal && !ui.showNewDebtModal && !ui.showNewCardModal && !ui.showNewBudgetModal && !ui.inputModal && !ui.showVoiceWidgetOverlay);
+      const shouldShow = (typeof ui !== 'undefined' && ui.activeTab === 'dashboard' && !ui.showOtaModal && !ui.showNewTxModal && !ui.showNewAccountModal && !ui.showTransferModal && !ui.showNewDebtModal && !ui.showNewCardModal && !ui.showNewBudgetModal && !ui.showNewRecurringModal && !ui.showPayCardClosingModal && !ui.showNewGoalModal && !ui.showGoalContribModal && !ui.editingTxId && !ui.showEditDebtModal && !ui.showEditCardModal && !ui.confirmModal && !ui.inputModal && !ui.showVoiceWidgetOverlay);
       if (!shouldShow) {
         if (existing) existing.remove();
         return;
@@ -4374,7 +5576,19 @@ input[type=number]::-webkit-outer-spin-button:hover {
           </form></div>`;
         })()}
         ${ui.showNewTxModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleNewTxSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic max-h-[90dvh] overflow-y-auto">
-          <h3 class="text-base font-extrabold text-white">➕ Nuevo Movimiento</h3>
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="text-base font-extrabold text-white">➕ Nuevo Movimiento</h3>
+            <span class="text-[10px] text-violet-300/90 font-semibold">Ctrl+V captura</span>
+          </div>
+          <div class="krono-scan-bar rounded-2xl p-2.5 flex items-center justify-between gap-2">
+            <input id="tx-ticket-file" type="file" accept="image/*" class="hidden" onchange="handleTicketFileSelected(event)" />
+            <div class="min-w-0">
+              <div class="text-[11px] font-bold text-white truncate">📷 Escanear ticket o comprobante</div>
+              <div class="text-[10px] text-slate-400 truncate">Subí una foto o pegá captura con Ctrl+V</div>
+            </div>
+            <button type="button" onclick="document.getElementById('tx-ticket-file').click()" class="spring-btn px-3 py-1.5 rounded-xl bg-violet-500/25 border border-violet-400/45 text-violet-100 font-bold text-[11px] shrink-0">📷 Subir</button>
+          </div>
+          <div id="tx-scan-status" class="hidden rounded-xl border px-3 py-2 text-[11px] font-semibold"></div>
           <input id="tx-title" type="text" required placeholder="Descripción (ej: Notebook, Súper, Préstamo)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" />
           <div class="grid grid-cols-2 gap-2">
             <select id="tx-type" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">
@@ -4470,6 +5684,128 @@ input[type=number]::-webkit-outer-spin-button:hover {
         })()}
         ${ui.showNewDebtModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateDebtSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">📌 Nueva Deuda / Prestado / Tarjeta</h3><input id="db-title" type="text" required placeholder="Concepto (ej: Compra en cuotas, préstamo, tarjeta)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><select id="db-kind" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="debt">📉 Deuda / Debo (-)</option><option value="credit">📈 Me deben / Prestado (+)</option></select><select id="db-method" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="credit_card">💳 Tarjeta de Crédito</option><option value="installment_plan">🗓️ Plan / Cuotas</option><option value="personal">🤝 Préstamo / Persona</option><option value="general">📌 General</option></select></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div class="flex gap-1.5 items-center"><select id="db-card-pick" onchange="const c=document.getElementById('db-card');if(c && this.value) c.value=this.value;" class="flex-1 bg-slate-950/80 border border-white/15 rounded-xl px-2.5 py-2.5 text-xs text-cyan-200"><option value="">Elegir tarjeta...</option>${(Array.isArray(state.creditCards)?state.creditCards:[]).map(cc => `<option value="${escapeAttr(cc.name)}">💳 ${escapeAttr(cc.name)}</option>`).join('')}</select><button type="button" onclick="ui.showNewCardModal=true;render();" title="Crear tarjeta" class="px-2.5 py-2.5 rounded-xl bg-violet-500/25 border border-violet-400/40 text-violet-200 text-xs font-bold shrink-0">+</button></div><input id="db-card" type="text" placeholder="Tarjeta o banco (ej: Itaú Visa)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /></div><input id="db-counterparty" type="text" placeholder="Comercio o persona (opcional)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-3 gap-2"><input id="db-amount" type="number" step="0.01" required placeholder="Monto" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><select id="db-amount-mode" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="total">Monto Total</option><option value="installment">Valor x Cuota</option></select><select id="db-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white"><option value="UYU">$ UYU</option><option value="USD">US$ USD</option></select></div><div class="grid grid-cols-2 gap-2"><input id="db-installments" type="number" min="1" max="120" value="1" placeholder="Cantidad de cuotas (1 = pago único)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="db-due" type="text" placeholder="Vencimiento / Cierre (ej: 30/11)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /></div><input id="db-notes" type="text" placeholder="Notas adicionales (opcional)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewDebtModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Guardar</button></div></form></div>` : ''}
         ${ui.showNewBudgetModal ? `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleCreateBudgetSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 space-y-3 animate-pop-elastic"><h3 class="text-base font-extrabold text-white">🎯 Nueva Categoría</h3><input id="bg-name" type="text" required placeholder="Nombre" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" /><div class="grid grid-cols-2 gap-2"><input id="bg-limit" type="number" required placeholder="Tope ($ UYU)" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" /><input id="bg-icon" type="text" value="🎯" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" /></div><div class="flex justify-end gap-2 pt-2"><button type="button" onclick="ui.showNewBudgetModal=false;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button><button type="submit" class="px-5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Crear</button></div></form></div>` : ''}
+        ${(() => {
+          if (!ui.showPayCardClosingModal || !ui.payCardClosingName) return '';
+          const info = getCardClosingBreakdown(ui.payCardClosingName);
+          return `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handlePayCardClosingSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-emerald-400/45 space-y-3 animate-pop-elastic max-h-[90dvh] overflow-y-auto">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="text-base font-extrabold text-white">💳 Pagar ${escapeAttr(info.label)}</h3>
+              <span class="text-[11px] mono px-2.5 py-0.5 rounded-full bg-violet-500/20 border border-violet-400/35 text-violet-200">${escapeAttr(info.cardName)}${info.dateLabel ? ' • ' + info.dateLabel : ''}</span>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-[10px] text-slate-400 block">¿Qué querés pagar?</label>
+              <select id="pcc-scope" onchange="const b=document.getElementById('pcc-total-preview'); if(b) b.textContent = this.value==='full' ? '${escapeAttr(formatMoney(info.fullBalanceUYU, 'UYU'))}' : '${escapeAttr(formatMoney(info.closingTotalUYU, 'UYU'))}';" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white font-bold">
+                <option value="closing">Cuotas de este cierre (${info.items.length} ${info.items.length === 1 ? 'ítem' : 'ítems'} • ${formatMoney(info.closingTotalUYU, 'UYU')})</option>
+                <option value="full">Saldo total restante (${info.allItems.length} ítems • ${formatMoney(info.fullBalanceUYU, 'UYU')})</option>
+              </select>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-[10px] text-slate-400 block">Cuenta de origen del pago</label>
+              <select id="pcc-account" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map(a => `<option value="${a.id}">${a.icon || '🏦'} ${escapeAttr(a.name)} (${formatMoney(a.balance, a.currency)})</option>`).join('')}</select>
+            </div>
+            ${info.items.length ? `<div class="p-3 rounded-2xl bg-slate-950/55 border border-white/10 space-y-1.5 max-h-36 overflow-y-auto krono-recent-scroll">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Detalle del cierre</div>
+              ${info.items.map(it => `<div class="flex justify-between items-center gap-2 text-[11px]">
+                <span class="text-slate-200 truncate">${escapeAttr(it.debt.title)}${it.instCount > 1 ? ` <span class="text-cyan-300 mono">(#${it.nextInstNum}/${it.instCount})</span>` : ''}</span>
+                <span class="mono font-bold text-amber-200 shrink-0">${formatMoney(it.payNow, it.debt.currency)}</span>
+              </div>`).join('')}
+            </div>` : ''}
+            <div class="flex items-center justify-between px-3 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 text-xs">
+              <span class="text-emerald-200 font-bold">Total a descontar:</span>
+              <span id="pcc-total-preview" class="text-base font-extrabold mono text-emerald-300">${formatMoney(info.closingTotalUYU, 'UYU')}</span>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+              <button type="button" onclick="ui.showPayCardClosingModal=false;ui.payCardClosingName=null;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button>
+              <button type="submit" class="spring-btn px-5 py-2 rounded-xl bg-emerald-400 text-slate-950 font-extrabold text-xs">✓ Confirmar Pago</button>
+            </div>
+          </form></div>`;
+        })()}
+        ${(() => {
+          if (!ui.showNewRecurringModal) return '';
+          const rec = ui.editingRecurringId ? (state.recurringExpenses || []).find(r => r.id === ui.editingRecurringId) : null;
+          return `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleSaveRecurringSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-violet-400/45 space-y-3 animate-pop-elastic">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="text-base font-extrabold text-white">${rec ? '✏️ Editar Gasto Fijo' : '🔁 Nuevo Gasto Fijo / Suscripción'}</h3>
+              ${rec ? `<button type="button" onclick="deleteRecurringExpense('${rec.id}')" class="px-2.5 py-1 rounded-xl bg-rose-500/20 border border-rose-400/30 text-rose-200 font-bold text-xs">🗑️ Borrar</button>` : ''}
+            </div>
+            <input id="rec-title" type="text" required value="${escapeAttr(rec ? rec.title : '')}" placeholder="Nombre (ej: UTE, Antel, Alquiler, Spotify)" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" />
+            <div class="grid grid-cols-3 gap-2">
+              <input id="rec-amount" type="number" step="0.01" required value="${escapeAttr(rec ? rec.amount : '')}" placeholder="Monto" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" />
+              <select id="rec-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">
+                <option value="UYU" ${!rec || rec.currency==='UYU'?'selected':''}>$ UYU</option>
+                <option value="USD" ${rec && rec.currency==='USD'?'selected':''}>US$ USD</option>
+              </select>
+              <input id="rec-icon" type="text" value="${escapeAttr(rec ? rec.icon : '⚡')}" placeholder="Ícono" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-1">Día de vencimiento</label>
+                <input id="rec-day" type="number" min="1" max="31" value="${escapeAttr(rec ? rec.dayOfMonth : 10)}" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" />
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-1">Categoría</label>
+                <select id="rec-category" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2 text-xs text-white">${state.budgets.map(b => `<option value="${escapeAttr(b.name)}" ${rec && rec.category===b.name?'selected':''}>${b.icon} ${escapeAttr(b.name)}</option>`).join('')}<option value="General" ${rec && rec.category==='General'?'selected':''}>📌 General</option></select>
+              </div>
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-1">Cuenta sugerida para pagar</label>
+              <select id="rec-account" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map(a => `<option value="${a.id}" ${rec && rec.accountId===a.id?'selected':''}>${a.icon || '🏦'} ${escapeAttr(a.name)} (${a.currency})</option>`).join('')}</select>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+              <button type="button" onclick="ui.showNewRecurringModal=false;ui.editingRecurringId=null;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button>
+              <button type="submit" class="spring-btn px-5 py-2 rounded-xl bg-violet-400 text-slate-950 font-extrabold text-xs">${rec ? 'Guardar Cambios' : 'Agregar Gasto Fijo'}</button>
+            </div>
+          </form></div>`;
+        })()}
+        ${(() => {
+          if (!ui.showNewGoalModal) return '';
+          const g = ui.editingGoalId ? (state.savingsGoals || []).find(x => x.id === ui.editingGoalId) : null;
+          return `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleSaveGoalSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 border-violet-400/45 space-y-3 animate-pop-elastic">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="text-base font-extrabold text-white">${g ? '✏️ Editar Meta de Ahorro' : '🐷 Nueva Meta de Ahorro'}</h3>
+              ${g ? `<button type="button" onclick="deleteSavingsGoal('${g.id}')" class="px-2.5 py-1 rounded-xl bg-rose-500/20 border border-rose-400/30 text-rose-200 font-bold text-xs">🗑️ Borrar</button>` : ''}
+            </div>
+            <div class="grid grid-cols-[1fr_72px] gap-2">
+              <input id="goal-name" type="text" required value="${escapeAttr(g ? g.name : '')}" placeholder="Ej: Fondo de emergencia, Vacaciones, PC" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white" />
+              <input id="goal-icon" type="text" value="${escapeAttr(g ? g.icon : '🐷')}" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white text-center" />
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <input id="goal-target" type="number" step="0.01" required value="${escapeAttr(g ? g.targetAmount : '')}" placeholder="Objetivo" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" />
+              <input id="goal-current" type="number" step="0.01" min="0" value="${escapeAttr(g ? g.currentAmount : '0')}" placeholder="Ahorrado" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" />
+              <select id="goal-currency" class="bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">
+                <option value="UYU" ${!g || g.currency==='UYU'?'selected':''}>$ UYU</option>
+                <option value="USD" ${g && g.currency==='USD'?'selected':''}>US$ USD</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-1">Fecha objetivo (opcional)</label>
+              <input id="goal-deadline" type="date" value="${escapeAttr(g ? g.deadline || '' : '')}" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2 text-xs text-white mono" />
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+              <button type="button" onclick="ui.showNewGoalModal=false;ui.editingGoalId=null;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button>
+              <button type="submit" class="spring-btn px-5 py-2 rounded-xl bg-violet-400 text-slate-950 font-extrabold text-xs">${g ? 'Guardar Cambios' : 'Crear Meta'}</button>
+            </div>
+          </form></div>`;
+        })()}
+        ${(() => {
+          if (!ui.showGoalContribModal || !ui.contribGoalId) return '';
+          const g = (state.savingsGoals || []).find(x => x.id === ui.contribGoalId);
+          if (!g) return '';
+          const isW = ui.contribGoalMode === 'withdraw';
+          return `<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"><form onsubmit="handleGoalContribSubmit(event)" class="glass-97 w-full max-w-md rounded-3xl p-6 border-2 ${isW ? 'border-amber-400/45' : 'border-emerald-400/45'} space-y-3 animate-pop-elastic">
+            <h3 class="text-base font-extrabold text-white">${isW ? '− Retirar de Meta' : '+ Aportar a Meta'}: ${escapeAttr(g.icon || '🐷')} ${escapeAttr(g.name)}</h3>
+            <div class="text-xs text-slate-300 mono">Actual: <strong class="text-white">${formatMoney(g.currentAmount || 0, g.currency || 'UYU')}</strong> / ${formatMoney(g.targetAmount, g.currency || 'UYU')}</div>
+            <input id="gc-amount" type="number" step="0.01" min="0.01" required placeholder="Monto en ${g.currency || 'UYU'}" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white mono" />
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-1">${isW ? 'Acreditar en cuenta' : 'Descontar de cuenta'}</label>
+              <select id="gc-account" class="w-full bg-slate-950/80 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white">${state.accounts.map(a => `<option value="${a.id}">${a.icon || '🏦'} ${escapeAttr(a.name)} (${formatMoney(a.balance, a.currency)})</option>`).join('')}</select>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+              <button type="button" onclick="ui.showGoalContribModal=false;ui.contribGoalId=null;render();" class="px-4 py-2 text-xs text-slate-300">Cancelar</button>
+              <button type="submit" class="spring-btn px-5 py-2 rounded-xl ${isW ? 'bg-amber-400' : 'bg-emerald-400'} text-slate-950 font-extrabold text-xs">${isW ? 'Retirar' : 'Aportar'}</button>
+            </div>
+          </form></div>`;
+        })()}
         ${ui.showVoiceWidgetOverlay ? `<div class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4 text-center"><div class="glass-97 w-full max-w-sm rounded-3xl p-6 border-2 border-cyan-400/50 animate-pop-elastic space-y-3"><div class="text-4xl">${ui.isListening?'🎙️':'✨'}</div><h3 class="text-base font-extrabold text-white">${ui.isListening?'Escuchando...':'Dictado por Voz'}</h3>${ui.voiceHintMsg?`<p class="text-[11px] text-amber-200 bg-amber-500/15 rounded-xl p-2">${ui.voiceHintMsg}</p>`:''}<input id="voice-overlay-manual-input" type="text" value="${escapeAttr(ui.voiceTranscript)}" oninput="ui.voiceTranscript=this.value;" onkeydown="if(event.key==='Enter')submitVoiceOverlayInput();" placeholder="Dictá con el teclado o escribí..." class="w-full bg-slate-950/85 border border-cyan-400/50 rounded-2xl px-3.5 py-3 text-xs text-white" /><div class="grid grid-cols-2 gap-2.5 pt-1"><button onclick="submitVoiceOverlayInput()" class="spring-btn py-2.5 rounded-2xl bg-cyan-400 text-slate-950 font-extrabold text-xs">✅ Procesar</button><button onclick="stopVoiceCapture();ui.showVoiceWidgetOverlay=false;render();" class="py-2.5 rounded-2xl bg-white/10 text-slate-300 font-bold text-xs">Cerrar</button></div></div></div>` : ''}
       `;
       syncFloatingVoiceButton();
@@ -4704,7 +6040,7 @@ input[type=number]::-webkit-outer-spin-button:hover {
 
       function findNavigableCard(target) {
         if (typeof ui === 'undefined' || !target || !target.closest) return null;
-        if (target.closest('button, input, select, textarea, a')) return null;
+        if (target.closest('button, input, select, textarea, a, [data-no-nav="1"]')) return null;
         if (ui.activeTab === 'dashboard') {
           const row = target.closest('main .glass-97 .rounded-2xl');
           if (!row) return null;
