@@ -1,6 +1,6 @@
 {
   "syncCode": "KRONO-7749",
-  "updatedAt": 1795727899923,
+  "updatedAt": 1795805718319,
   "cloudWebhookUrl": "https://script.google.com/macros/s/AKfycbzph0baVBgM5c_KcyS54vzsykxTo_wm06hrryCdf2s9Zq0pVPjQJW1SYXqbj0IZx1Ls4w/exec",
   "exchangeRate": 41.5,
   "defaultCurrency": "UYU",
@@ -150,7 +150,7 @@
       "id": "acc_cash",
       "name": "Efectivo / Billetera",
       "currency": "UYU",
-      "balance": -11766,
+      "balance": 128466,
       "color": "from-violet-400 to-purple-500",
       "icon": "👛"
     }
@@ -421,6 +421,18 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_1795805718309_835",
+      "title": "Ingreso en efectivo",
+      "amount": 140232,
+      "currency": "UYU",
+      "type": "income",
+      "category": "Ingreso",
+      "accountId": "acc_cash",
+      "accountName": "Efectivo / Billetera",
+      "date": "27/11 15:55",
+      "timestamp": 1795805718309
+    },
     {
       "id": "tx_pcc_1795727899922_116",
       "title": "💳 Pago Próximo Cierre Itaú Visa (1 cuota)",
